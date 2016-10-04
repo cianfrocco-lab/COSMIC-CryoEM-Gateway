@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ToolRegistry>
+	<ToolResources>
+		<ToolResource id="comet" type="REMOTE_SHELL" 
+			class="org.ngbw.sdk.tool.DefaultToolResource"
+			filehandler="org.ngbw.sdk.tool.LocalFileHandler"
+            processrunner="org.ngbw.sdk.common.util.SSHExecProcessRunner"
+			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
+			<Parameters>
+				<Parameter key="runner"
+					value="org.ngbw.sdk.common.util.SSHExecProcessRunner"/>
+				<Parameter key="login" value="${teragrid.comet.login}"/>
+				<Parameter key="fileHost" value="${teragrid.comet.host}"/>
+				<Parameter key="filePort" value="2811"/>
+				<Parameter key="workspace" value="${teragrid.comet.workspace}"/>
+				<Parameter key="rc" value="${teragrid.comet.rc}"/>
+				<Parameter key="submit" value="${teragrid.comet.submit}"/>
+				<Parameter key="check" value="${teragrid.comet.check}"/>
+				<Parameter key="cancel" value="${teragrid.comet.cancel}"/>
+				<Parameter key="accountGroup" value="teragrid"/>
+				<Parameter key="chargeNumber" value="${organization.charge.number}"/>
+				<Parameter key="coresPerNode" value="24"/>
+			</Parameters>
+		</ToolResource>
+	</ToolResources>
+	<ToolGroups>
+		<ToolGroup id="XSEDE" disable="${teragrid.tools.disable}">
+			<Tool id="NEURON73_TG" name="NEURON73 on Comet"
+				configfile="pisexml/neuron73_tg.xml" toolresource="comet"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                	<InputParameters>
+                    	<InputParameter id="infile_" entityType="UNKNOWN"
+							dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                    </InputParameters>
+                    <OutputParameters>
+                    </OutputParameters>
+             </Tool>
+             <Tool id="NEURON73_PY_TG" name="NEURON 7.3 on Comet using python"
+				configfile="pisexml/neuron73_py_tg.xml" toolresource="comet"
+				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRender">
+				<InputParameters>
+                	<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+			</Tool>
+			<Tool id="PGENESIS_TG" name="PGENESIS 2.3 on Comet"
+            	configfile="pisexml/pgenesis_tg.xml" toolresource="comet"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                	<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="PYNN_TG" name="PyNN 0.7.5 on Comet"
+            	configfile="pisexml/pynn_tg.xml" toolresource="comet"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                	<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="NEST_TG" name="NEST 2.2.1 on Comet using nest executable"
+            	configfile="pisexml/nest_tg.xml" toolresource="comet"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                	<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="NEST_PY_TG" name="NEST 2.2.1 on Comet using python"
+            	configfile="pisexml/nest_py_tg.xml" toolresource="comet"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                	<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="PY_TG"
+                               name="Python"
+                               configfile="pisexml/py_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+			<Tool id="BRIAN_TG"
+                               name="Brian 2.0 on Comet using python"
+                               configfile="pisexml/brian_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+			<Tool id="FREESURF_TG"
+                               name="Freesurfer on Comet"
+                               configfile="pisexml/freesurf_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+                       <Tool id="MOOSE_TG"
+                               name="Moose 3.0.1 Gulab Jamun on Comet"
+                               configfile="pisexml/moose_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                                <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                                </InputParameters>
+                                <OutputParameters>
+                                </OutputParameters>
+                       </Tool>
+                       <Tool id="NEURON74_TG"
+                               name="NEURON7.4 on Comet"
+                               configfile="pisexml/neuron74_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+                       <Tool id="NEURON74_PY_TG"
+                               name="NEURON 7.4 on Comet using python"
+                               configfile="pisexml/neuron74_py_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+			<Tool id="CPIPELINE_TG"
+                               name="The Virtual Brain Personalized Multimodal Connectome Pipeline on Comet"
+                               configfile="pisexml/cpipeline_tg.xml" toolresource="comet"
+                               commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                               <InputParameters>
+                                       <InputParameter id="infile_" entityType="UNKNOWN" dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE" />
+                               </InputParameters>
+                               <OutputParameters>
+                               </OutputParameters>
+                       </Tool>
+				 
+		</ToolGroup>
+		<ToolGroup id="WEB" isdefault="1">
+		</ToolGroup>
+	</ToolGroups>
+</ToolRegistry>
+

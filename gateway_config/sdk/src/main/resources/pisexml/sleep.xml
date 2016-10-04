@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE pise PUBLIC "pise.dtd" "pise.dtd" >
+
+<!-- I just created this for testing timeouts -->
+
+<pise>	
+	<head>
+		<title>Sleep</title>
+		<version>0.0</version>
+		<description>Should not be in production.  For testing sshprocessworker. </description>
+		<authors></authors>
+		<reference></reference>
+		<category></category>
+		<doclink>stdout and sleep_time.txt will have output.</doclink>
+	</head>
+	<command>sleep</command>
+	
+	<parameters>
+
+		<parameter ishidden="1" type="String">
+			<name>command_part1</name>
+			<attributes>
+				<format>
+					<language>perl</language>
+					<code>"echo WORKING DIR `pwd`; echo ENV `env` ;"</code>
+				</format>
+				<group>0</group>
+			</attributes>
+		</parameter>
+
+		<parameter ishidden="1" type="String">
+			<name>command_part2</name>
+			<attributes>
+				<format>
+					<language>perl</language>
+					<code>"date > sleep_time.txt ; sleep"</code>
+				</format>
+				<group>1</group>
+			</attributes>
+		</parameter>
+
+		<parameter ishidden="1" type="String">
+			<name>force_spacing</name>
+			<attributes>
+				<format>
+					<language>perl</language>
+					<code>""</code>
+				</format>
+				<group>2</group>
+			</attributes>
+		</parameter>
+
+		<parameter type="Integer" ismandatory="1" issimple="1">
+			<name>seconds</name>
+			<attributes>
+				<prompt>Number of seconds to sleep</prompt>
+				<format>
+					<language>perl</language>
+					<code>"$value"</code>
+				</format>
+				<vdef><value>10</value></vdef>
+				<group>3</group>
+			</attributes>
+		</parameter>
+
+		<parameter type="String" ishidden="1">
+			<name>printend</name>
+			<attributes>
+				<format>
+					<language>perl</language>
+					<code>"; date >> sleep_time.txt"</code>
+				</format>
+				<group>4</group>
+			</attributes>
+		</parameter>
+
+		<parameter ismandatory="1" issimple="1" isinput="1" type="InFile">
+			<name>infile</name>
+			<attributes>
+				<group>1</group>
+				<filenames>dummy_file.txt</filenames>
+			</attributes>
+		</parameter>
+
+		<parameter type="Results">
+			<name>all_files</name>
+			<attributes>
+				<filenames>*</filenames>
+			</attributes>
+		</parameter>
+
+
+
+
+	</parameters>
+</pise>

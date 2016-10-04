@@ -1,0 +1,62 @@
+<!-- DTD for Pise descriptions
+     Copyright (C) 1999-2204 Institut Pasteur and Catherine Letondal <letondal@pasteur.fr> 
+  -->
+<!ENTITY % word "CDATA">
+<!ENTITY % number "CDATA">
+<!ENTITY % boolean "CDATA">
+<!ELEMENT pise (head, command, parameters)>
+<!ELEMENT command (#PCDATA)>
+<!ELEMENT parameters (parameter)+>
+<!ELEMENT head (title, version?, description?, authors?, reference*, category*, doclink*)>
+<!ELEMENT version (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT category (#PCDATA)>
+<!ELEMENT doclink (#PCDATA)>
+<!ELEMENT authors (#PCDATA)>
+<!ELEMENT reference (#PCDATA)>
+<!ELEMENT parameter (paragraph | (name, attributes)+)>
+<!ELEMENT paragraph (name, prompt, precond?, group?, format?, comment?, parameters)>
+<!ATTLIST parameter
+	type (InFile | Sequence | OutFile | Results | Switch | Excl | List | Integer | Float | String | Paragraph | Label) #REQUIRED
+	ismandatory %boolean; #IMPLIED
+	iscommand %boolean; #IMPLIED
+	ishidden %boolean; #IMPLIED
+	isstandout %boolean; #IMPLIED
+	issimple %boolean; #IMPLIED
+	isclean %boolean; #IMPLIED
+	isinput %boolean; #IMPLIED
+>
+<!ELEMENT attributes (prompt | info | format | vdef | group | vlist | flist | comment | seqfmt | seqtype | ctrls | warns | precond | paramfile | filenames | scalemin | scalemax | scaleinc | separator | size | pipe | withpipe)+>
+<!ELEMENT prompt (#PCDATA)>
+<!ELEMENT format (language, code)+>
+<!ELEMENT vdef ((value)+ | (language, code)+)>
+<!ELEMENT group (#PCDATA)>
+<!ELEMENT info (#PCDATA)>
+<!ELEMENT vlist (value, label)+>
+<!ELEMENT flist (value, code)+>
+<!ELEMENT comment (value)+>
+<!ELEMENT seqfmt (value)+>
+<!ELEMENT seqtype (value | (language, code)+)>
+<!ELEMENT ctrls (ctrl)+>
+<!ELEMENT ctrl (message, (language, code)+)>
+<!ELEMENT warns (warn)+>
+<!ELEMENT warn (message, (language, code)+)>
+<!ELEMENT message (#PCDATA)>
+<!ELEMENT precond (language, code)+>
+<!ELEMENT paramfile (#PCDATA)>
+<!ELEMENT filenames (#PCDATA)>
+<!ELEMENT scalemin (value | (language, code)+)>
+<!ELEMENT scalemax (value | (language, code)+)>
+<!ELEMENT scaleinc (#PCDATA)>
+<!ELEMENT separator (#PCDATA)>
+<!ELEMENT size (#PCDATA)>
+<!ELEMENT pipe (pipetype, (language, code)+)+>
+<!ELEMENT withpipe (pipetype, (parametername)+)+>
+<!ELEMENT parametername (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT code (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT pipetype (#PCDATA)>
+<!ELEMENT label (#PCDATA)>
+<!ELEMENT language (#PCDATA)>
