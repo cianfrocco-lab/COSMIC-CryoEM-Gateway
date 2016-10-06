@@ -1,1 +1,1 @@
-# COSMIC-CryoEM-Gateway
+# COSMIC-CryoEM-GatewayThe gateway_config/ subdirectory contains code custom to the COSMIC2 CryoEMScience Gateway.  The rest of the gateway's code is in the CIPRES svn athttps://svn.sdsc.edu/repo/scigap/trunk.
