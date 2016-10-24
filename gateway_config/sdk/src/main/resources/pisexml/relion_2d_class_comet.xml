@@ -80,10 +80,6 @@ Mike -->
 	<parameter ishidden="1" type="String">
 		<name>relion_commandline</name>
 		<attributes>
-			<format>
-				<language>perl</language>
-				<code>"--ctf --flatten_solvent --zero_mask --oversampling 1 --healpix_order 2 --auto_local_healpix_order 4 --low_resol_join_halves 40 --norm --scale  --j 1 --memory_per_thread 4"</code>
-			</format>
 			<group>1</group>
 		</attributes>
 	</parameter>	
@@ -92,11 +88,11 @@ Mike -->
     <parameter isinput = "1" type = "InFile">
 	  <name>infile</name>
 	  <attributes>
-	    <prompt>Images File (FASTA format)</prompt>
-		<filenames>input.images</filenames>
+	    <prompt>Image File</prompt>
+        <!-- <filenames>infile</filenames> -->
 		<format>
 		  <language>perl</language>
-		  <code>"-i input.images"</code>
+		  <code>"--i $value"</code>
 		</format>
 	    <group>90</group>
 	  </attributes>	  
@@ -116,7 +112,7 @@ Mike -->
 	    <name>particle_diameter</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Particle diameter (Angstroms)</prompt>
+		    <prompt>Particle diameter, in angstroms (particle_diameter)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--particle_diameter $value"</code>
@@ -132,10 +128,10 @@ Mike -->
     </parameter>
 
     <parameter type="Float" issimple="1" ismandatory="1">
-	    <name>pixel_size</name>
+	    <name>angpix</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Pixel size of data (Angstroms/pix)</prompt>
+		    <prompt>Pixel size of data, in angstroms/pixel (angpix)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--angpix $value"</code>
@@ -144,17 +140,17 @@ Mike -->
 			    <ctrl>
                     <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
 				    <language>perl</language>
-				    <code>$pixel_size &lt; 0.01</code>
+				    <code>$angpix &lt; 0.01</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>classes</name>
+	    <name>K</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Number of classes</prompt>
+		    <prompt>Number of classes (K)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--K $value"</code>
@@ -163,17 +159,17 @@ Mike -->
 			    <ctrl>
                     <message>Please enter an integer > 0 for the number of classes</message>
 				    <language>perl</language>
-				    <code>$classes &lt; 1</code>
+				    <code>$K &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>iterations</name>
+	    <name>iter</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Number of iterations</prompt>
+		    <prompt>Number of iterations (iter)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--iter $value"</code>
@@ -185,20 +181,20 @@ Mike -->
 			    <ctrl>
                     <message>Please enter an integer > 0 for the number of iterations</message>
 				    <language>perl</language>
-				    <code>$iterations &lt; 1</code>
+				    <code>$iter &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>angular_sampling</name>
+	    <name>psi_step</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>In-plane angular sampling</prompt>
+		    <prompt>In-plane angular sampling (psi_step)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--psi_step 2 * $value"</code>
+			    <code>"--psi_step " . 2 * $value</code>
 		    </format>
 		    <vdef>
 			    <value>5</value>
@@ -207,17 +203,17 @@ Mike -->
 			    <ctrl>
                     <message>Please enter an integer > 0 for the in-plane angular sampling</message>
 				    <language>perl</language>
-				    <code>$angular_sampling &lt; 1</code>
+				    <code>$psi_step &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>pixel_range</name>
+	    <name>offset_range</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Pixel search range (pixels)</prompt>
+		    <prompt>Pixel search range, in pixels (offset_range)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--offset_range $value"</code>
@@ -229,20 +225,20 @@ Mike -->
 			    <ctrl>
                     <message>Please enter an integer > 0 for the pixel search range (in pixels)</message>
 				    <language>perl</language>
-				    <code>$pixel_range &lt; 1</code>
+				    <code>$offset_range &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>step_size</name>
+	    <name>offset_step</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Pixel search range step size (pixels)</prompt>
+		    <prompt>Pixel search range step size, in pixels (offset_step)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--offset_step 2 * $value"</code>
+			    <code>"--offset_step " . 2 * $value</code>
 		    </format>
 		    <vdef>
 			    <value>1</value>
@@ -251,7 +247,7 @@ Mike -->
 			    <ctrl>
                     <message>Please enter an integer > 0 for the pixel search range step size (in pixels)</message>
 				    <language>perl</language>
-				    <code>$step_size &lt; 1</code>
+				    <code>$offset_step &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
@@ -263,7 +259,7 @@ Mike -->
 	    <attributes>
 		    <group>1</group>
 		    <paramfile>scheduler.conf</paramfile>
-		    <prompt>Maximum Relion runtime (hours)</prompt>
+		    <prompt>Maximum Relion runtime in hours (runtime)</prompt>
 		    <vdef>
 			    <value>12</value>
 		    </vdef>
@@ -287,22 +283,22 @@ Mike -->
     </parameter>
 
     <parameter type="String" issimple="1" ismandatory="1">
-	    <name>basename</name>
+	    <name>o</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Basename to use for the output file</prompt>
+		    <prompt>Output directory name (o)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"-o $value"</code>
+			    <code>"--o $value"</code>
 		    </format>
 		    <comment>
-			    <value>This value determines the name of output files.</value>
+			    <value>Name of output directory.</value>
 		    </comment>
 		    <ctrls>
 			    <ctrl>
-				    <message>Please enter a string for the base name of the output file</message>
+				    <message>Please enter a string for the output directory name</message>
 				    <language>perl</language>
-				    <code>!$basename</code>
+				    <code>!$o</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
@@ -310,74 +306,56 @@ Mike -->
 
     <!-- Advanced parameters -->
     
-    <parameter type="Excl" ismandatory="1">
-	    <name>ctf_correction</name>
+    <parameter type="Switch">
+	    <name>ctf</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Do CTF correction?</prompt>
+		    <prompt>Do CTF correction (ctf) </prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--ctf $value"</code>
+                <code>($value) ? " --ctf" : ""</code>
 		    </format>
-            <vlist>
-                <value>yes</value>
-                <label>Yes</label>
-                <value>no</value>
-                <label>No</label>
-            </vlist>
             <vdef>
-                <value>yes</value>
+                <value>1</value>
             </vdef>
 	    </attributes>
     </parameter>
 
-    <parameter type="Excl" ismandatory="1">
-	    <name>phase_flipped</name>
+    <parameter type="Switch">
+	    <name>ctf_phase_flipped</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Have data been phase-flipped</prompt>
+		    <prompt>Have data been phase-flipped (ctf_phase_flipped)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--ctf_phase_flipped $value"</code>
+			    <code>($value) ? " --ctf_phase_flipped" : ""</code>
 		    </format>
-            <vlist>
-                <value>yes</value>
-                <label>Yes</label>
-                <value>no</value>
-                <label>No</label>
-            </vlist>
             <vdef>
-                <value>no</value>
+                <value>0</value>
             </vdef>
 	    </attributes>
     </parameter>
 
-    <parameter type="Excl" ismandatory="1">
-	    <name>ignore_ctfs</name>
+    <parameter type="Switch">
+	    <name>ctf_intact_first_peak</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Ignore CTFs until first peak</prompt>
+		    <prompt>Ignore CTFs until first peak (ctf_intact_first_peak)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--ctf_intact_first_peak $value"</code>
+			    <code>($value) ? " --ctf_intact_first_peak" : ""</code>
 		    </format>
-            <vlist>
-                <value>yes</value>
-                <label>Yes</label>
-                <value>no</value>
-                <label>No</label>
-            </vlist>
             <vdef>
-                <value>no</value>
+                <value>0</value>
             </vdef>
 	    </attributes>
     </parameter>
 
     <parameter type="Integer" ismandatory="1">
-	    <name>regularization</name>
+	    <name>tau2_fudge</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Regularization parameter</prompt>
+		    <prompt>Regularization parameter (tau2_fudge)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--tau2_fudge $value"</code>
@@ -389,20 +367,20 @@ Mike -->
 			    <ctrl>
 				    <message>Please enter an integer between 1 and 4, inclusively, for the regularization parameter</message>
 				    <language>perl</language>
-				    <code>$regularization &lt; 1 || $regularization &gt; 4</code>
+				    <code>$tau2_fudge &lt; 1 || $tau2_fudge &gt; 4</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
-    <parameter type="Integer" ismandatory="1">
-	    <name>e_step_limit</name>
+    <parameter type="Integer">
+	    <name>strict_highres_exp</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Limit resolution E-step to (Angstroms)</prompt>
+		    <prompt>Limit resolution E-step to, in angstroms (strict_highres_exp)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--strict_highres_exp $value"</code>
+			    <code>($value) ? "--strict_highres_exp $value" : ""</code>
 		    </format>
 		    <vdef>
 			    <value>-1</value>
@@ -411,29 +389,23 @@ Mike -->
 			    <ctrl>
                     <message>Please enter a non-zero integer > -1 for E-step resolution limit (in Angstroms)</message>
 				    <language>perl</language>
-				    <code>$e_step_limit &lt; -1 || $e_step_limit == 0</code>
+				    <code>defined $strict_highres_exp &amp;&amp; ( $strict_highres_exp &lt; -1 || $strict_highres_exp == 0 )</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
     </parameter>
 
-    <parameter type="Excl" ismandatory="1">
-	    <name>image_alignment</name>
+    <parameter type="Switch">
+	    <name>skip_align</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Perform image alignment</prompt>
+		    <prompt>Skip image alignment (skip_align)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--skip_align $value"</code>
+			    <code>($value) ? " --skip_align" : ""</code>
 		    </format>
-            <vlist>
-                <value>yes</value>
-                <label>Yes</label>
-                <value>no</value>
-                <label>No</label>
-            </vlist>
             <vdef>
-                <value>yes</value>
+                <value>0</value>
             </vdef>
 	    </attributes>
     </parameter>
