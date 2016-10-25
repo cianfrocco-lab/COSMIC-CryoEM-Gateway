@@ -108,7 +108,7 @@ Mike -->
 	    <filenames>*</filenames>
 	  </attributes>
 	</parameter>
-	  	
+    
 <!-- visible input parameters -->	
 
     <parameter type="Integer" issimple="1" ismandatory="1">
@@ -118,7 +118,7 @@ Mike -->
 		    <prompt>Diameter of particle, in angstroms (particle_diameter)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"—-particle_diameter $value"</code>
+			    <code>"--particle_diameter $value"</code>
 		    </format>
 		    <ctrls>
 			    <ctrl>
@@ -137,7 +137,7 @@ Mike -->
 		    <prompt>Pixel size of data, in angstroms/pixel (angpix)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"—angpix $value"</code>
+			    <code>"--angpix $value"</code>
 		    </format>
             <ctrls>
                 <ctrl>
@@ -517,7 +517,7 @@ Mike -->
             </vdef>
 		    <format>
 			    <language>perl</language>
-			    <code>"--offset_step " . 2 * $value"</code>
+			    <code>"--offset_step " . 2 * $value</code>
 		    </format>
 		    <ctrls>
 			    <ctrl>
@@ -683,29 +683,6 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <!--
-    <parameter type="Excl" ismandatory="1">
-	    <name>angular_search</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Perform local angular searches</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"-o $value"</code>
-		    </format>
-            <vlist>
-                <value>yes</value>
-                <label>Yes</label>
-                <value>no</value>
-                <label>No</label>
-            </vlist>
-            <vdef>
-                <value>no</value>
-            </vdef>
-	    </attributes>
-    </parameter>
-    -->
-
     <parameter type="Integer">
 	    <name>sigma_ang</name>
 	    <attributes>
@@ -713,7 +690,7 @@ Mike -->
 		    <prompt>Local angular search range, in degrees (sigma_ang)</prompt>
 		    <format>
 			    <language>perl</language>
-                <code>($value) ? " --sigma_ang " . sprintf('%.6f',$value/3) : ""</code>
+                <code>($value) ? "--sigma_ang " . sprintf('%.6f',$value/3) : ""</code>
 		    </format>
             <ctrls>
                 <ctrl>
