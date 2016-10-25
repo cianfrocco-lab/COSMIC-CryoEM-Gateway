@@ -174,7 +174,7 @@
 			</Tool>
 			<Tool id="RELION_3D_REFINE_COMET" name="Relion on Comet"
 				toolresource="comet"
-				configfile="pisexml/relion_3d_refine.xml"
+				configfile="pisexml/relion_3d_refine_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
 				<InputParameters>
 					<InputParameter id="infile_" entityType="UNKNOWN"
