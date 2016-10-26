@@ -89,7 +89,6 @@ Mike -->
 	  <name>infile</name>
 	  <attributes>
 	    <prompt>Image File</prompt>
-        <!-- <filenames>infile</filenames> -->
 		<format>
 		  <language>perl</language>
 		  <code>"--i $value"</code>

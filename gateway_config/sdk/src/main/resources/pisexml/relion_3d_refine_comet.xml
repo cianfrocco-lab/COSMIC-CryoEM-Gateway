@@ -92,7 +92,6 @@ Mike -->
 	  <name>infile</name>
 	  <attributes>
 	    <prompt>Images File</prompt>
-        <!-- <filenames>infile</filenames> -->
 		<format>
 		  <language>perl</language>
 		  <code>"--i $value"</code>
@@ -158,7 +157,6 @@ Mike -->
 			    <language>perl</language>
 			    <code>"--ref $value"</code>
 		    </format>
-		    <filenames>ref</filenames>
             <ctrls>
                 <ctrl>
                     <message>Please choose a reference map file</message>
