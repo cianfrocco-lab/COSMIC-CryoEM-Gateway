@@ -16,6 +16,23 @@
 	<command>sleep</command>
 	
 	<parameters>
+        <!-- build the conf file -->
+        <parameter ishidden="1" type="String">
+            <name>sleep_scheduler</name>
+            <attributes>
+                <paramfile>scheduler.conf</paramfile>
+                <format>
+                    <language>perl</language>
+                    <code>
+                        "ntasks-per-node=3\\n" .
+                        "nodes=1\\n" .
+                        "cores_per_node=1\\n" .
+                        "runhours=0.25\\n"
+                    </code>
+                </format>
+                <group>1</group>
+            </attributes>
+        </parameter>
 
 		<parameter ishidden="1" type="String">
 			<name>command_part1</name>
@@ -78,7 +95,6 @@
 			<name>infile</name>
 			<attributes>
 				<group>1</group>
-				<filenames>dummy_file.txt</filenames>
 			</attributes>
 		</parameter>
 
@@ -88,9 +104,5 @@
 				<filenames>*</filenames>
 			</attributes>
 		</parameter>
-
-
-
-
 	</parameters>
 </pise>
