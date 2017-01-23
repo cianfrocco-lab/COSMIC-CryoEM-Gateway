@@ -45,6 +45,26 @@ Let me know what else I can do to help!
 Mike -->
 
 <parameters>
+    <!-- Configure wrapper -->
+    <!-- Wrapper runs after job is already submitted so this won't work for
+         us-->
+    <!--
+    <parameter ishidden="1" type="String">
+        <name>wrapper_2d</name>
+        <attributes>
+            <precond>
+                <language>perl</language>
+                <code>$bam_index</code>
+            </precond> 
+            <format>
+                <language>perl</language>
+                <code>'comet_relion_2d_wrapper.bash'</code>
+            </format>
+            <group>0</group>
+        </attributes>
+    </parameter>
+    -->
+
 <!-- command name: this parameter precedes all instruction strings -->
     <parameter ishidden="1" type="String"> 
 	  <name>relion_invoke</name>
@@ -65,10 +85,8 @@ Mike -->
 			<format>
 				<language>perl</language>
 				<code>
-<!-- RUN THESE JOBS ON Comet -->
-				 "ntasks-per-node=15\\n" .
-				 "node_exclusive=1\\n" .
-				 "nodes=10\\n"
+				 "ntasks-per-node=24\\n" .
+				 "nodes=1\\n"
 				</code>
 			</format>
 			<group>1</group>
@@ -76,7 +94,7 @@ Mike -->
 	</parameter>	
 
 <!-- create the non-configurable command line -->
-<!--  -->
+
 	<parameter ishidden="1" type="String">
 		<name>relion_commandline</name>
 		<attributes>
@@ -85,7 +103,7 @@ Mike -->
 	</parameter>	
 
 <!-- required input file, this is selected outside the parameters gui -->
-    <parameter isinput = "1" type = "InFile">
+    <parameter isinput="1" type="InFile">
 	  <name>infile</name>
 	  <attributes>
 	    <prompt>Image File</prompt>
