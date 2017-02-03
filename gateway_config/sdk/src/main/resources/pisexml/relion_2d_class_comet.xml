@@ -117,9 +117,9 @@ Mike -->
 	
 <!-- output all results files -->
 	<parameter type="Results">
-	  <name>all_outputfiles</name>
+	  <name>result_output</name>
 	  <attributes>
-	    <filenames>*</filenames>
+          <filenames>output.tar.gz</filenames>
 	  </attributes>
 	</parameter>
 	  	
