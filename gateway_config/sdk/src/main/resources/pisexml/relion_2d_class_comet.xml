@@ -115,9 +115,9 @@ Mike -->
 	  </attributes>	  
 	</parameter>
 	
-<!-- output all results files -->
+<!-- Retrieve compressed file containing Relion outputs -->
 	<parameter type="Results">
-	  <name>result_output</name>
+	  <name>relion_output</name>
 	  <attributes>
           <filenames>output.tar.gz</filenames>
 	  </attributes>

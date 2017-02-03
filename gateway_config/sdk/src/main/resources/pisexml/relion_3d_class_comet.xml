@@ -97,11 +97,11 @@ Mike -->
 	  </attributes>	  
 	</parameter>
 	
-<!-- output all results files -->
+<!-- Retrieve compressed file containing Relion outputs -->
 	<parameter type="Results">
-	  <name>all_outputfiles</name>
+	  <name>relion_output</name>
 	  <attributes>
-	    <filenames>*</filenames>
+	    <filenames>output.tar.gz</filenames>
 	  </attributes>
 	</parameter>
 	  	
@@ -142,6 +142,28 @@ Mike -->
                     <code>$angpix &lt; 0.01</code>
                 </ctrl>
             </ctrls>
+	    </attributes>
+    </parameter>
+
+    <parameter type="Integer" issimple="1" ismandatory="1">
+	    <name>iter</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Number of iterations (iter)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--iter $value"</code>
+		    </format>
+		    <vdef>
+			    <value>25</value>
+		    </vdef>
+		    <ctrls>
+			    <ctrl>
+                    <message>Please enter an integer > 0 for the number of iterations</message>
+				    <language>perl</language>
+				    <code>$iter &lt; 1</code>
+			    </ctrl>
+		    </ctrls>
 	    </attributes>
     </parameter>
 
@@ -491,6 +513,7 @@ Mike -->
     </parameter>
 
     <!-- set the run time -->		
+    <!-- will be calculated by the submit script instead of having user set it
     <parameter type="Float" issimple="1" ismandatory="1">
 	    <name>runtime</name>
 	    <attributes>
@@ -518,6 +541,7 @@ Mike -->
 		    </format>
 	    </attributes>
     </parameter>
+    -->
 
     <parameter type="String" issimple="1" ismandatory="1">
 	    <name>o</name>
