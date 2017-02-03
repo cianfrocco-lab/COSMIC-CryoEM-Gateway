@@ -153,11 +153,14 @@ Mike -->
 			    <language>perl</language>
 			    <code>"--angpix $value"</code>
 		    </format>
+		    <vdef>
+			    <value>-1</value>
+		    </vdef>
 		    <ctrls>
 			    <ctrl>
                     <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
 				    <language>perl</language>
-				    <code>$angpix &lt; 0.01</code>
+                    <code>$angpix &lt; 0.01 &amp;&amp; $angpix != -1</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
