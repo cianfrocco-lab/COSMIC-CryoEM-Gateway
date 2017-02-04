@@ -948,7 +948,6 @@ public class DataManager extends FolderManager
             try 
 		    {
 			    String theData = getSourceDataAsString(sourceDocument);
-                logger.debug ( "*** MONA : theData = " + theData );
 			    if (theData != null)
 			    {
 				    //TODO: make sure the saved data item isn't meant to be rendered as HTML
