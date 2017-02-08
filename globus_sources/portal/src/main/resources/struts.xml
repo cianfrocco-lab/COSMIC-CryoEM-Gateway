@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+	 "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+
+    <!-- ========================================== Configuration File Includes -->
+    <!-- Include Struts 2 default configuration (from Struts 2 JAR) -->
+    <include file="struts-default.xml"/>
+
+    <!-- =================================================== Property Constants -->
+	<!-- changed limit to use a build property. -->
+	<constant name="struts.multipart.maxSize" value="${portal.upload.size.limit}" />
+
+    <!-- constant name="struts.devMode" value="true"/ -->
+    <constant name="struts.i18n.encoding" value="UTF-8"/>
+    <constant name="struts.custom.i18n.resources" value="MessageResources,errors,tools"/>
+    <!-- constant name="strus.ui.theme" value="css_xhtml"/ -->
+    <constant name="struts.enable.SlashesInActionNames" value="true"/>
+    <!--constant name="struts.codebehind.pathPrefix" value="/pages/"/-->
+
+	<constant name="struts.enable.DynamicMethodInvocation" value="true" />
+
+	<!-- Excludes url http://host/app/upload from handling by struts.  Only one allowed. -->
+	<!-- For tus file upload -->
+	<!--
+	<constant name="struts.action.excludePattern" value="/files,/files/[0-9a-zA-Z_]*,/pages/tus,/pages/tus/.*"/>
+	-->
+	<constant name="struts.action.excludePattern" value="/files,/files/[0-9a-zA-Z_]*"/>
+
+    <!-- ============================================================= Packages -->
+    <!-- Default NGBW web application package -->
+    <package name="default" extends="struts-default">
+
+		
+
+        <!-- ===================================================== Interceptors -->
+        <interceptors>
+
+            <!-- User authentication interceptor -->
+            <interceptor name="authentication"
+                class="org.ngbw.web.interceptors.AuthenticationInterceptor"/>
+
+            <!-- Login interceptor -->
+            <interceptor name="loginInter"
+                class="org.ngbw.web.interceptors.LoginInterceptor"/>
+
+            <!-- Menu navigation interceptor -->
+            <interceptor name="navigation"
+                class="org.ngbw.web.interceptors.NavigationInterceptor"/>
+
+
+            <!-- Copied from struts-default.xml and changed validation exclude methods -->
+            <interceptor-stack name="defaultStack">
+                <interceptor-ref name="exception"/>
+                <interceptor-ref name="alias"/>
+                <interceptor-ref name="servletConfig"/>
+                <interceptor-ref name="prepare"/>
+                <interceptor-ref name="i18n"/>
+                <interceptor-ref name="chain"/>
+                <interceptor-ref name="debugging"/>
+                <interceptor-ref name="profiling"/>
+                <interceptor-ref name="scopedModelDriven"/>
+                <interceptor-ref name="modelDriven"/>
+                <interceptor-ref name="fileUpload">
+                    <param name="maximumSize">${portal.upload.size.limit}</param>
+                </interceptor-ref>
+                <interceptor-ref name="checkbox"/>
+                <interceptor-ref name="staticParams"/>
+                <interceptor-ref name="params">
+                    <!--
+                    <param name="excludeParams">dojo\..*</param>
+                    -->
+                    <param name="excludeParams">dojo\..*,^struts\..*,struts.token,struts.token.name</param>   
+                </interceptor-ref> 
+                <interceptor-ref name="conversionError"/>
+                <interceptor-ref name="validation">
+                    <param name="excludeMethods">cancel,execute,delete,edit,list</param>
+                </interceptor-ref>
+                <interceptor-ref name="workflow">
+                    <param name="excludeMethods">input,back,cancel,browse</param>
+                </interceptor-ref>
+            </interceptor-stack>
+
+            <!-- Basic user authentication interceptor stack -->
+            <interceptor-stack name="authenticationStack">
+                <interceptor-ref name="defaultStack">
+                    <!-- log stack traces for uncaught exceptions -->
+                    <param name="exception.logEnabled">true</param>
+                    <param name="exception.logLevel">ERROR</param>
+                </interceptor-ref>
+                <interceptor-ref name="authentication"/>
+            </interceptor-stack>
+
+            <interceptor-stack name="loginStack">
+                <interceptor-ref name="defaultStack" />
+                <interceptor-ref name="loginInter"/>
+            </interceptor-stack>
+
+        </interceptors>
+
+        <default-interceptor-ref name="authenticationStack"/>
+
+        <!-- =================================================== Global Results -->
+                     
+        <global-results>
+            <result name="welcome" type="redirectAction">welcome</result>
+            <result name="home" type="redirectAction">home</result>
+            <result name="login" type="redirectAction">login!input</result>
+            <result name="error">/pages/error.jsp</result>
+        </global-results>
+        
+        <global-allowed-methods>
+			input
+		</global-allowed-methods>
+
+        <!-- Has to come after global-results -->
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Exception" result="error" />
+        </global-exception-mappings>
+
+        <!-- ========================================================== Actions -->
+        <!-- Top-level NGBW menu pages -->
+        <action name="welcome">
+            <interceptor-ref name="defaultStack"/>
+            <!--result>/pages/user/login.jsp</result -->
+            <result type="redirectAction">home</result>
+        </action>
+
+        <action name="download" class="org.ngbw.web.actions.DownloadAction">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success" type="stream">
+                <param name="contentType">${getContentType()}</param>
+                <param name="inputName">inputStream</param>
+                <param name="bufferSize">4096</param>
+                <param name="contentDisposition">${getContentDisposition()}</param>
+            </result>
+        </action>
+
+        <action name="home" class="org.ngbw.web.actions.NgbwSupport">
+            <result>/pages/user/home.jsp</result>
+        </action>
+
+
+        <action name="taskupdate" class="org.ngbw.web.actions.TaskUpdate">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success">/pages/user/taskupdateok.txt</result>
+            <result name="error">/pages/user/taskupdateerror.txt</result>
+        </action>
+
+
+
+<!--STATISTICS -->
+        <action name="statistics" class="org.ngbw.web.actions.RegisterStatistics">
+            <interceptor-ref name="defaultStack"/> <!-- This line is that the login page is not shown -->
+            <result>/pages/user/statistics.jsp</result>
+        </action>
+<!-- PROFILE -->
+        <!--
+        <action name="profile" class="org.ngbw.web.actions.ProfileManager">
+            <result>/pages/user/profile.jsp</result>
+        </action>
+        -->
+        <!-- Start: Globus Auth & Transfer actions -->
+        <action name="profile" class="edu.sdsc.globusauth.action.ProfileAction">
+            <result name="success">/pages/oauth/profile.jsp</result>
+            <result name="failure">/pages/error.jsp</result>
+            <result name="transfer" type="redirectAction">transfer</result>
+        </action>
+
+        <action name="transfer" class="edu.sdsc.globusauth.action.TransferAction" method="transfer">
+            <result name="success">/pages/oauth/transfer.jsp</result>
+            <result name="transferstatus" type="redirectAction">status?taskId=${taskId}</result>
+            <result name="dataendpoints" type="redirectAction">endpointlist?empty=true</result>
+            <result name="failure">/pages/error.jsp</result>
+        </action>
+
+        <action name="status" class="edu.sdsc.globusauth.action.TransferStatusAction" method="transfer_status">
+            <result name="success">/pages/oauth/transfer_status.jsp</result>
+            <result name="failure">/pages/error.jsp</result>
+        </action>
+
+        <action name="endpointlist" class="edu.sdsc.globusauth.action.EndpointListAction" method="endpoint_list">
+            <result name="success">/pages/oauth/endpoint_list.jsp</result>
+            <result name="failure">/pages/error.jsp</result>
+        </action>
+
+        <action name="signup" class="org.ngbw.web.actions.NgbwSupport">
+            <interceptor-ref name="defaultStack"/>
+            <result type="redirectAction">authcallback?signup=true</result>
+        </action>
+
+        <action name="login" class="edu.sdsc.globusauth.action.LoginAction" method="authcallback">
+            <interceptor-ref name="loginStack"/>
+            <result name="input">/pages/user/login.jsp</result>
+            <result name="authcallback" type="redirectAction">authcallback</result>
+            <allowed-methods>authcallback,input</allowed-methods>
+        </action>
+
+        <action name="authcallback" class="edu.sdsc.globusauth.action.AuthCallbackAction" method="globuslogin">
+            <interceptor-ref name="defaultStack"/>
+            <result name="failure">/pages/error.jsp</result>
+            <result name="profileredirect" type="redirectAction">profile</result>
+            <result name="authredirect" type="redirect">${authurl}</result>
+            <result name="transfer" type="redirectAction">transfer</result>
+            <result name="success" type="redirectAction">home</result>
+            <result name="dataendpoints" type="redirectAction">endpointlist?empty=true</result>
+            <allowed-methods>input,globuslogin</allowed-methods>
+        </action>
+
+        <action name="logout" class="edu.sdsc.globusauth.action.LogoutAction" method="globuslogout">
+            <interceptor-ref name="defaultStack"/>
+            <result type="redirect">${logouturl}</result>
+        </action>
+        <!-- End: Globus Auth & Transfer actions -->
+
+        <!-- TOOLKIT -->
+        <action name="tools" class="org.ngbw.web.actions.NgbwSupport" method="changeToolTab">
+          <interceptor-ref name="defaultStack"/>
+          <result name="list">/pages/user/tools.jsp</result>
+          <result name="display">/pages/user/displayTool.jsp</result>
+        </action>
+
+        <action name="contact" class="org.ngbw.web.actions.NgbwSupport">
+            <interceptor-ref name="defaultStack"/>
+            <result>/pages/static/contact.jsp</result>
+        </action>
+
+        <action name="help" class="org.ngbw.web.actions.NgbwSupport">
+            <interceptor-ref name="defaultStack"/>
+            <result>/pages/static/help.jsp</result>
+        </action>
+
+        <!-- Unavailable pages -->
+        <action name="unavailable" class="org.ngbw.web.actions.NgbwSupport">
+            <interceptor-ref name="defaultStack"/>
+            <result>/pages/user/unavailable.jsp</result>
+        </action>
+<!--REGISTER.USER-->
+        <!-- NBGW session management pages -->
+        <action name="register" class="org.ngbw.web.actions.RegisterUser">
+            <interceptor-ref name="defaultStack"/>
+            <result name="input">/pages/user/register.jsp</result>
+            <result name="cancel" type="redirectAction">home</result>
+            <result name="success" type="redirectAction">home</result>
+			<allowed-methods>register,cancel</allowed-methods>
+        </action>
+        <action name="guestLogin" class="org.ngbw.web.actions.FolderManager" method="guestLogin">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success">/pages/user/home.jsp</result>
+            <result name="input">/pages/user/home.jsp</result>
+        </action>
+
+        <!-- Login via iplant link takes us to this action, shibboleth protection will take us
+        to shibboleth login page (if we don't already have a shibboleth session) before this
+        action is invoked.
+        -->
+        <action name="iplantLogin" class="org.ngbw.web.actions.FolderManager" method="iplantLogin">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success" type="redirectAction">home</result> 
+            <result name="input">/pages/user/login.jsp</result>
+            <result name="iplant_register">/pages/user/iplantRegister.jsp</result>
+        </action>
+        <!--
+        <action name="login" class="org.ngbw.web.actions.FolderManager" method="login">
+            <interceptor-ref name="loginStack"/>
+            <result name="success" type="redirectAction">home</result>
+            <result name="input">/pages/user/login.jsp</result>
+            <result name="iplant_register">/pages/user/iplantRegister.jsp</result>
+			<allowed-methods>input,login</allowed-methods>
+        </action>
+        -->
+        <!-- We get here when someone logs in via shibbleth and doesn't already have a cipres account -->
+        <action name="iplantRegister" class="org.ngbw.web.actions.FolderManager" method="iplantRegister">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success" type="redirectAction">home</result> 
+            <result name="input">/pages/user/iplantRegister.jsp</result>
+            <!--
+            <result name="localLogout" type="redirect">/Shibboleth.sso/LocalLogout</result>
+            -->
+        </action>
+
+        <!--
+        <action name="logout" class="org.ngbw.web.actions.SessionManager" method="logout">
+            <interceptor-ref name="defaultStack"/>
+            <result type="redirectAction">welcome</result>
+            <result name="iplant_logout" type="redirect">/Shibboleth.sso/Logout</result>
+        </action>
+        -->
+
+        <action name="forgotPassword" class="org.ngbw.web.actions.SessionManager" method="sendPasswordReset">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success">/pages/user/forgotPassword.jsp</result>
+            <result name="input">/pages/user/forgotPassword.jsp</result>
+			<allowed-methods>input</allowed-methods>
+        </action>
+
+        <action name="resetPassword" class="org.ngbw.web.actions.ProfileManager" method="confirmPasswordReset">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success">/pages/user/profile.jsp</result>
+            <result name="input">/pages/user/forgotPassword.jsp</result>
+        </action>
+
+        <!-- NGBW profile management pages -->
+        <action name="updatePassword" class="org.ngbw.web.actions.ProfileManager"
+            method="updatePassword">
+            <result name="success">/pages/user/profile.jsp</result>
+            <result name="input">/pages/user/updatePassword.jsp</result>
+			<allowed-methods>input</allowed-methods>
+        </action>
+        <action name="updateProfile" class="org.ngbw.web.actions.ProfileManager"
+            method="updatePersonalInformation">
+            <result name="success">/pages/user/profile.jsp</result>
+            <result name="input">/pages/user/updateProfile.jsp</result>
+			<allowed-methods>input</allowed-methods>
+        </action>
+
+        <!-- NGBW folder management pages -->
+        <action name="folder" class="org.ngbw.web.actions.FolderManager" method="input">
+            <result name="list">/pages/user/home.jsp</result>
+            <result name="display">/pages/user/home.jsp</result>
+            <result name="input">/pages/user/folder/folderForm.jsp</result>
+			<allowed-methods>create,edit,delete,list,display</allowed-methods>
+        </action>
+        <action name="saveFolder" class="org.ngbw.web.actions.FolderManager" method="save">
+            <result name="list" type="redirectAction">home</result> 
+            <result name="display" type="redirectAction">home</result>
+            <result name="input">/pages/user/folder/folderForm.jsp</result>
+			<allowed-methods>cancel</allowed-methods>
+        </action>
+
+        <!-- NGBW data management pages-->
+        <action name="data" class="org.ngbw.web.actions.DataManager">
+            <result name="list">/pages/user/data/dataList.jsp</result>
+            <result name="display">/pages/user/data/displayData.jsp</result>
+            <result name="task" type="redirectAction">createTask</result>
+            <result name="download" type="stream">
+                <param name="parse">true</param>
+                <param name="contentType">${contentType}</param>
+                <param name="contentLength">${dataLength}</param>
+                <param name="contentDisposition">attachment; filename="${filename}"</param>
+            </result>
+            <result name="archiveData" type="redirectAction">archiveData</result>
+			<allowed-methods>setPage,display,cancel,list,download,delete</allowed-methods>
+        </action>
+        <action name="archiveData" class="org.ngbw.web.actions.ArchiveManager" method="download">
+            <result name="download" type="stream">
+                <param name="parse">true</param>
+                <param name="contentType">${contentType}</param>
+                <param name="contentDisposition">attachment; filename="${filename}"</param>
+            </result>
+        </action>
+        <action name="paginateData" class="org.ngbw.web.actions.DataManager" method="paginate">
+            <result name="list">/pages/user/data/dataList.jsp</result>
+        </action>
+        <action name="pasteData" class="org.ngbw.web.actions.CreateData">
+            <result name="list" type="redirectAction">data!list</result>
+            <result name="display" type="redirectAction">data!display</result>
+            <result name="input">/pages/user/data/pasteForm.jsp</result>
+			<allowed-methods>upload,executePaste,cancel</allowed-methods>
+        </action>
+        <action name="uploadData" class="org.ngbw.web.actions.CreateData">
+            <result name="list" type="redirectAction">data!list</result>
+            <result name="display" type="redirectAction">data!display</result>
+            <result name="input">/pages/user/data/uploadForm.jsp</result>
+			<allowed-methods>upload</allowed-methods>
+        </action>
+        <!-- this is invoked by the Jupload applet, included in uploadForm.jsp, stream result goes back to the applet. -->
+        <action name="uploadFiles" class="org.ngbw.web.actions.CreateData" method="uploadFiles">
+            <result name="uploadStatus" type="stream">
+                <param name="contentType">text/plain</param>
+                <param name="inputName">uploadStatus</param>
+            </result>
+        </action>
+        <action name="searchData" class="org.ngbw.web.actions.SearchData" method="reload">
+            <result name="input">/pages/user/data/searchForm.jsp</result>
+            <result name="display">/pages/user/data/displaySearchResult.jsp</result>
+			<allowed-methods>execute,save,list,setPage,displayResultItem,changeTab,saveSelected</allowed-methods>
+        </action>
+        <action name="paginateSearch" class="org.ngbw.web.actions.SearchData" method="paginate">
+            <result name="input">/pages/user/data/searchForm.jsp</result>
+        </action>
+
+        <action name="tus" class="org.ngbw.web.actions.NgbwSupport">
+            <result>/pages/tus/index.jsp</result>
+        </action>
+
+
+        <!-- Task management -->
+        <action name="task" class="org.ngbw.web.actions.ManageTasks">
+            <result name="list">/pages/user/task/taskList.jsp</result>
+            <result name="display">/pages/user/task/displayTask.jsp</result>
+            <result name="displayInput">/pages/user/task/displayInput.jsp</result>
+            <result name="displayParameters">/pages/user/task/displayParameters.jsp</result>
+            <result name="displayOutputList">/pages/user/task/displayOutputList.jsp</result>
+            <result name="displayWorkingDirectory">/pages/user/task/displayWorkingDirectory.jsp</result>
+            <result name="invalid.token" type="redirectAction">home</result>
+			<allowed-methods>
+				list,display,displayInput,displayParameters,displayWorkingDirectory,delete,refresh,setPage,
+				cancel,downloadSelected,deleteSelected
+			</allowed-methods>
+        </action>
+        <action name="paginateTasks" class="org.ngbw.web.actions.ManageTasks" method="paginate">
+            <result name="list">/pages/user/task/taskList.jsp</result>
+            <result name="invalid.token" type="redirectAction">home</result>
+        </action>
+
+        <!-- Task creation -->
+        <action name="createTask" class="org.ngbw.web.actions.CreateTask">
+
+            <interceptor-ref name="tokenSession">
+                <param name="includeMethods">execute,cancel</param>
+            </interceptor-ref>
+            <interceptor-ref name="authenticationStack"/>
+
+            <result name="list_error">pages/user/task/taskList.jsp</result>
+            <result name="list" type="redirectAction">task!list</result>
+            <result name="display" type="redirectAction">task!display</result>
+            <result name="input">/pages/user/task/taskForm.jsp</result>
+            <result name="parameters" type="redirectAction">${toolAction}!input</result>
+            <result name="tools">/pages/user/displayTool.jsp</result>
+            <result name="createFolder" type="redirectAction">home</result> 
+            <result name="invalid.token" type="redirectAction">home</result>
+			<allowed-methods>create,selectTool,changeTab,edit,clone,run,execute,cancel</allowed-methods>
+        </action>
+
+        <!-- Task output saving -->
+        <action name="setTaskOutput" class="org.ngbw.web.actions.SetTaskOutput" method="reload">
+            <result name="list">/pages/user/task/taskList.jsp</result>
+            <result name="display">/pages/user/task/displayTask.jsp</result>
+            <result name="displayOutputList">/pages/user/task/displayOutputList.jsp</result>
+            <result name="displayOutput">/pages/user/task/displayOutput.jsp</result>
+            <result name="displayOutputFile" type="stream">
+                <param name="parse">true</param>
+                <param name="contentType">${contentType}</param>
+                <param name="contentLength">${dataLength}</param>
+                <param name="contentDisposition">attachment; filename="${filename}"</param>
+            </result>
+            <result name="archiveData" type="redirectAction">archiveData</result>
+            <result name="displayTransformedOutput">/pages/user/task/displayTransformedOutput.jsp</result>
+            <result name="displayTransformedRecord">/pages/user/task/displayTransformedRecord.jsp</result>
+            <result name="input">/pages/user/task/outputForm.jsp</result>
+			<allowed-methods>
+				input,display,displayOutputFile,displayTransformedOutput,selectOutput,displayOutput,save,downloadSelected,saveSelected,
+				execute,cancel
+			</allowed-methods>
+        </action>
+
+        <!-- Transformed task output results re-paginate -->
+        <action name="paginateOutput" class="org.ngbw.web.actions.SetTaskOutput" method="paginate">
+            <result name="input">/pages/user/task/displayTransformedOutput.jsp</result>
+            <result name="displayTransformedRecord">/pages/user/task/displayTransformedRecord.jsp</result>
+			<allowed-methods>setPage,displayTransformedRecord</allowed-methods>
+        </action>
+
+        <!-- =============================================== AJAX-Based Actions -->
+        <!-- Data upload drop-down list dynamic repopulation -->
+        <action name="dataUploadLists" class="org.ngbw.web.actions.ajax.DataUploadLists">
+            <result type="stream">
+                <param name="contentType">text/xml</param>
+                <param name="inputName">selectState</param>
+            </result>
+        </action>
+
+        <!-- Data search drop-down list dynamic repopulation -->
+        <action name="datasetLists" class="org.ngbw.web.actions.ajax.DatasetLists">
+            <result type="stream">
+                <param name="contentType">text/xml</param>
+                <param name="inputName">selectState</param>
+            </result>
+        </action>
+
+        <!-- Data search drop-down list dynamic repopulation -->
+        <action name="datasetLists" class="org.ngbw.web.actions.ajax.DatasetLists">
+            <result type="stream">
+                <param name="contentType">text/xml</param>
+                <param name="inputName">selectState</param>
+            </result>
+        </action>
+
+        <!-- Dynamic folder expansion in left-panel folder list -->
+        <action name="toggleFolder" class="org.ngbw.web.actions.ajax.ToggleFolder">
+            <result type="stream">
+                <param name="contentType">text/xml</param>
+                <param name="inputName">folder</param>
+            </result>
+        </action>
+
+    </package>
+
+    <!--
+        Include NGBW Struts tool configuration file, must be
+        done after "default" package in order to properly extend it
+    -->
+    <include file="struts-tools.xml"/>
+
+</struts>
