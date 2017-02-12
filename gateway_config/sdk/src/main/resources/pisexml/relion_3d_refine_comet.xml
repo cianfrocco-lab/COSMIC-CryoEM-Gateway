@@ -15,18 +15,18 @@
   </head>
 
   <command>relion_3d_refine_comet</command>
-<!-- 
-Per our conversation earlier today, I’m sending along a comet submission script for the analysis routine that will be a part of the gateway. 
+<!--
+Per our conversation earlier today, I’m sending along a comet submission script for the analysis routine that will be a part of the gateway.
 
-First, you can look at an example submission script that I typically have used (‘relion_refine_submission.txt’). The cluster input variables are standard, 
-and then there is a single command that will run using MPI. 
+First, you can look at an example submission script that I typically have used (‘relion_refine_submission.txt’). The cluster input variables are standard,
+and then there is a single command that will run using MPI.
 
-The barebones version of the command line input is the following (‘relion_refine_submission_base.txt’). I’ve bolded and underlined the areas that users 
-will have to input: 
+The barebones version of the command line input is the following (‘relion_refine_submission_base.txt’). I’ve bolded and underlined the areas that users
+will have to input:
 
-ibrun -v relion_refine_mpi  —o /path/to/working/directory/[output] -*auto_refine -*split_random_halves —i /path/to/working/directory/[input file] 
--*particle_diameter [user provided] —angpix [user provided] —ref /path/to/working/directory/[user provided] -*ini_high [user provided] -*ctf 
--*flatten_solvent -*zero_mask -*oversampling 1 -*healpix_order 2 -*auto_local_healpix_order 4 -*offset_range [user provided] -*offset_step [user provided] 
+ibrun -v relion_refine_mpi  —o /path/to/working/directory/[output] -*auto_refine -*split_random_halves —i /path/to/working/directory/[input file]
+-*particle_diameter [user provided] —angpix [user provided] —ref /path/to/working/directory/[user provided] -*ini_high [user provided] -*ctf
+-*flatten_solvent -*zero_mask -*oversampling 1 -*healpix_order 2 -*auto_local_healpix_order 4 -*offset_range [user provided] -*offset_step [user provided]
 —sym [user provided] -*low_resol_join_halves 40 -*norm -*scale  -*j 1 -*memory_per_thread 4
 
 A list of variables that I would change for these test run (or at least an initial list of variables):
@@ -34,11 +34,11 @@ A list of variables that I would change for these test run (or at least an initi
 —i Input file
 —particle_diameter Diameter of particle (Angstroms)
 —angpix Pixel size of data (A/pix)
-—ref 3D model to use as template 
+—ref 3D model to use as template
 —ini_high Initial filter for 3D volume
-—offset_range Pixel search range 
+—offset_range Pixel search range
 —offset_step Pixel search range step size
-—sym Symmetry of sample 
+—sym Symmetry of sample
 I’m not sure what the next steps are for building out this command, but this is a definite start. There will be a few added changes to the submission command based upon users data, which we will incorporate into the gateway job template page.
 
 Let me know what else I can do to help!
@@ -46,7 +46,7 @@ Mike -->
 
 <parameters>
 <!-- command name: this parameter precedes all instruction strings -->
-    <parameter ishidden="1" type="String"> 
+    <parameter ishidden="1" type="String">
 	  <name>relion_invoke</name>
 	  <attributes>
 	    <format>
@@ -55,8 +55,8 @@ Mike -->
 		</format>
 		<group>0</group>
 	  </attributes>
-	</parameter> 
-	  
+	</parameter>
+
 <!-- build the conf file -->
 	<parameter ishidden="1" type="String">
 		<name>relion_scheduler</name>
@@ -72,7 +72,7 @@ Mike -->
 			</format>
 			<group>1</group>
 		</attributes>
-	</parameter>	
+	</parameter>
 
 <!-- create the non-configurable command line -->
 	<parameter ishidden="1" type="String">
@@ -84,7 +84,7 @@ Mike -->
 			</format>
 			<group>1</group>
 		</attributes>
-	</parameter>	
+	</parameter>
 
 <!-- required input file, this is selected outside the parameters gui -->
     <parameter isinput = "1" type = "InFile">
@@ -96,9 +96,9 @@ Mike -->
 		  <code>"--i $value"</code>
 		</format>
 	    <group>90</group>
-	  </attributes>	  
+	  </attributes>
 	</parameter>
-	
+
 <!-- Retrieve compressed file containing Relion outputs -->
 	<parameter type="Results">
 	  <name>relion_output</name>
@@ -106,8 +106,8 @@ Mike -->
 	    <filenames>output.tar.gz</filenames>
 	  </attributes>
 	</parameter>
-    
-<!-- visible input parameters -->	
+
+<!-- visible input parameters -->
 
     <parameter type="Integer" issimple="1" ismandatory="1">
 	    <name>particle_diameter</name>
@@ -421,7 +421,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <!-- set the run time -->		
+    <!-- set the run time -->
     <!-- will be calculated by the submit script instead of asking user to set it here
     <parameter type="Float" issimple="1" ismandatory="1">
 	    <name>runtime</name>
