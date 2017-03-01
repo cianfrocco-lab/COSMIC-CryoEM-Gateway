@@ -301,12 +301,15 @@ public class TransferAction extends NgbwSupport {
             JSONTransferAPIClient.Result r = client.getResult("/submission_id");
             String submissionId = r.document.getString("value");
             int sync_level = Integer.parseInt(config.getProperty("sync_level"));
+            boolean encrypt_data = Boolean.parseBoolean(config.getProperty("encrypt_data"));
+
             JSONObject transfer = new JSONObject();
             transfer.put("DATA_TYPE", "transfer");
             transfer.put("submission_id", submissionId);
             transfer.put("source_endpoint", s_epid);
             transfer.put("destination_endpoint", d_epid);
             transfer.put("sync_level", sync_level);
+            transfer.put("encrypt_data", encrypt_data);
 
             if (filter_filenames.size() > 0) {
                 for (String file : filter_filenames) {
@@ -680,9 +683,15 @@ public class TransferAction extends NgbwSupport {
         Map<String, String> params = new HashMap<String, String>();
         String fields = "status,source_endpoint_display_name,"
                 +"destination_endpoint_display_name,request_time,files_transferred,faults,"
-                +"sync_level,files,directories,files_skipped,bytes_transferred";
+                +"sync_level,encrypt_data,files,directories,files_skipped,bytes_transferred";
         params.put("fields", fields);
         JSONTransferAPIClient.Result r = client.getResult(resource, params);
+
+        try {
+            logger.info("Encrypt data type: " + r.document.getBoolean("encrypt_data"));
+        } catch (org.json.JSONException e) {
+            logger.info("Encrypt data type is not specified.....");
+        }
 
         tr.setTaskId(taskId);
         tr.setUserId((Long) getSession().get("user_id"));
