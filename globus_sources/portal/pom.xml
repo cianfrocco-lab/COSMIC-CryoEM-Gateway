@@ -390,30 +390,6 @@
 			<artifactId>c3p0</artifactId>
 			<version>0.9.5.2</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-c3p0 -->
-		<!--
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-c3p0</artifactId>
-			<version>5.2.3.Final</version>
-		</dependency>
-		-->
-		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-ehcache -->
-		<!--
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-ehcache</artifactId>
-			<version>5.2.3.Final</version>
-		</dependency>
-		-->
-		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
-		<!--
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.55</version>
-		</dependency>
-		-->
 		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk16 -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
@@ -421,6 +397,7 @@
 			<version>1.45</version>
 		</dependency>
 		<!--} cyoun: globus integration work -->
+
 	</dependencies>
 
 </project>
