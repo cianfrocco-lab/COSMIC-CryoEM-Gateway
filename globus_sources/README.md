@@ -56,9 +56,9 @@ If you have already deployed CIPRES framework, you can stop the server running a
 1. Download source codes for CIPRES framework at [CIPRES SVN](https://svn.sdsc.edu/repo/scigap/trunk/).
     * svn checkout https://svn.sdsc.edu/repo/scigap/trunk source
 2. Install CIPRES framework based on [instructions](https://svn.sdsc.edu/repo/scigap/trunk/documents/framework_install.txt).
-3. Dowload source codes for globus integration at [Github](https://github.com/leschzinerlab/COSMIC-CryoEM-Gateway).
+3. Dowload source codes for globus integration at [Github](COSMIC-CryoEM-Gateway).
     * git clone https://github.com/leschzinerlab/COSMIC-CryoEM-Gateway.git
-4. Add [libraries](https://github.com/leschzinerlab/COSMIC-CryoEM-Gateway/blob/master/globus_sources/portal/pom.xml) below into the __dependencies__ tag in the maven pom file, ***portal/pom.xml***.
+4. Add [libraries](globus_sources/portal/pom.xml) below into the __dependencies__ tag in the maven pom file, ***portal/pom.xml***.
   ```xml
 		<!-- cyoun: globus integration work { -->
 		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-oauth2 -->
