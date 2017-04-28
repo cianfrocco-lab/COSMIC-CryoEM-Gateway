@@ -5,12 +5,18 @@
   <content tag="menu">Home</content>
 </head>
 <body onLoad="detectBrowser()"/>
-
+<%-- BEGIN MAIN CONTENT AREA --%>
+<div class="col-xs-7">
+  <div class="col-xs-6">
+    <b>Welcome Science Gateway!</b>
+  </div>
+</div>
+<%--
   <s:url id="registerUrl" action="register"/>
   <s:url id="guestUrl" action="guestLogin"/>
   <s:url id="forgotPasswordUrl" action="forgotPassword" method="input" includeParams="none"/>
 
-  <%-- BEGIN MAIN CONTENT AREA --%>
+  <-- BEGIN MAIN CONTENT AREA -->
   <div class="col-xs-7">
 
     <div class="col-xs-6">
@@ -30,12 +36,13 @@
         </div>
         <s:a href="%{forgotPasswordUrl}">Forgot Password?</s:a>
       </s:form>
-      <%-- under the cipres box --%>
+      <-- under the cipres box -->
       <div>
         <s:a href="%{registerUrl}">Register</s:a><b> &nbsp;| &nbsp;</b>
         <s:a href="%{guestUrl}">Proceed without Registering</s:a>
        </div>
     </div>
   </div>
+--%>
 </body>
 </html>

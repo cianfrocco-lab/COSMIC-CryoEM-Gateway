@@ -20,19 +20,32 @@
           <a href="<s:url action='tools.action'/>"><span>Toolkit</span></a>
         </li>
         <s:if test="%{isAuthenticated()}">
+          <!-- Start: Globus Auth & Transfer Service -->
+          <li class="${current_menu == 'Transfer' ? 'active' : ''}">
+            <a href="<s:url action='transfer.action'/>"><span>Transfer</span></a>
+          </li>
+          <li class="${current_menu == 'Transfer Status' ? 'active' : ''}">
+            <a href="<s:url action='status.action'/>"><span>Transfer Status</span></a>
+          </li>
+          <li class="${current_menu == 'Endpoints' ? 'active' : ''}">
+            <a href="<s:url action='endpointlist.action'/>"><span>Data Endpoints</span></a>
+          </li>
+          <!-- End: Globus Auth & Transfer Service -->
           <li class="${current_menu == 'My Profile' ? 'active' : ''}">
             <a href="<s:url action='profile.action'/>"><span>My Profile</span></a>
           </li>
         </s:if>
         <li>
-          <a href="javascript:popitup('${staticSite}/gateway-help/')"><span>Help</span></a>
+          <a href="javascript:popitup('${staticSite}/help/')"><span>Help</span></a>
         </li>
         <li>
-          <a href="javascript:popitup('${staticSite}/how-to-cite-cosmic')"><span>How to Cite Us</span></a>
+          <a href="javascript:popitup('${staticSite}/portal/cite_us')"><span>How to Cite Us</span></a>
         </li>
       </ul>
-      <s:if test="%{isAuthenticated()}">
-        <ul class="nav navbar-nav navbar-right">
+
+      <!-- Start: Globus Auth & Transfer Service -->
+      <ul class="nav navbar-nav navbar-right">
+        <s:if test="%{isAuthenticated()}">
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">XSEDE Status<b class="caret"></b></a>
             <ul class="dropdown-menu">
@@ -53,8 +66,19 @@
           <li>
             <a href="<s:url action='logout.action'/>"><span>Logout</span></a>
           </li>
-        </ul>
-      </s:if>
+        </s:if>
+        <s:else>
+          <li>
+	    <s:url id="loginUrl" action="login"/>
+            <s:a href="%{loginUrl}">Login</s:a>
+          </li>
+          <li>
+	    <s:url id="signupUrl" action="signup"/>
+            <s:a href="%{signupUrl}">Sign up</s:a>
+          </li>
+        </s:else>
+      </ul>
+      <!-- End: Globus Auth & Transfer Service -->
     </div><!--/.nav-collapse -->
   </div>
 </div>
