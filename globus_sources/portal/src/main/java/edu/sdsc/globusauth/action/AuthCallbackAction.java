@@ -398,6 +398,8 @@ public class AuthCallbackAction extends FolderManager {
             username = existing_user.getUsername();
             profile.setLinkUsername(username);
             profileManager.updateLinkUsername(profile);
+        } else {
+            profile.setLinkUsername(username);
         }
 
         try {
