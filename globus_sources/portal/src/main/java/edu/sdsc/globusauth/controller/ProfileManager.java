@@ -20,11 +20,11 @@ import org.hibernate.query.Query;
 public class ProfileManager extends HibernateUtil {
     public OauthProfile add(OauthProfile oathProfile) {
         User user = new User();
-        String password = "Globus" + oathProfile.getUserName() + Calendar.getInstance().getTimeInMillis();
+        String password = "Globus" + oathProfile.getUsername() + Calendar.getInstance().getTimeInMillis();
         user.setFirstName(oathProfile.getFirstName());
         user.setLastName(oathProfile.getLastName());
         user.setEmail(oathProfile.getEmail());
-        user.setUsername(oathProfile.getUserName());
+        user.setUsername(oathProfile.getUsername());
         user.setPassword(StringUtils.getMD5HexString(password));
         user.setRole(UserRole.STANDARD.toString());
         user.setActive(true);
@@ -48,6 +48,21 @@ public class ProfileManager extends HibernateUtil {
         session.save(oathProfile);
         session.getTransaction().commit();
         return oathProfile;
+    }
+
+    public int updateLinkUsername(OauthProfile oathProfile) {
+        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
+        session.beginTransaction();
+
+        String sql = "update OauthProfile set linkUsername = :linkusername"
+                + " where identityId = :identityId";
+        Query query = session.createQuery(sql);
+        query.setParameter("linkusername", oathProfile.getLinkUsername());
+        query.setParameter("identityId", oathProfile.getIdentityId());
+        int result = query.executeUpdate();
+
+        session.getTransaction().commit();
+        return result;
     }
 
     public int update(OauthProfile oathProfile) {
@@ -82,7 +97,7 @@ public class ProfileManager extends HibernateUtil {
         u_query.setParameter("fname", oauthProfile.getFirstName());
         u_query.setParameter("lname", oauthProfile.getLastName());
         u_query.setParameter("ins", oauthProfile.getInstitution());
-        u_query.setParameter("userName", oauthProfile.getUserName());
+        u_query.setParameter("userName", oauthProfile.getUsername());
         int result = u_query.executeUpdate();
 
         session.getTransaction().commit();

@@ -174,6 +174,7 @@ public class AuthCallbackAction extends FolderManager {
                     String username = (String) id_token.getPayload().get(OauthConstants.PREFERRED_USERNAME);
                     String email = (String) id_token.getPayload().get(OauthConstants.EMAIL);
                     String identity = (String) id_token.getPayload().get(OauthConstants.SUB);
+                    String linkusername = null;
 
                     // Step 3: Create the Credential object, which stores the Auth Token
                     //Credential credentials = flow.createAndStoreCredential(tokenResponse, name);
@@ -202,7 +203,8 @@ public class AuthCallbackAction extends FolderManager {
                     OauthProfile db_profile = profileManager.load(identity);
                     if (db_profile == null) {
                         //profile.setUserId(00001L);
-                        profile.setUserName(username);
+                        profile.setUsername(username);
+                        profile.setLinkUsername(username);
                         profile.setIdentityId(identity);
                         profile.setFirstName(names[0]);
                         profile.setLastName(names[1]);
@@ -223,8 +225,9 @@ public class AuthCallbackAction extends FolderManager {
                     } else {
                         //transfer
                         redirect_flag = false;
-                        profile.setUserName(db_profile.getUserName());
-                        if (!activateLogin()) return "failure";
+                        profile.setEmail(db_profile.getEmail());
+                        profile.setIdentityId(db_profile.getIdentityId());
+                        if (!activateLogin(null,db_profile.getLinkUsername())) return "failure";
 
                         getSession().put("user_id",db_profile.getUserId());
                         getSession().put(OauthConstants.EMAIL, db_profile.getEmail());
@@ -242,20 +245,22 @@ public class AuthCallbackAction extends FolderManager {
                         //return "transfer";
                     }
 
+                    linkusername = profile.getLinkUsername();
                     getSession().put(OauthConstants.CREDENTIALS, accesstoken);
                     getSession().put(OauthConstants.ID_TOKEN, id_token);
                     getSession().put(OauthConstants.IS_AUTHENTICATED, true);
                     getSession().put(OauthConstants.PRIMARY_USERNAME, username);
+                    //getSession().put("link_username", linkusername);
                     getSession().put(OauthConstants.PRIMARY_IDENTITY, identity);
 
                     //initial setup for source and destination endpoint
                     getSession().put(OauthConstants.DATASET_ENDPOINT_ID,dataset_endpoint_id);
-                    getSession().put(OauthConstants.DATASET_ENDPOINT_BASE,dataset_endpoint_base+username+"/");
+                    getSession().put(OauthConstants.DATASET_ENDPOINT_BASE,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.DATASET_ENDPOINT_NAME,dataset_endpoint_name);
 
                     getSession().put(OauthConstants.DEST_BOOKMARK_ID,"XSERVER");
                     getSession().put(OauthConstants.DEST_ENDPOINT_ID,dataset_endpoint_id);
-                    getSession().put(OauthConstants.DEST_ENDPOINT_PATH,dataset_endpoint_base+username+"/");
+                    getSession().put(OauthConstants.DEST_ENDPOINT_PATH,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME,dataset_endpoint_name);
                     getSession().put(OauthConstants.DEST_DISP_NAME,dataset_endpoint_name);
 
@@ -282,7 +287,7 @@ public class AuthCallbackAction extends FolderManager {
                                     getSession().put(OauthConstants.SRC_ENDPOINT_ID, dataset_endpoint_id);
                                     getSession().put(OauthConstants.SRC_ENDPOINT_NAME, dataset_endpoint_name);
                                     getSession().put(OauthConstants.SRC_DISP_NAME, dataset_endpoint_name);
-                                    getSession().put(OauthConstants.SRC_ENDPOINT_PATH, dataset_endpoint_base + username + "/");
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_PATH, dataset_endpoint_base + linkusername + "/");
 
                                     getSession().put(OauthConstants.DEST_BOOKMARK_ID, (String) bmmap.get("id"));
                                     getSession().put(OauthConstants.DEST_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
@@ -328,34 +333,75 @@ public class AuthCallbackAction extends FolderManager {
     public long registerUser() {
         long userid = -1L;
         SessionController controller = getController();
-        String password = "Globus" + profile.getUserName() + Calendar.getInstance().getTimeInMillis();
-        ValidationResult result = controller.registerUser(profile.getUserName(), password,
-                profile.getEmail(), profile.getFirstName(), profile.getLastName(),
-                profile.getInstitution(), null);
-        if (result == null) {
-            addActionError("Sorry, there was an error creating your account.");
-            return userid;
-        }
-        if (result.isValid() == false) {
-            reportUserError("Sorry, there was an error creating your account:");
-            for (String error : result.getErrors())
-                reportUserError(error);
-            return userid;
-        } else {
-            addActionMessage("User account \"" + getUsername() + "\" successfully created.");
-            if (finalizeLogin() != true) {
+        //checking existing user
+        User existing_user = controller.getUserByEmail(profile.getEmail());
+        if (existing_user != null) {
+            profile.setLinkUsername(existing_user.getUsername());
+            if (!activateLogin(controller,existing_user.getUsername())) {
                 return userid;
             }
+        } else {
+            String password = "Globus" + profile.getUsername() + Calendar.getInstance().getTimeInMillis();
+            ValidationResult result = controller.registerUser(profile.getUsername(), password,
+                    profile.getEmail(), profile.getFirstName(), profile.getLastName(),
+                    profile.getInstitution(), null);
+            if (result == null) {
+                addActionError("Sorry, there was an error creating your account.");
+                return userid;
+            }
+            if (result.isValid() == false) {
+                reportUserError("Sorry, there was an error creating your account:");
+                for (String error : result.getErrors())
+                    reportUserError(error);
+                return userid;
+            } else {
+                addActionMessage("User account \"" + getUsername() + "\" successfully created.");
+                if (finalizeLogin() != true) {
+                    return userid;
+                }
+            }
         }
+
         User user = controller.getAuthenticatedUser();
         return user.getUserId();
     }
-
+/*
     public boolean activateLogin() {
         SessionController controller = getController();
         WorkbenchSession session = null;
         try {
             session = controller.login(profile.getUserName());
+        } catch (UserAuthenticationException error) {
+            reportUserError(error.getMessage());
+            return false;
+        }
+        if (session == null) {
+            reportUserError("There was an error authenticating your information.");
+            return false;
+        }
+        clearSessionAttribute(SESSION_ERROR_MESSAGE);
+        if (finalizeLogin() != true) {
+            return false;
+        }
+        return true;
+    }
+*/
+    public boolean activateLogin(SessionController controller, String username) {
+        if (controller == null)
+            controller = getController();
+
+        WorkbenchSession session = null;
+
+        if (username == null) {
+            User existing_user = controller.getUserByEmail(profile.getEmail());
+            if (existing_user == null) return false;
+            username = existing_user.getUsername();
+            profile.setLinkUsername(username);
+            profileManager.updateLinkUsername(profile);
+        }
+
+        try {
+            session = controller.login(username);
         } catch (UserAuthenticationException error) {
             reportUserError(error.getMessage());
             return false;
