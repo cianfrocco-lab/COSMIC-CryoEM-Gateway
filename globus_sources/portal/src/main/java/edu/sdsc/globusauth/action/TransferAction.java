@@ -76,6 +76,8 @@ public class TransferAction extends NgbwSupport {
 
         getSourceInfo();
         if (s_epid == null || s_epid.trim().isEmpty()) return "dataendpoints";
+        getDestinationInfo();
+        if (d_epid == null || d_epid.trim().isEmpty()) return "dataendpoints";
 
         EndpointListAction iplistaction = new EndpointListAction(accesstoken, username);
         String s_eptype = request.getParameter("bookmarkId");
