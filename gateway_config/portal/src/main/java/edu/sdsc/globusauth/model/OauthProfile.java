@@ -12,6 +12,7 @@ CREATE TABLE `oauth_profile` (
   `USER_ID` bigint(20) NOT NULL,
   `IDENTITY_ID` varchar(255) NOT NULL,
   `USERNAME` varchar(255) NOT NULL,
+  `LINK_USERNAME` varchar(255) NOT NULL,
   `FIRST_NAME` varchar(100) NOT NULL,
   `LAST_NAME` varchar(100) NOT NULL,
   `EMAIL` varchar(200) NOT NULL,
@@ -39,7 +40,10 @@ public class OauthProfile implements Serializable {
     private String identityId;
 
     @Column(name="USERNAME")
-    private String userName;
+    private String username;
+
+    @Column(name="LINK_USERNAME")
+    private String linkUsername;
 
     @Column(name="EMAIL")
     private String email;
@@ -62,8 +66,11 @@ public class OauthProfile implements Serializable {
     public String getIdentityId() {
         return identityId;
     }
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
+    }
+    public String getLinkUsername() {
+        return linkUsername;
     }
     public String getEmail() {
         return email;
@@ -83,8 +90,11 @@ public class OauthProfile implements Serializable {
     public void setIdentityId(String identityId) {
         this.identityId = identityId;
     }
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public void setLinkUsername(String linkUsername) {
+        this.linkUsername = linkUsername;
     }
     public void setFirstName(String firstName) {this.firstName = firstName;}
     public void setLastName(String lastName) {this.lastName = lastName;}
