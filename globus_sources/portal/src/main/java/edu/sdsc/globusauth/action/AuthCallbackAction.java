@@ -258,19 +258,20 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.DATASET_ENDPOINT_BASE,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.DATASET_ENDPOINT_NAME,dataset_endpoint_name);
 
-                    /*
                     getSession().put(OauthConstants.DEST_BOOKMARK_ID,"XSERVER");
                     getSession().put(OauthConstants.DEST_ENDPOINT_ID,dataset_endpoint_id);
                     getSession().put(OauthConstants.DEST_ENDPOINT_PATH,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME,dataset_endpoint_name);
                     getSession().put(OauthConstants.DEST_DISP_NAME,dataset_endpoint_name);
-                    */
 
+                    //in case, the source is Comet
+                    /*
                     getSession().put(OauthConstants.SRC_BOOKMARK_ID,"XSERVER");
                     getSession().put(OauthConstants.SRC_ENDPOINT_ID,dataset_endpoint_id);
                     getSession().put(OauthConstants.SRC_ENDPOINT_PATH,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.SRC_ENDPOINT_NAME,dataset_endpoint_name);
                     getSession().put(OauthConstants.SRC_DISP_NAME,dataset_endpoint_name);
+                    */
 
                     EndpointListAction iplistaction = new EndpointListAction(accesstoken,username);
                     iplistaction.my_endpoint_list();
@@ -285,6 +286,8 @@ public class AuthCallbackAction extends FolderManager {
                             if (bnamea.length == 3) {
                                 flag = true;
                                 if (bnamea[2].equals("SOURCE")) {
+                                    //in case the source is Comet
+                                    /*
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
                                     getSession().put(OauthConstants.SRC_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
                                     getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
@@ -296,20 +299,35 @@ public class AuthCallbackAction extends FolderManager {
                                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME, dataset_endpoint_name);
                                     getSession().put(OauthConstants.DEST_DISP_NAME, dataset_endpoint_name);
                                     getSession().put(OauthConstants.DEST_ENDPOINT_PATH, dataset_endpoint_base + linkusername + "/");
+                                    */
+
+                                    getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
+                                    getSession().put(OauthConstants.SRC_DISP_NAME, bname.split("::")[0]);
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_PATH, (String) bmmap.get("path"));
 
                                 } else {
-                                    /*
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, "XSERVER");
                                     getSession().put(OauthConstants.SRC_ENDPOINT_ID, dataset_endpoint_id);
                                     getSession().put(OauthConstants.SRC_ENDPOINT_NAME, dataset_endpoint_name);
                                     getSession().put(OauthConstants.SRC_DISP_NAME, dataset_endpoint_name);
                                     getSession().put(OauthConstants.SRC_ENDPOINT_PATH, dataset_endpoint_base + linkusername + "/");
-                                    */
+
                                     getSession().put(OauthConstants.DEST_BOOKMARK_ID, (String) bmmap.get("id"));
                                     getSession().put(OauthConstants.DEST_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
                                     getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
                                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
                                     getSession().put(OauthConstants.DEST_DISP_NAME, bname.split("::")[0]);
+
+                                    //in case, the source is Comet
+                                    /*
+                                    getSession().put(OauthConstants.DEST_BOOKMARK_ID, (String) bmmap.get("id"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
+                                    getSession().put(OauthConstants.DEST_DISP_NAME, bname.split("::")[0]);
+                                    */
                                 }
                                 break;
                             }
@@ -318,6 +336,8 @@ public class AuthCallbackAction extends FolderManager {
                             Map<String, Object> bmmap = bookmarklist.get(0);
                             String bm_id = (String) bmmap.get("id");
                             String bname = (String) bmmap.get("name");
+                            //in case, the destination is Comet
+                            /*
                             bname += "::DEST";
                             logger.info("update bookmark: "+bm_id);
                             iplistaction.updateBookmark(bm_id,bname);
@@ -326,6 +346,17 @@ public class AuthCallbackAction extends FolderManager {
                             getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
                             getSession().put(OauthConstants.DEST_DISP_NAME, (String) bmmap.get("disp_name"));
                             getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
+                            */
+
+                            bname += "::SOURCE";
+                            logger.info("update bookmark: "+bm_id);
+                            iplistaction.updateBookmark(bm_id,bname);
+                            getSession().put(OauthConstants.SRC_BOOKMARK_ID, bm_id);
+                            getSession().put(OauthConstants.SRC_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                            getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
+                            getSession().put(OauthConstants.SRC_DISP_NAME, (String) bmmap.get("disp_name"));
+                            getSession().put(OauthConstants.SRC_ENDPOINT_PATH, (String) bmmap.get("path"));
+
                         }
                     } else {
                         return "dataendpoints";
