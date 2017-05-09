@@ -54,7 +54,7 @@ public class EndpointListAction extends NgbwSupport {
 
     public void my_endpoint_list() throws Exception {
         bookmarklist = new ArrayList<>();
-        my_endpoint_search("my-gcp-endpoints");
+        my_endpoint_search("all");
         //my_endpoint_search("my-endpoints");
         if (iplist != null && iplist.size() > 0) {
             List<Map<String,Object>> bmlist = my_bookmark_list();
@@ -72,7 +72,7 @@ public class EndpointListAction extends NgbwSupport {
                         }
                     }
                     if(!flag) {
-                        String disp_ipname = (String) ipmap.get("canonical_name");
+                        String disp_ipname = (String) ipmap.get("display_name");
                         String ipname = disp_ipname + "::MYGCPEP";
                         String bm_id = createBookmark(ipname,eid,"/~/");
                         Map<String,Object> bmmap = new HashMap<String, Object>();
@@ -89,7 +89,7 @@ public class EndpointListAction extends NgbwSupport {
                 for (int i=0; i<iplist.size(); i++) {
                     Map<String, Object> ipmap = iplist.get(i);
                     String eid = (String) ipmap.get("id");
-                    String disp_ipname = (String) ipmap.get("canonical_name");
+                    String disp_ipname = (String) ipmap.get("display_name");
                     String ipname = disp_ipname + "::MYGCPEP";
                     String bm_id = createBookmark(ipname,eid,"/~/");
                     Map<String,Object> bmmap = new HashMap<String, Object>();
@@ -118,7 +118,7 @@ public class EndpointListAction extends NgbwSupport {
         if (data.length() > 0) {
             for (int i = 0; i < data.length(); i++) {
                 Map<String,Object> ipmap = new HashMap<String, Object>();
-                ipmap.put("canonical_name", data.getJSONObject(i).getString("canonical_name"));
+                ipmap.put("display_name", data.getJSONObject(i).getString("display_name"));
                 ipmap.put("id", data.getJSONObject(i).getString("id"));
                 iplist.add(ipmap);
             }
