@@ -33,7 +33,7 @@
           </li>
         </s:if>
         <li>
-          <a href="javascript:window.open('${staticSite}/help/', '_blank')"><span>Help</span></a>
+          <a href="javascript:window.open('${staticSite}/help/', 'cosmic2_help')"><span>Help</span></a>
         </li>
         <li>
           <a href="javascript:popitup('${staticSite}/portal/cite_us')"><span>How to Cite Us</span></a>
