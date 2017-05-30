@@ -24,6 +24,7 @@ CREATE TABLE `transfer_record` (
   `FILES` int(5),
   `FILES_SKIPPED` int(5),
   `BYTE_TRANSFERRED` bigint(20),
+  'ENCLOSING_FOLDER_ID' bigint(20),
   PRIMARY KEY (`TR_ID`),
   UNIQUE KEY `TASK_ID` (`TASK_ID`),
   KEY `USER_ID` (`USER_ID`)
@@ -81,6 +82,9 @@ public class TransferRecord implements Serializable {
     @Column(name = "BYTE_TRANSFERRED")
     private Long byteTransferred;
 
+    @Column(name="ENCLOSING_FOLDER_ID")
+    private Long enclosingFolderId;
+
     public Long getId() {
         return id;
     }
@@ -108,6 +112,7 @@ public class TransferRecord implements Serializable {
     public Integer getFiles() { return files;}
     public Integer getFilesSkipped() {return filesSkipped;}
     public Long getByteTransferred() { return byteTransferred;}
+    public Long getEnclosingFolderId() { return enclosingFolderId;}
 
     public void setId(Long id) {
         this.id = id;
@@ -135,6 +140,7 @@ public class TransferRecord implements Serializable {
     public void setDirectories(Integer directories) { this.directories = directories; }
     public void setFiles(Integer files) { this.files = files; }
     public void setFilesSkipped(Integer filesSkipped) { this.filesSkipped = filesSkipped; }
-    public void setByteTransferred(Long byteTransferred) { this.byteTransferred = byteTransferred;}
+    public void setByteTransferred(Long byteTransferred) { this.byteTransferred = byteTransferred; }
+    public void setEnclosingFolderId(Long enclosingFolderId) { this.enclosingFolderId = enclosingFolderId; }
 }
 

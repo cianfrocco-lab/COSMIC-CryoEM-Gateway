@@ -51,10 +51,10 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("task_id", taskId);
             taskmap.put("source_endpoint_display_name", r.document.getString("source_endpoint_display_name"));
             taskmap.put("destination_endpoint_display_name", r.document.getString("destination_endpoint_display_name"));
-            taskmap.put("request_time", r.document.getString("request_time"));
+            taskmap.put("request_time", r.document.getString("request_time")+" UTC");
             taskmap.put("status", r.document.getString("status"));
             try {
-                taskmap.put("completion_time", r.document.getString("completion_time"));
+                taskmap.put("completion_time", r.document.getString("completion_time")+" UTC");
             } catch (org.json.JSONException e) {
                 taskmap.put("completion_time", "Not available");
             }
@@ -68,7 +68,7 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("files", r.document.getInt("files"));
             taskmap.put("directories", r.document.getInt("directories"));
             taskmap.put("files_skipped", r.document.getInt("files_skipped"));
-            taskmap.put("bytes_transferred", r.document.getLong("bytes_transferred"));
+            taskmap.put("bytes_transferred", humanReadableByteCount(r.document.getLong("bytes_transferred"),true));
             statuslist.add(taskmap);
 
         } else {
@@ -85,10 +85,10 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("task_id", data.getJSONObject(i).getString("task_id"));
                     taskmap.put("source_endpoint_display_name", data.getJSONObject(i).getString("source_endpoint_display_name"));
                     taskmap.put("destination_endpoint_display_name", data.getJSONObject(i).getString("destination_endpoint_display_name"));
-                    taskmap.put("request_time", data.getJSONObject(i).getString("request_time"));
+                    taskmap.put("request_time", data.getJSONObject(i).getString("request_time")+" UTC");
                     taskmap.put("status", data.getJSONObject(i).getString("status"));
                     try {
-                        taskmap.put("completion_time", data.getJSONObject(i).getString("completion_time"));
+                        taskmap.put("completion_time", data.getJSONObject(i).getString("completion_time")+" UTC");
                     } catch (org.json.JSONException e) {
                         taskmap.put("completion_time", "Not available");
                     }
@@ -102,12 +102,13 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("files", data.getJSONObject(i).getInt("files"));
                     taskmap.put("directories", data.getJSONObject(i).getInt("directories"));
                     taskmap.put("files_skipped", data.getJSONObject(i).getInt("files_skipped"));
-                    taskmap.put("bytes_transferred", data.getJSONObject(i).getLong("bytes_transferred"));
+                    taskmap.put("bytes_transferred", humanReadableByteCount(data.getJSONObject(i).getLong("bytes_transferred"),true));
                     statuslist.add(taskmap);
                 }
             }
         }
 
+        /*
         //update transfer record
         ProfileManager profileManager = new ProfileManager();
         TransferAction txaction = new TransferAction();
@@ -117,9 +118,18 @@ public class TransferStatusAction extends NgbwSupport {
             for (String taskid: tr)
                 profileManager.updateRecord(txaction.updateTask(taskid,client));
         }
+        */
 
         return SUCCESS;
 
+    }
+
+    private String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        return String.format("%.2f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     //public Map<String,Object> getTaskmap() {return taskmap;}
