@@ -561,8 +561,8 @@ public class CreateData extends DataManager
 		{
 		*/
 			// get source data
-			//String data = null;
-			String data = stripCarriageReturns ( getSource().trim() );
+			String data = null;     // No paste (source) for COSMIC2
+			//String data = stripCarriageReturns ( getSource().trim() );
 			File uploads[] = getUpload();
 			String filenames[] = getUploadFileName();
 			String label = null;
