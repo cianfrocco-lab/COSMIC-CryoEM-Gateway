@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- BEGIN APPENDER: CONSOLE APPENDER (stdout) -->
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- TL: I added %x to display NDC which is used in BaseProcessWorker -->
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} - %-5.5p - %-20.20c{1} %x | %m%n"/>
+		</layout>
+	</appender>
+
+	<!-- BEGIN APPENDER: CONSOLE APPENDER (stderr) -->
+	<appender name="stderr" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.TTCCLayout"/>
+	</appender>
+
+	<!-- BEGIN APPENDER: DAILY ROLLING FILE APPENDER  -->
+	<appender name="all" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="${logs}/all-${build.portal.appName}.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<!--
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} %-5.5p %-25.25c{1} %x | %m%n"/>
+			-->
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} [%-6.6t] %-5.5p - %25.25c{1}:%-5.5L %x | %m%n"/>
+		</layout>
+	</appender>
+
+	<!-- BEGIN APPENDER: NULL -->
+	<appender name="null" class="org.apache.log4j.FileAppender">
+		<param name="File" value="/dev/null"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n"/>
+		</layout>
+	</appender>
+
+
+	<!-- BEGIN APPENDER: DAILY ROLLING FILE APPENDER (web) -->
+	<appender name="web" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="${logs}/${build.portal.appName}.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<!--
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} - %-5.5p - %-20.20c{1} | %m%n"/>
+			-->
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} [%-6.6t] %-5.5p - %25.25c{1}:%-5.5L %x | %m%n"/>
+		</layout>
+	</appender>
+
+	<!-- BEGIN APPENDER: DAILY ROLLING FILE APPENDER (sdk_file) -->
+	<!-- Note that including the %L for location info (line numbers) is supposedly very slow, but I think we need it at this point. -->
+	<appender name="sdk_file" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="${logs}/sdk.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} [%-6.6t] %-5.5p - %25.25c{1}:%-5.5L %x | %m%n"/>
+		</layout>
+	</appender>
+
+	<!-- BEGIN APPENDER: DAILY ROLLING FILE APPENDER (db_file) -->
+	<!-- Note that including the %L for location info (line numbers) is supposedly very slow, but I think we need it at this point. -->
+	<appender name="db_file" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="${logs}/db.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%-20.20d{MMM dd yyyy HH:mm:ss} [%-6.6t] %-5.5p - %25.25c{1}%-5.5L %x | %m%n"/>
+		</layout>
+	</appender>
+
+
+	<!-- BEGIN APPENDER: DAILY ROLLING FILE APPENDER (tools) -->
+	<appender name="tools" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="${logs}/tools.log"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<!--
+			<param name="ConversionPattern" value="%d{ABSOLUTE} %5p %c{1}:%L - %m%n"/>
+			-->
+			<param name="ConversionPattern" value="%5p %c{1}:%L %x - %m%n"/>
+		</layout>
+	</appender>
+
+	<!-- BEGIN customized logger configurations -->
+	<logger name="org.ngbw.web">
+		<level value="debug"/>
+		<appender-ref ref="web"/>
+	</logger>
+	<logger name="org.ngbw.sdk">
+		<level value="debug"/>
+		<appender-ref ref="sdk_file"/>
+	</logger>
+	<logger name="org.ngbw.pise">
+		<level value="debug"/>
+		<appender-ref ref="tools"/>
+	</logger>
+	<logger name="edu.sdsc.globusauth">
+		<level value="debug"/>
+		<appender-ref ref="web"/>
+	</logger>
+
+	<!-- START SECTION: I don't want logging for these sdk classes -->
+	<logger name="org.ngbw.sdk.dataresources.lucene.LuceneDataResourceConfig">
+		<level value="warn"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="org.ngbw.sdk.core.io.SSLConnectionPool" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="null"/>
+    </logger>
+    <logger name="org.ngbw.sdk.core.DefaultCoreRegistryBuilder" additivity="false">
+        <level value="info"/>
+        <appender-ref ref="null"/>
+    </logger>
+    <logger name="org.ngbw.sdk.core.DefaultCoreRegistry" additivity="false">
+        <level value="warn"/>
+        <appender-ref ref="null"/>
+    </logger>
+    <logger name="org.ngbw.sdk.data.DefaultDatasetRegistryBuilder" additivity="false">
+        <level value="warn"/>
+        <appender-ref ref="null"/>
+    </logger>
+    <logger name="org.ngbw.sdk.conversion" additivity="false">
+        <level value="warn"/>
+        <appender-ref ref="null"/>
+    </logger>
+	<!-- END  SECTION: I don't want DEBUG level logging for these sdk classes -->
+	
+	<!-- log4jdbc LOGGING -->
+	<logger name="jdbc.connection" additivity="false">
+		<level value="error"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="jdbc.sqlonly" additivity="false">
+		<level value="error"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="jdbc.sqltiming" additivity="false">
+		<level value="info"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="jdbc.audit"  additivity="false"> 
+		<level value="error"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="jdbc.resultset" additivity="false">
+		<level value="error"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<logger name="jdbc.resultsettable" additivity="false">
+		<level value="error"/>
+		<appender-ref ref="null"/>
+	</logger>
+	<!-- END log4jdbc LOGGING -->
+
+	<logger name="org.tus">
+        <level value="debug"/>
+        <appender-ref ref="web"/>
+    </logger>
+
+	<!-- unless specified otherwise, the level for all loggers will be
+	inherited from here, and this appender (i.e. "all")  will be used. 
+	You need to set additivity=false on other loggers if you don't want their messages
+	appearing in this appender.  This logger's level is irrelevant, except for loggers
+	that don't specify their own level.
+	-->
+	<root>
+		<level value="info"/>
+		<appender-ref ref="all"/>
+	</root>
+</log4j:configuration>
