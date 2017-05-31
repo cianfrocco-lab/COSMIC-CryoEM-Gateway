@@ -8,14 +8,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.ngbw.sdk.WorkbenchSession;
+
+import edu.sdsc.globusauth.controller.Transfer2DataManager;
 import edu.sdsc.globusauth.model.OauthProfile;
 import edu.sdsc.globusauth.model.TransferRecord;
 import edu.sdsc.globusauth.model.User;
 import edu.sdsc.globusauth.util.HibernateUtil;
 import edu.sdsc.globusauth.util.StringUtils;
 import edu.sdsc.globusauth.util.UserRole;
+
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+
 
 public class ProfileManager extends HibernateUtil {
     public OauthProfile add(OauthProfile oathProfile) {
@@ -124,7 +129,28 @@ public class ProfileManager extends HibernateUtil {
         session.getTransaction().commit();
     }
 
-    public int updateRecord(TransferRecord tr) {
+    /**
+     * IMPORTANT : This function assumes that the incoming tr parameter
+     *      current status value in the database is ACTIVE or INACTIVE.
+     *      If this NOT the case, DO NOT use this function!
+     **/
+    public int updateRecord
+        ( TransferRecord tr, String destination_path, WorkbenchSession wbs )
+    {
+        int saved = 0;
+
+        // First, if the new record has SUCCEEDED status, then we will get
+        // its info from the transfer_record table and create a new
+        // document needed by the CIPRES workflow
+        String status = tr.getStatus();
+        if ( status.equals ( "SUCCEEDED" ) )
+        {
+            Transfer2DataManager dataManager = new Transfer2DataManager();
+            saved = dataManager.setupDataItems ( tr, this, destination_path,
+                wbs );
+        }
+
+        // Now update the record
         Session session = HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
 
@@ -133,8 +159,9 @@ public class ProfileManager extends HibernateUtil {
                 + "filesTransferred = :ft, faults = :faults, directories = :dir, files = :file, "
                 + "filesSkipped = :fs, byteTransferred = :bt"
                 + " where taskId = :taskId";
+
         Query u_query = session.createQuery(u_sql);
-        u_query.setParameter("status", tr.getStatus());
+        u_query.setParameter("status", status );
         u_query.setParameter("ctime", tr.getCompletionTime());
         u_query.setParameter("ft", tr.getFilesTransferred());
         u_query.setParameter("faults", tr.getFaults());
@@ -158,6 +185,25 @@ public class ProfileManager extends HibernateUtil {
         query.setParameter("status1","ACTIVE");
         query.setParameter("status2","INACTIVE");
         List<String> trs = query.list();
+
+        session.getTransaction().commit();
+        return trs;
+    }
+
+    /**
+     * Get the userId, status and enclosingFolderId from the transfer_record
+     * table by taskId
+     * @param taskId - Globus transfer task ID
+     **/
+    public List <TransferRecord> loadRecordByTaskId ( String taskId )
+    {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+
+        Query query = session.createQuery
+            ( "FROM TransferRecord WHERE taskId = :taskId" );
+        query.setParameter ( "taskId", taskId );
+        List<TransferRecord> trs = query.list();
 
         session.getTransaction().commit();
         return trs;
