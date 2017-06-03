@@ -241,15 +241,17 @@ public class AuthCallbackAction extends FolderManager {
                         if (tr != null && tr.size() > 0) {
                             String dest_path = dataset_endpoint_base +
                                 db_profile.getLinkUsername() + "/";
+                            /*
                             WorkbenchSession wbs = ( WorkbenchSession ) 
                                 getSession().get ( "workbenchSession" );
+                            */
                             TransferAction txaction = new TransferAction(accesstoken,username);
                             for (String taskid: tr)
                             {
                                 //profileManager.updateRecord(txaction.updateTask(taskid,null));
                                 profileManager.updateRecord (
                                     txaction.updateTask(taskid,null),
-                                    dest_path, wbs );
+                                    dest_path );
                             }
                         }
                         //return "transfer";

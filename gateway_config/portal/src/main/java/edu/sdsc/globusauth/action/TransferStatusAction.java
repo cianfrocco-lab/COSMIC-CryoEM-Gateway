@@ -7,7 +7,7 @@ import org.globusonline.transfer.Authenticator;
 import org.globusonline.transfer.GoauthAuthenticator;
 import org.globusonline.transfer.JSONTransferAPIClient;
 import org.json.JSONArray;
-import org.ngbw.sdk.WorkbenchSession;
+//import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.web.actions.NgbwSupport;
 
 import java.time.LocalDate;
@@ -125,13 +125,15 @@ public class TransferStatusAction extends NgbwSupport {
         if (tr != null && tr.size() > 0) {
             String dest_path = ( String ) getSession().get
                 ( OauthConstants.DEST_ENDPOINT_PATH );
+            /*
             WorkbenchSession wbs = ( WorkbenchSession ) getSession().get
                 ( "workbenchSession" );
+            */
             for (String taskid: tr)
             {
                 //profileManager.updateRecord(txaction.updateTask(taskid,client));
                 profileManager.updateRecord (
-                    txaction.updateTask ( taskid,client ), dest_path, wbs );
+                    txaction.updateTask ( taskid,client ), dest_path );
             }
         }
 
