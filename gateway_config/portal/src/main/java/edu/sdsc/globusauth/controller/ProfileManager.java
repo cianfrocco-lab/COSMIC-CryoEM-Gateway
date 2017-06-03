@@ -8,6 +8,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.ngbw.sdk.WorkbenchSession;
 
 import edu.sdsc.globusauth.controller.Transfer2DataManager;
@@ -23,6 +26,9 @@ import org.hibernate.query.Query;
 
 
 public class ProfileManager extends HibernateUtil {
+
+    private static final Log log = LogFactory.getLog ( ProfileManager.class );
+
     public OauthProfile add(OauthProfile oathProfile) {
         User user = new User();
         String password = "Globus" + oathProfile.getUsername() + Calendar.getInstance().getTimeInMillis();
@@ -134,21 +140,39 @@ public class ProfileManager extends HibernateUtil {
      *      current status value in the database is ACTIVE or INACTIVE.
      *      If this NOT the case, DO NOT use this function!
      **/
-    public int updateRecord
-        ( TransferRecord tr, String destination_path, WorkbenchSession wbs )
+    public int updateRecord ( TransferRecord tr, String destination_path )
     {
+        // Check incoming parameters
+        if ( tr == null || destination_path == null ||
+            destination_path.trim().equals ( "" ) )
+            return ( 0 );
+
         int saved = 0;
+        String status = tr.getStatus();
 
         // First, if the new record has SUCCEEDED status, then we will get
         // its info from the transfer_record table and create a new
         // document needed by the CIPRES workflow
-        String status = tr.getStatus();
         if ( status.equals ( "SUCCEEDED" ) )
         {
-            Transfer2DataManager dataManager = new Transfer2DataManager();
-            saved = dataManager.setupDataItems ( tr, this, destination_path,
-                wbs );
+            List <TransferRecord> trs = loadRecordByTaskId ( tr.getTaskId() );
+
+            if ( ! trs.isEmpty() )
+            {
+                TransferRecord old_tr = trs.get ( 0 );
+
+                if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
+                {
+                    Transfer2DataManager dataManager = new
+                        Transfer2DataManager();
+                    saved = dataManager.setupDataItems ( old_tr,
+                        destination_path );
+                }
+            }
         }
+
+        if ( saved == 0 )
+            return ( 0 );
 
         // Now update the record
         Session session = HibernateUtil.getSessionFactory().openSession();
