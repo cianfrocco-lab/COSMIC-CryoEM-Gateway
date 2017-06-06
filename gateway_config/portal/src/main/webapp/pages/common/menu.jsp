@@ -24,9 +24,11 @@
           <li class="${current_menu == 'Transfer Status' ? 'active' : ''}">
             <a href="<s:url action='status.action'/>"><span>Transfer Status</span></a>
           </li>
+          <%--
           <li class="${current_menu == 'Endpoints' ? 'active' : ''}">
             <a href="<s:url action='endpointlist.action'/>"><span>Data Endpoints</span></a>
           </li>
+          --%>
           <!-- End: Globus Auth & Transfer Service -->
           <li class="${current_menu == 'My Profile' ? 'active' : ''}">
             <a href="<s:url action='profile.action'/>"><span>My Profile</span></a>
