@@ -82,6 +82,7 @@ public class AuthCallbackAction extends FolderManager {
         String dataset_endpoint_id = config.getProperty(OauthConstants.DATASET_ENDPOINT_ID);
         String dataset_endpoint_base = config.getProperty(OauthConstants.DATASET_ENDPOINT_BASE);
         String dataset_endpoint_name = config.getProperty(OauthConstants.DATASET_ENDPOINT_NAME);
+		String endpoint_activation_uri = config.getProperty(OauthConstants.ENDPOINT_ACTIVATION_URI);
 
         // creates builder for flow object, necessary for oauth flow
         AuthorizationCodeFlow.Builder flowBuilder =
@@ -142,7 +143,7 @@ public class AuthCallbackAction extends FolderManager {
                 String code = request.getParameter(OauthConstants.CODE);
                 TokenResponse tokenResponse = null;
                 Boolean isErrorFree = true;
-                reportUserMessage("Got authorization code: " + code);
+                // reportUserMessage("Got authorization code: " + code);
 
                 try {
                     // This is step 2: exchanging the code for an Auth Token
@@ -238,9 +239,20 @@ public class AuthCallbackAction extends FolderManager {
                         //update transfer record
                         List<String> tr = profileManager.loadRecord(db_profile.getUserId());
                         if (tr != null && tr.size() > 0) {
+                            String dest_path = dataset_endpoint_base +
+                                db_profile.getLinkUsername() + "/";
+                            /*
+                            WorkbenchSession wbs = ( WorkbenchSession ) 
+                                getSession().get ( "workbenchSession" );
+                            */
                             TransferAction txaction = new TransferAction(accesstoken,username);
                             for (String taskid: tr)
-                                profileManager.updateRecord(txaction.updateTask(taskid,null));
+                            {
+                                //profileManager.updateRecord(txaction.updateTask(taskid,null));
+                                profileManager.updateRecord (
+                                    txaction.updateTask(taskid,null),
+                                    dest_path );
+                            }
                         }
                         //return "transfer";
                     }
@@ -252,6 +264,7 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.PRIMARY_USERNAME, username);
                     //getSession().put("link_username", linkusername);
                     getSession().put(OauthConstants.PRIMARY_IDENTITY, identity);
+					getSession().put(OauthConstants.ENDPOINT_ACTIVATION_URI, endpoint_activation_uri);
 
                     //initial setup for source and destination endpoint
                     getSession().put(OauthConstants.DATASET_ENDPOINT_ID,dataset_endpoint_id);
@@ -263,6 +276,15 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.DEST_ENDPOINT_PATH,dataset_endpoint_base+linkusername+"/");
                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME,dataset_endpoint_name);
                     getSession().put(OauthConstants.DEST_DISP_NAME,dataset_endpoint_name);
+
+                    //in case, the source is Comet
+                    /*
+                    getSession().put(OauthConstants.SRC_BOOKMARK_ID,"XSERVER");
+                    getSession().put(OauthConstants.SRC_ENDPOINT_ID,dataset_endpoint_id);
+                    getSession().put(OauthConstants.SRC_ENDPOINT_PATH,dataset_endpoint_base+linkusername+"/");
+                    getSession().put(OauthConstants.SRC_ENDPOINT_NAME,dataset_endpoint_name);
+                    getSession().put(OauthConstants.SRC_DISP_NAME,dataset_endpoint_name);
+                    */
 
                     EndpointListAction iplistaction = new EndpointListAction(accesstoken,username);
                     iplistaction.my_endpoint_list();
@@ -277,11 +299,27 @@ public class AuthCallbackAction extends FolderManager {
                             if (bnamea.length == 3) {
                                 flag = true;
                                 if (bnamea[2].equals("SOURCE")) {
+                                    //in case the source is Comet
+                                    /*
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
                                     getSession().put(OauthConstants.SRC_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
                                     getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
                                     getSession().put(OauthConstants.SRC_DISP_NAME, bname.split("::")[0]);
                                     getSession().put(OauthConstants.SRC_ENDPOINT_PATH, (String) bmmap.get("path"));
+
+                                    getSession().put(OauthConstants.DEST_BOOKMARK_ID, "XSERVER");
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_ID, dataset_endpoint_id);
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_NAME, dataset_endpoint_name);
+                                    getSession().put(OauthConstants.DEST_DISP_NAME, dataset_endpoint_name);
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_PATH, dataset_endpoint_base + linkusername + "/");
+                                    */
+
+                                    getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
+                                    getSession().put(OauthConstants.SRC_DISP_NAME, bname.split("::")[0]);
+                                    getSession().put(OauthConstants.SRC_ENDPOINT_PATH, (String) bmmap.get("path"));
+
                                 } else {
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, "XSERVER");
                                     getSession().put(OauthConstants.SRC_ENDPOINT_ID, dataset_endpoint_id);
@@ -294,6 +332,15 @@ public class AuthCallbackAction extends FolderManager {
                                     getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
                                     getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
                                     getSession().put(OauthConstants.DEST_DISP_NAME, bname.split("::")[0]);
+
+                                    //in case, the source is Comet
+                                    /*
+                                    getSession().put(OauthConstants.DEST_BOOKMARK_ID, (String) bmmap.get("id"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
+                                    getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
+                                    getSession().put(OauthConstants.DEST_DISP_NAME, bname.split("::")[0]);
+                                    */
                                 }
                                 break;
                             }
@@ -302,6 +349,18 @@ public class AuthCallbackAction extends FolderManager {
                             Map<String, Object> bmmap = bookmarklist.get(0);
                             String bm_id = (String) bmmap.get("id");
                             String bname = (String) bmmap.get("name");
+                            //in case, the destination is Comet
+                            /*
+                            bname += "::DEST";
+                            logger.info("update bookmark: "+bm_id);
+                            iplistaction.updateBookmark(bm_id,bname);
+                            getSession().put(OauthConstants.DEST_BOOKMARK_ID, bm_id);
+                            getSession().put(OauthConstants.DEST_ENDPOINT_ID, (String) bmmap.get("endpoint_id"));
+                            getSession().put(OauthConstants.DEST_ENDPOINT_NAME, bname);
+                            getSession().put(OauthConstants.DEST_DISP_NAME, (String) bmmap.get("disp_name"));
+                            getSession().put(OauthConstants.DEST_ENDPOINT_PATH, (String) bmmap.get("path"));
+                            */
+
                             bname += "::SOURCE";
                             logger.info("update bookmark: "+bm_id);
                             iplistaction.updateBookmark(bm_id,bname);
@@ -310,6 +369,7 @@ public class AuthCallbackAction extends FolderManager {
                             getSession().put(OauthConstants.SRC_ENDPOINT_NAME, bname);
                             getSession().put(OauthConstants.SRC_DISP_NAME, (String) bmmap.get("disp_name"));
                             getSession().put(OauthConstants.SRC_ENDPOINT_PATH, (String) bmmap.get("path"));
+
                         }
                     } else {
                         return "dataendpoints";

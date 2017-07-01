@@ -405,6 +405,9 @@ public class DataManager extends FolderManager
 	//TODO: add sort functionality to user interface
 	public List<UserDataItem> getCurrentDataTab() 
 	{
+        // added this or else new Globus transfer files won't show up in UI
+        // without logout/login
+		refreshFolderDataTabs();
 		try
 		{
 			TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
@@ -927,17 +930,7 @@ public class DataManager extends FolderManager
 	 */
 	public String getFormattedSourceData() 
 	{
-        logger.debug ( "*** MONA : entered DataManager.getFormattedSourceData()" );
 		SourceDocument sourceDocument = getSourceDocument();
-        logger.debug ( "*** MONA : sourceDocument = " + sourceDocument );
-        logger.debug ( "*** MONA : data type = " + sourceDocument.getDataType() );
-        try {
-            logger.debug ( "*** MONA : data = " + sourceDocument.getData() );
-        }
-        catch ( Exception e ) {
-            logger.debug ( "*** MONA : unable to get data" );
-        }
-        logger.debug ( "*** MONA : name = " + sourceDocument.getName() );
 
         if ( sourceDocument.getDataType() == DataType.IMAGE )
         {

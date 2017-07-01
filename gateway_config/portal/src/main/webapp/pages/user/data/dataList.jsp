@@ -6,6 +6,13 @@
 <body>
 <s:if test="%{hasFolderData()}">
   <h2>All Data</h2>
+  <div>
+    <s:url id="uploadDataUrl" action="pasteData" method="upload"
+        includeParams="none"/>
+    <s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">
+        Upload Data</s:a>
+  </div>
+
   <div class="callout">
     <s:if test="%{currentTabSize != 1}">
       There are currently <s:property value="%{currentTabSize}"/>
@@ -17,10 +24,6 @@
       There is currently 1 data item in this folder.
     </s:else>
   </div>
-  <s:url id="uploadDataUrl" action="pasteData" method="upload"
-    includeParams="none"/>
-  <s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">Upload Data</s:a>
-
   <s:url id="firstPageUrl" action="data" method="setPage" includeParams="none">
     <s:param name="page" value="%{'0'}"/>
   </s:url>
@@ -165,7 +168,7 @@
   </div>
   <div class="button-group">
     <s:url id="uploadDataUrl" action="pasteData" method="upload" includeParams="none"/>
-    <s:a href="%{uploadDataUrl}" cssClass="btn btn-primary">Upload/Enter Data</s:a>
+    <s:a href="%{uploadDataUrl}" cssClass="btn btn-primary">Upload Data</s:a>
     <s:url id="createTaskUrl" action="createTask" method="create" includeParams="none"/>
     <s:a href="%{createTaskUrl}" cssClass="btn btn-primary">Create a Task</s:a>
   </div>
