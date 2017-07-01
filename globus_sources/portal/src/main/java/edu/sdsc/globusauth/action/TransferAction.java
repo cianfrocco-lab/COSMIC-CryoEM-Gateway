@@ -1,7 +1,7 @@
 package edu.sdsc.globusauth.action;
 
 /**
- * Created by cyoun on 10/26/16.
+ * Created by cyoun on 06/25/17.
  */
 
 import com.google.api.client.auth.oauth2.Credential;
@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.ngbw.web.actions.NgbwSupport;
+import org.ngbw.sdk.database.Folder;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -38,14 +39,26 @@ public class TransferAction extends NgbwSupport {
     private String s_epid;
     private String s_eppath;
     private String s_epname;
-    //private String s_dispname;
+    private String s_dispname;
 
     //destination endpoint info
     private String d_epbmid;
     private String d_epid;
     private String d_eppath;
     private String d_epname;
-    //private String d_dispname;
+    private String d_dispname;
+
+    //endpoint activation uri
+    private String ep_act_uri = null;
+
+    private List<Map<String,Object>> bookmarklist;
+    private String actionType;
+
+    private Map<String,String> myendpoints;
+    private String searchValue;
+    private String searchLabel;
+    private String myendpointName;
+    private String myendpointValue;
 
     public TransferAction(){}
     public TransferAction(String filename,String filetype,
@@ -73,86 +86,177 @@ public class TransferAction extends NgbwSupport {
 
         client = new JSONTransferAPIClient(username, null, null);
         client.setAuthenticator(authenticator);
+        EndpointListAction iplistaction = new EndpointListAction(accesstoken, username);
+        setMyendpoints(iplistaction.my_endpoint_search_transfer("administered-by-me"));
+
+        logger.info("search label: "+searchLabel);
+        logger.info("search value: "+searchValue);
+        logger.info("my emdpoint name: "+myendpointName);
+        logger.info("my endpoint value: "+myendpointValue);
+
+        if ((searchLabel != null && searchLabel.trim().length() > 0) &&
+                (searchValue != null && searchValue.trim().length() > 0)) {
+            bookmarklist = iplistaction.add_my_endpoint_transfer(searchLabel,searchValue);
+            if (bookmarklist.size() == 1) {
+                setIntialLocation(bookmarklist.get(0));
+            }
+        } else if ((myendpointName != null && myendpointName.trim().length() > 0) &&
+                (myendpointValue != null && myendpointValue.trim().length() > 0)) {
+            bookmarklist = iplistaction.add_my_endpoint_transfer(myendpointName,myendpointValue);
+            if (bookmarklist.size() == 1) {
+                setIntialLocation(bookmarklist.get(0));
+            }
+        }
+
+        String transferlocation = request.getParameter("transferLocation");
+        logger.info("Exchange Location: "+transferlocation);
+
+        if (transferlocation != null) {
+            if (Boolean.valueOf(transferlocation)) {
+                getSourceInfo();
+                getDestinationInfo();
+                if (!s_epbmid.equals("XSERVER")) {
+                    s_epname = s_epname.replace("SOURCE", "DEST");
+                    iplistaction.updateBookmark(s_epbmid, s_epname);
+                    setDestinationInfo(s_epbmid, s_epid, s_eppath, s_epname);
+
+                    s_epbmid = "XSERVER";
+                    s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
+                    s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
+                    s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
+                    setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
+
+                } else {
+                    d_epname = d_epname.replace("DEST", "SOURCE");
+                    iplistaction.updateBookmark(d_epbmid, d_epname);
+                    setSourceInfo(d_epbmid, d_epid, d_eppath, d_epname);
+
+                    s_epbmid = "XSERVER";
+                    s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
+                    s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
+                    s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
+                    setDestinationInfo(s_epbmid, s_epid, s_eppath, s_epname);
+                }
+            }
+        }
 
         getSourceInfo();
-        if (s_epid == null || s_epid.trim().isEmpty()) return "dataendpoints";
+        if (s_epid == null || s_epid.trim().isEmpty()) {
+            bookmarklist = new ArrayList<>();
+            return SUCCESS;
+        }
         //in case the source is Comet
         //getDestinationInfo();
         //if (d_epid == null || d_epid.trim().isEmpty()) return "dataendpoints";
 
-        EndpointListAction iplistaction = new EndpointListAction(accesstoken, username);
         String s_eptype = request.getParameter("bookmarkId");
-        if (s_eptype != null && !s_eptype.equals(s_epbmid)) {
-            if (s_eptype.equals("XSERVER")) {
-                s_epname = s_epname.replace("SOURCE", "DEST");
-                iplistaction.updateBookmark(s_epbmid, s_epname);
-                setDestinationInfo(s_epbmid,s_epid,s_eppath,s_epname);
+        logger.info("Transfer Bookmark ID: "+s_eptype);
+        logger.info("Transfer Action Type: "+actionType);
 
-                s_epbmid = "XSERVER";
-                s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
-                s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
-                s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
-                setSourceInfo(s_epbmid,s_epid,s_eppath,s_epname);
+        if (s_eptype != null) {
+            if (actionType != null) {
+                if (actionType.equals("List")) {
+                    if (!s_eptype.equals(s_epbmid)) {
+                        if (s_eptype.equals("XSERVER")) {
+                            s_epname = s_epname.replace("SOURCE", "DEST");
+                            iplistaction.updateBookmark(s_epbmid, s_epname);
+                            setDestinationInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
-            } else {
-                if (s_epbmid.equals("XSERVER")) {
+                            s_epbmid = "XSERVER";
+                            s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
+                            s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
+                            s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
+                            setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
-                    getDestinationInfo();
-                    setDestinationInfo(s_epbmid,s_epid,s_eppath,s_epname);
+                        } else {
+                            if (s_epbmid.equals("XSERVER")) {
 
-                    if (s_eptype.equals(d_epbmid)) {
-                        d_epname = d_epname.replace("DEST", "SOURCE");
-                        s_eppath = request.getParameter("endpointPath");
-                        if (s_eppath != null && !s_eppath.isEmpty()) {
-                            s_eppath = s_eppath.trim();
-                            char lastChar = s_eppath.charAt(s_eppath.length() - 1);
-                            if (lastChar != '/') {
-                                s_eppath += "/";
-                            }
-                            if (d_eppath.equalsIgnoreCase(s_eppath)) {
-                                iplistaction.updateBookmark(d_epbmid, d_epname);
+                                getDestinationInfo();
+                                setDestinationInfo(s_epbmid, s_epid, s_eppath, s_epname);
+
+                                if (s_eptype.equals(d_epbmid)) {
+                                    d_epname = d_epname.replace("DEST", "SOURCE");
+                                    s_eppath = request.getParameter("endpointPath");
+                                    if (s_eppath != null && !s_eppath.isEmpty()) {
+                                        s_eppath = s_eppath.trim();
+                                        char lastChar = s_eppath.charAt(s_eppath.length() - 1);
+                                        if (lastChar != '/') {
+                                            s_eppath += "/";
+                                        }
+                                        if (d_eppath.equalsIgnoreCase(s_eppath)) {
+                                            iplistaction.updateBookmark(d_epbmid, d_epname);
+                                        } else {
+                                            if (iplistaction.deleteBookmark(d_epbmid)) {
+                                                d_epbmid = iplistaction.createBookmark(d_epname, d_epid, s_eppath);
+                                            }
+                                        }
+                                    } else {
+                                        s_eppath = d_eppath;
+                                        iplistaction.updateBookmark(d_epbmid, d_epname);
+                                    }
+
+                                    s_epbmid = d_epbmid;
+                                    s_epid = d_epid;
+                                    //s_eppath = d_eppath;
+                                    s_epname = d_epname;
+                                    setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
+
+                                } else {
+                                    exchangeSourceInfo(iplistaction, s_eptype, d_epbmid, d_epname, "DEST");
+                                }
                             } else {
-                                if (iplistaction.deleteBookmark(d_epbmid)) {
-                                    d_epbmid = iplistaction.createBookmark(d_epname, d_epid, s_eppath);
+                                exchangeSourceInfo(iplistaction, s_eptype, s_epbmid, s_epname, "SOURCE");
+                            }
+                        }
+                    } else {
+                        if (!s_eptype.equals("XSERVER")) {
+                            d_eppath = request.getParameter("endpointPath");
+                            if (d_eppath != null && !d_eppath.isEmpty()) {
+                                d_eppath = d_eppath.trim();
+                                char lastChar = d_eppath.trim().charAt(d_eppath.trim().length() - 1);
+                                if (lastChar != '/') {
+                                    d_eppath += "/";
+                                }
+                                if (!d_eppath.equalsIgnoreCase(s_eppath)) {
+                                    if (iplistaction.deleteBookmark(s_epbmid)) {
+                                        s_eppath = d_eppath;
+                                        s_epbmid = iplistaction.createBookmark(s_epname, s_epid, s_eppath);
+                                        setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
+                                    }
                                 }
                             }
-                        } else {
-                            s_eppath = d_eppath;
-                            iplistaction.updateBookmark(d_epbmid, d_epname);
                         }
-
-                        s_epbmid = d_epbmid;
-                        s_epid = d_epid;
-                        //s_eppath = d_eppath;
-                        s_epname = d_epname;
-                        setSourceInfo(s_epbmid,s_epid,s_eppath,s_epname);
-
-                    } else {
-                        exchangeSourceInfo(iplistaction,s_eptype,d_epbmid,d_epname,"DEST");
                     }
-                } else {
-                    exchangeSourceInfo(iplistaction,s_eptype,s_epbmid,s_epname,"SOURCE");
-                }
-            }
-        } else {
-            if (s_eptype != null && !s_eptype.equals("XSERVER")) {
-                d_eppath = request.getParameter("endpointPath");
-                if (d_eppath != null && !d_eppath.isEmpty()) {
-                    d_eppath = d_eppath.trim();
-                    char lastChar = d_eppath.trim().charAt(d_eppath.trim().length() - 1);
-                    if (lastChar != '/') {
-                        d_eppath += "/";
-                    }
-                    if (!d_eppath.equalsIgnoreCase(s_eppath)) {
-                        if (iplistaction.deleteBookmark(s_epbmid)) {
-                            s_eppath = d_eppath;
-                            s_epbmid = iplistaction.createBookmark(s_epname, s_epid, s_eppath);
-                            setSourceInfo(s_epbmid,s_epid,s_eppath,s_epname);
-                        }
+                } else if (actionType.equals("Delete")) {
+                    Map<String, Object> bmObj = iplistaction.removeBookmark(s_eptype);
+                    int srcType = (Integer)bmObj.get("index");
+                    if (srcType == -1 || srcType == 3) {
+                        bookmarklist = new ArrayList<>();
+                        return SUCCESS;
+                    } else if (srcType == 0) {
+                        String bid = (String) bmObj.get("id");
+                        String bname = (String) bmObj.get("name");
+                        String epid = (String) bmObj.get("endpoint_id");
+                        String path = (String) bmObj.get("path");
+                        //String d_name = (String) bmObj.get("disp_name");
+                        setSourceInfo(bid,epid,path,bname);
+                        getSourceInfo();
+                    } else if (srcType == 1) {
+                        String bid = (String) bmObj.get("id");
+                        String bname = (String) bmObj.get("name");
+                        String epid = (String) bmObj.get("endpoint_id");
+                        String path = (String) bmObj.get("path");
+                        //String d_name = (String) bmObj.get("disp_name");
+                        setDestinationInfo(bid,epid,path,bname);
+                        getDestinationInfo();
                     }
                 }
             }
         }
+
+        //iplistaction.my_endpoint_list();
+        //setBookmarklist(iplistaction.getBookmarklist());
+        setBookmarklist(iplistaction.my_bookmark_list());
 
         logger.info("SRC Bookmark ID: "+s_epbmid);
         logger.info("SRC Endpoint ID: "+s_epid);
@@ -191,7 +295,8 @@ public class TransferAction extends NgbwSupport {
                     //My GCP endpoint
                     if (!autoActivate(s_epid)) {
                         logger.error("Unable to auto activate source endpoint, exiting");
-                        reportUserError("Unable to auto activate source endpoint, "+s_epid);
+                        reportUserMessage("Unable to auto activate source endpoint, \""+s_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
+                        //reportUserMessage("<a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
                         return SUCCESS;
                     }
                     ep_status = endpointStatus(s_epid);
@@ -210,7 +315,9 @@ public class TransferAction extends NgbwSupport {
             if(ep_status.get("is_connected")) {
                 displayLs(s_epid, s_eppath);
             } else {
-                reportUserMessage("Source endpoint, "+s_epid+" is not connected.");
+                //reportUserMessage("Source endpoint, "+s_epid+" is not connected.");
+                reportUserError ("Source endpoint, "+
+                        s_epname.split("::")[0] + ", is not connected.");
             }
 
             return SUCCESS;
@@ -269,7 +376,7 @@ public class TransferAction extends NgbwSupport {
                     //My GCP endpoint
                     if (!autoActivate(d_epid)) {
                         logger.error("Unable to auto activate destination endpoint, exiting");
-                        reportUserError("Unable to auto activate destination endpoint, "+d_epid);
+                        reportUserMessage("Unable to auto activate destination endpoint, \""+d_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
                         return SUCCESS;
                     }
                     ep_status = endpointStatus(d_epid);
@@ -314,26 +421,68 @@ public class TransferAction extends NgbwSupport {
             transfer.put("sync_level", sync_level);
             transfer.put("encrypt_data", encrypt_data);
 
+            String file_names = null;
+            String dir_names = null;
+            String delim = "";
             if (filter_filenames.size() > 0) {
+                file_names = "";
                 for (String file : filter_filenames) {
                     logger.info("Filtered file name:" + file);
+                    file_names += delim + file;
+                    delim = "|";
                     addTransferItem(s_eppath+file, d_eppath+file, false, transfer);
                 }
             }
             if (filter_dirnames.size() > 0) {
+                dir_names = "";
+                delim = "";
                 for (String dir : filter_dirnames) {
                     logger.info("Filtered directory name:"+dir);
+                    dir_names += delim + dir;
+                    delim = "|";
                     addTransferItem(s_eppath+dir, d_eppath+dir, true, transfer);
                 }
             }
+
+            logger.info("File names: "+file_names);
+            logger.info("Directory names: "+dir_names);
+
             r = client.postResult("/transfer", transfer, null);
             taskId = r.document.getString("task_id");
-            saveTask(taskId);
+            saveTask(taskId,file_names,dir_names);
+
+            /*
+            //update transfer record
+            new Thread() {
+                public void run() {
+                    while (true) {
+                        try {
+                            // still queued - sleep for 5 seconds
+                            Thread.sleep(5000);
+                            String tstat = updateRecord(taskId);
+                            if (tstat.equals("SUCCEEDED") || tstat.equals("FAILED")) break;
+                        } catch (Exception e) {
+                            String msg = "Can't wait for job to update - " + e.getMessage();
+                            logger.warn(msg);
+                            break;
+                        }
+                    }
+                }
+            }.start();
+            */
+
             return "transferstatus";
         } else {
             return "failure";
         }
 
+    }
+
+    private String updateRecord(String taskId) throws Exception {
+        TransferRecord tr = updateTask(taskId, null);
+        ProfileManager profileManager = new ProfileManager();
+        profileManager.updateRecord(tr);
+        return tr.getStatus();
     }
 
     @SuppressWarnings("unchecked")
@@ -346,7 +495,7 @@ public class TransferAction extends NgbwSupport {
         s_epid = (String) getSession().get(OauthConstants.SRC_ENDPOINT_ID);
         s_eppath = (String) getSession().get(OauthConstants.SRC_ENDPOINT_PATH);
         s_epname = (String) getSession().get(OauthConstants.SRC_ENDPOINT_NAME);
-        //s_dispname = (String) getSession().get(OauthConstants.SRC_DISP_NAME);
+        s_dispname = (String) getSession().get(OauthConstants.SRC_DISP_NAME);
     }
 
     private void setSourceInfo(String epbmid, String epid, String eppath, String epname){
@@ -362,6 +511,7 @@ public class TransferAction extends NgbwSupport {
         d_epid = (String) getSession().get(OauthConstants.DEST_ENDPOINT_ID);
         d_eppath = (String) getSession().get(OauthConstants.DEST_ENDPOINT_PATH);
         d_epname = (String) getSession().get(OauthConstants.DEST_ENDPOINT_NAME);
+        d_dispname = (String) getSession().get(OauthConstants.DEST_DISP_NAME);
     }
 
     private void setDestinationInfo(String epbmid, String epid, String eppath, String epname) {
@@ -405,6 +555,21 @@ public class TransferAction extends NgbwSupport {
         //getSession().put(OauthConstants.SRC_ENDPOINT_NAME, s_epname);
     }
 
+    private void setIntialLocation(Map<String, Object> bmmap) {
+        String si_bid = (String) bmmap.get("id");
+        String si_bname = (String) bmmap.get("name");
+        String si_epid = (String) bmmap.get("endpoint_id");
+        String si_path = (String) bmmap.get("path");
+        //String si_d_name = (String) bmmap.get("disp_name");
+        setSourceInfo(si_bid, si_epid, si_path, si_bname);
+
+        String di_epbmid = "XSERVER";
+        String di_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
+        String di_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
+        String di_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
+        setDestinationInfo(di_epbmid, di_epid, di_eppath, di_epname);
+    }
+
     public boolean autoActivate(String endpointId)
             throws IOException, JSONException, GeneralSecurityException, APIError {
         String resource = BaseTransferAPIClient.endpointPath(endpointId)
@@ -413,6 +578,8 @@ public class TransferAction extends NgbwSupport {
                 null);
         String code = r.document.getString("code");
         if (code.startsWith("AutoActivationFailed")) {
+            ep_act_uri = (String) getSession().get(OauthConstants.ENDPOINT_ACTIVATION_URI);
+            ep_act_uri = ep_act_uri.replace(":endpoint_id",endpointId);
             return false;
         }
         return true;
@@ -571,7 +738,7 @@ public class TransferAction extends NgbwSupport {
         inStream.close();
         scanner.close();
 
-        logger.info(sb.toString());
+        //logger.info(sb.toString());
         return sb.toString();
 
     }
@@ -679,7 +846,7 @@ public class TransferAction extends NgbwSupport {
         }
     }
 
-    public void saveTask(String taskId)
+    public void saveTask(String taskId,String fileNames, String dirNames)
             throws IOException, JSONException, GeneralSecurityException, APIError {
         TransferRecord tr = new TransferRecord();
         String resource = "/task/" +  taskId;
@@ -703,9 +870,13 @@ public class TransferAction extends NgbwSupport {
         tr.setRequestTime(r.document.getString("request_time"));
         tr.setStatus(r.document.getString("status"));
         try {
-            tr.setCompletionTime(r.document.getString("completion_time"));
+            String c_time = r.document.getString("completion_time");
+            if (c_time != null)
+                tr.setCompletionTime(c_time);
+            else
+                tr.setCompletionTime("");
         } catch (org.json.JSONException e) {
-            tr.setCompletionTime("Not available");
+            tr.setCompletionTime("");
         }
         tr.setFilesTransferred(r.document.getInt("files_transferred"));
         tr.setFaults(r.document.getInt("faults"));
@@ -718,6 +889,14 @@ public class TransferAction extends NgbwSupport {
         tr.setDirectories(r.document.getInt("directories"));
         tr.setFilesSkipped(r.document.getInt("files_skipped"));
         tr.setByteTransferred(r.document.getLong("bytes_transferred"));
+
+        Folder current_folder = getCurrentFolder();
+        long folder_id = current_folder.getFolderId();
+        logger.info("Current Folder ID: "+folder_id);
+        tr.setEnclosingFolderId(folder_id);
+        tr.setFileNames(fileNames);
+        tr.setDirectoryNames(dirNames);
+
         ProfileManager pm = new ProfileManager();
         pm.addRecord(tr);
     }
@@ -741,7 +920,11 @@ public class TransferAction extends NgbwSupport {
         //tr.setRequestTime(r.document.getString("request_time"));
         tr.setStatus(r.document.getString("status"));
         try {
-            tr.setCompletionTime(r.document.getString("completion_time"));
+            String c_time = r.document.getString("completion_time");
+            if (c_time != null)
+                tr.setCompletionTime(c_time);
+            else
+                tr.setCompletionTime("");
         } catch (org.json.JSONException e) {
             tr.setCompletionTime("Not available");
         }
@@ -777,5 +960,23 @@ public class TransferAction extends NgbwSupport {
     public void setFilenames(List<String> filenames) {this.filenames = filenames;}
     public String getTaskId() {return taskId;}
     public void setTaskId(String taskId) {this.taskId = taskId;}
+
+    public void setBookmarklist(List<Map<String,Object>> bookmarklist) {this.bookmarklist = bookmarklist;}
+    public List<Map<String,Object>> getBookmarklist() {return bookmarklist;}
+
+    public void setActionType(String actionType) { this.actionType = actionType; }
+    public String getActionType() { return actionType; }
+
+    public String getSearchLabel() { return searchLabel; }
+    public String getSearchValue() { return searchValue; }
+    public String getMyendpointName() { return myendpointName; }
+    public String getMyendpointValue() { return myendpointValue; }
+
+    public Map<String,String> getMyendpoints() {return myendpoints;}
+    public void setMyendpoints(Map<String,String> myendpoints) { this.myendpoints = myendpoints; }
+    public void setSearchLabel(String searchLabel) { this.searchLabel = searchLabel; }
+    public void setSearchValue(String searchValue) { this.searchValue = searchValue; }
+    public void setMyendpointName(String myendpointName) { this.myendpointName = myendpointName; }
+    public void setMyendpointValue(String myendpointValue) { this.myendpointValue = myendpointValue; }
 
 }

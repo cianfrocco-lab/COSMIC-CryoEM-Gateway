@@ -44,8 +44,8 @@ public class AuthCallbackAction extends FolderManager {
     private String authurl;
     private String profileurl;
     private Properties config;
-    private ActionMapper actionMapper;
-    private UrlHelper urlHelper;
+    // private ActionMapper actionMapper;
+    // private UrlHelper urlHelper;
 
     private JsonFactory jsonFactory = new JacksonFactory();
     private ProfileManager profileManager;
@@ -82,6 +82,7 @@ public class AuthCallbackAction extends FolderManager {
         String dataset_endpoint_id = config.getProperty(OauthConstants.DATASET_ENDPOINT_ID);
         String dataset_endpoint_base = config.getProperty(OauthConstants.DATASET_ENDPOINT_BASE);
         String dataset_endpoint_name = config.getProperty(OauthConstants.DATASET_ENDPOINT_NAME);
+        String endpoint_activation_uri = config.getProperty(OauthConstants.ENDPOINT_ACTIVATION_URI);
 
         // creates builder for flow object, necessary for oauth flow
         AuthorizationCodeFlow.Builder flowBuilder =
@@ -142,7 +143,7 @@ public class AuthCallbackAction extends FolderManager {
                 String code = request.getParameter(OauthConstants.CODE);
                 TokenResponse tokenResponse = null;
                 Boolean isErrorFree = true;
-                reportUserMessage("Got authorization code: " + code);
+                // reportUserMessage("Got authorization code: " + code);
 
                 try {
                     // This is step 2: exchanging the code for an Auth Token
@@ -252,6 +253,7 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.PRIMARY_USERNAME, username);
                     //getSession().put("link_username", linkusername);
                     getSession().put(OauthConstants.PRIMARY_IDENTITY, identity);
+                    getSession().put(OauthConstants.ENDPOINT_ACTIVATION_URI, endpoint_activation_uri);
 
                     //initial setup for source and destination endpoint
                     getSession().put(OauthConstants.DATASET_ENDPOINT_ID,dataset_endpoint_id);
@@ -274,18 +276,18 @@ public class AuthCallbackAction extends FolderManager {
                     */
 
                     EndpointListAction iplistaction = new EndpointListAction(accesstoken,username);
-                    iplistaction.my_endpoint_list();
-                    List<Map<String,Object>> bookmarklist = iplistaction.getBookmarklist();
-
+                    //iplistaction.my_endpoint_list();
+                    //List<Map<String,Object>> bookmarklist = iplistaction.getBookmarklist();
+                    List<Map<String,Object>> bookmarklist = iplistaction.my_bookmark_list();
                     if (bookmarklist != null && bookmarklist.size() > 0) {
                         boolean flag = false;
                         for (int i=0; i<bookmarklist.size(); i++) {
                             Map<String, Object> bmmap = bookmarklist.get(i);
                             String bname = (String) bmmap.get("name");
                             String[] bnamea = bname.split("::");
-                            if (bnamea.length == 3) {
+                            if (bnamea.length == 2) {
                                 flag = true;
-                                if (bnamea[2].equals("SOURCE")) {
+                                if (bnamea[1].equals("SOURCE")) {
                                     //in case the source is Comet
                                     /*
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
@@ -359,7 +361,8 @@ public class AuthCallbackAction extends FolderManager {
 
                         }
                     } else {
-                        return "dataendpoints";
+                        //return "dataendpoints";
+                        return "transfer";
                     }
                 }
                 if (redirect_flag) {
@@ -466,6 +469,7 @@ public class AuthCallbackAction extends FolderManager {
         return true;
     }
 
+    /*
     @Inject
     public void setActionMapper(ActionMapper actionMapper) {
         this.actionMapper = actionMapper;
@@ -475,6 +479,7 @@ public class AuthCallbackAction extends FolderManager {
     public void setUrlHelper(UrlHelper urlHelper) {
         this.urlHelper = urlHelper;
     }
+    */
 
     public String getAuthurl() {
         return authurl;

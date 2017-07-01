@@ -54,9 +54,13 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("request_time", r.document.getString("request_time")+" UTC");
             taskmap.put("status", r.document.getString("status"));
             try {
-                taskmap.put("completion_time", r.document.getString("completion_time")+" UTC");
+                String c_time = r.document.getString("completion_time");
+                if (c_time != null)
+                    taskmap.put("completion_time", c_time+" UTC");
+                else
+                    taskmap.put("completion_time", "");
             } catch (org.json.JSONException e) {
-                taskmap.put("completion_time", "Not available");
+                taskmap.put("completion_time", "");
             }
             taskmap.put("files_transferred", r.document.getInt("files_transferred"));
             taskmap.put("faults", r.document.getInt("faults"));
@@ -88,9 +92,13 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("request_time", data.getJSONObject(i).getString("request_time")+" UTC");
                     taskmap.put("status", data.getJSONObject(i).getString("status"));
                     try {
-                        taskmap.put("completion_time", data.getJSONObject(i).getString("completion_time")+" UTC");
+                        String c_time = data.getJSONObject(i).getString("completion_time");
+                        if (c_time != null)
+                            taskmap.put("completion_time", c_time+" UTC");
+                        else
+                            taskmap.put("completion_time", "");
                     } catch (org.json.JSONException e) {
-                        taskmap.put("completion_time", "Not available");
+                        taskmap.put("completion_time", "");
                     }
                     taskmap.put("files_transferred", data.getJSONObject(i).getInt("files_transferred"));
                     taskmap.put("faults", data.getJSONObject(i).getInt("faults"));
@@ -108,7 +116,6 @@ public class TransferStatusAction extends NgbwSupport {
             }
         }
 
-        /*
         //update transfer record
         ProfileManager profileManager = new ProfileManager();
         TransferAction txaction = new TransferAction();
@@ -118,7 +125,6 @@ public class TransferStatusAction extends NgbwSupport {
             for (String taskid: tr)
                 profileManager.updateRecord(txaction.updateTask(taskid,client));
         }
-        */
 
         return SUCCESS;
 

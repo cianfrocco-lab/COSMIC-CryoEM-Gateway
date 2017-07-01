@@ -489,6 +489,14 @@
 
     </package>
 
+    <package name="json" namespace="/" extends="json-default">
+        <action name="endpointlistJSON" class="edu.sdsc.globusauth.action.EndpointListJSONAction" method="endpoint_list">
+            <result type="json" >
+                <param name="root">endpointlist</param>
+            </result>
+        </action>
+    </package>
+
     <!--
         Include NGBW Struts tool configuration file, must be
         done after "default" package in order to properly extend it

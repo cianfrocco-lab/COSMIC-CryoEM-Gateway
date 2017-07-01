@@ -80,6 +80,8 @@ public final class OauthConstants {
     public static final int HTTP_FORBIDDEN = 403;
     public static final int HTTP_UNAUTHORIZED = 401;
 
+    public static final String ENDPOINT_ACTIVATION_URI = "activate_endpoint_uri";
+
 
     //Prevents instantialtion
     private OauthConstants() {
