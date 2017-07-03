@@ -34,7 +34,59 @@
                 }
                 return true;
             });
+
+        <%--
+        // Set a variable, we will fill later.
+        var value = null;
+
+        // On submit click, set the value
+        $('input[type="submit"]').click(function(){
+            value = $(this).val();
         });
+
+        // On data-type submit click, set the value
+        $('input[type="submit"][data-type]').click(function(){
+            value = $(this).data('type');
+        });
+
+        // Use the set value in the submit function
+        $('form').submit(function (event){
+            //event.preventDefault();
+            alert("vale: "+value);
+            // do whatever you need to with the content
+        });
+        --%>
+        });
+
+        function validateForm(obj,event){
+            var submitButton;
+
+            if(typeof event.explicitOriginalTarget != 'undefined'){  //
+                submitButton = event.explicitOriginalTarget;
+            }else if(typeof document.activeElement.value != 'undefined'){  // IE
+                submitButton = document.activeElement;
+            };
+
+            var sub_name = submitButton.name;
+            var sub_value = submitButton.value;
+
+            if (sub_name == "actionType" && sub_value == "List") {
+                var ep = obj['endpointPath'].value;//$("#endpointPath").val();
+                if (ep.startsWith("/")) {
+                    return true;
+                }
+                alert("Please enter a valid path, starting with '/': "+ep);
+                return false;
+
+                //alert(ep + " : " + sub_name + ' = ' + sub_value)
+                //return false;
+            }
+
+            //var ep = obj['endpointPath'].value;
+            //alert(ep + " : " + sub_name + ' = ' + sub_value)
+            //return false;
+        }
+
     </script>
     <!-- Javascript -->
     <script type="text/javascript">
@@ -92,6 +144,16 @@
                 $( "#searchValue" ).val("");
                 return true;
             });
+
+            <%--
+            $('[id^=endpoint-list-]').submit(function (e) {
+                var ss = $(this);
+                var en = ss["endpointName"].value;
+                //var clicked = $("#actionType").
+                alert("action type: "+$("#actionType").val()+en+e);
+                return false;
+            });
+            --%>
         });
 
     </script>
@@ -139,17 +201,17 @@
 
                 <s:iterator value="bookmarklist" var="data">
                     <tr>
-                        <s:form id="endpoint-list-%{#data['id']}" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
+                        <s:form id="endpoint-list-%{#data['id']}" cssClass="form-horizontal" action="transfer" method="GET" theme="simple" onsubmit="return validateForm(this,event);">
                             <s:hidden name="bookmarkId" value="%{#data['id']}" />
                             <s:hidden name="endpointId" value="%{#data['endpoint_id']}" />
-                            <s:hidden name="endpointName" value="%{#data['name']}" />
+                            <s:hidden id="endpointName" name="endpointName" value="%{#data['name']}" />
 
                             <td class="col-md-4 text-left">
                                 <s:property value="#data['disp_name']" />
                             </td>
 
                             <td class="col-md-5 text-left">
-                                <s:textfield cssClass="form-control" name="endpointPath" value="%{#data['path']}"/>
+                                <s:textfield cssClass="form-control" id="endpointPath" name="endpointPath" value="%{#data['path']}"/>
                             </td>
                             <td class="col-md-1 text-center">
                                 <s:submit id="actionType" name="actionType" value="List" cssClass="btn btn-primary"/>

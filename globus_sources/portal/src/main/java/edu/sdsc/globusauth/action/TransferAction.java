@@ -814,7 +814,7 @@ public class TransferAction extends NgbwSupport {
             return true;
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
-            reportUserError(e.toString());
+            reportUserError("It was failed to list files in the path, \""+path+"\" on the endpoint ID, \""+endpointId+"\".");
             return false;
         }
     }
@@ -839,7 +839,7 @@ public class TransferAction extends NgbwSupport {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
-                reportUserError(e.toString());
+                reportUserError("The user directory, \""+path+"\" on XSEDE Comet resource was failed to access.");
                 return false;
             }
             return true;
