@@ -166,6 +166,7 @@ public class TransferAction extends NgbwSupport {
                             s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
                             s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
                             s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
+                            s_dispname = s_epname;
                             setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
                         } else {
@@ -199,6 +200,7 @@ public class TransferAction extends NgbwSupport {
                                     s_epid = d_epid;
                                     //s_eppath = d_eppath;
                                     s_epname = d_epname;
+                                    s_dispname = d_epname.split("::")[0];
                                     setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
                                 } else {
@@ -221,6 +223,7 @@ public class TransferAction extends NgbwSupport {
                                     if (iplistaction.deleteBookmark(s_epbmid)) {
                                         s_eppath = d_eppath;
                                         s_epbmid = iplistaction.createBookmark(s_epname, s_epid, s_eppath);
+                                        s_dispname = s_epname;
                                         setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
                                     }
                                 }
@@ -262,6 +265,7 @@ public class TransferAction extends NgbwSupport {
         logger.info("SRC Endpoint ID: "+s_epid);
         logger.info("SRC Path: "+s_eppath);
         logger.info("SRC Name: "+s_epname);
+        logger.info("SRC Display Name: "+s_dispname);
 
         //XSEDE endpoint
         String xsede_id = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
@@ -315,9 +319,30 @@ public class TransferAction extends NgbwSupport {
             if(ep_status.get("is_connected")) {
                 displayLs(s_epid, s_eppath);
             } else {
-                //reportUserMessage("Source endpoint, "+s_epid+" is not connected.");
-                reportUserError ("Source endpoint, "+
-                        s_epname.split("::")[0] + ", is not connected.");
+                reportUserError ("Source endpoint, "+ s_epname.split("::")[0] + ", is not connected.");
+            }
+
+            getDestinationInfo();
+            logger.info("Destination Endpoint activation....");
+            if (d_epname.contains("::")) {
+                logger.info("Destination Endpoint status......");
+                ep_status = endpointStatus(d_epid);
+                if (!ep_status.get("activated")) {
+                    //My GCP endpoint
+                    if (!autoActivate(d_epid)) {
+                        logger.error("Unable to auto activate destination endpoint, exiting");
+                        reportUserMessage("Unable to auto activate destination endpoint, \""+d_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
+                        return SUCCESS;
+                    }
+                    ep_status = endpointStatus(d_epid);
+                }
+
+                //check the file path
+                if(ep_status.get("is_connected")) {
+                    checkLs(d_epid, d_eppath);
+                } else {
+                    reportUserMessage("Destination endpoint, "+d_dispname+" is not connected.");
+                }
             }
 
             return SUCCESS;
@@ -366,6 +391,7 @@ public class TransferAction extends NgbwSupport {
             }
             */
 
+            /*
             getDestinationInfo();
 
             logger.info("Destination Endpoint activation....");
@@ -387,6 +413,7 @@ public class TransferAction extends NgbwSupport {
                     return SUCCESS;
                 }
             }
+            */
 
             /*
             logger.info("Destination Endpoint status......");
@@ -496,6 +523,10 @@ public class TransferAction extends NgbwSupport {
         s_eppath = (String) getSession().get(OauthConstants.SRC_ENDPOINT_PATH);
         s_epname = (String) getSession().get(OauthConstants.SRC_ENDPOINT_NAME);
         s_dispname = (String) getSession().get(OauthConstants.SRC_DISP_NAME);
+        logger.info("Get SRC Bookmark ID: "+s_epbmid);
+        logger.info("Get SRC Endpoint ID: "+s_epid);
+        logger.info("Get SRC Path: "+s_eppath);
+        logger.info("Get SRC Name: "+s_epname);
     }
 
     private void setSourceInfo(String epbmid, String epid, String eppath, String epname){
@@ -534,6 +565,7 @@ public class TransferAction extends NgbwSupport {
         s_epid = request.getParameter("endpointId");
         s_eppath = request.getParameter("endpointPath");
         s_epname = request.getParameter("endpointName");
+        s_dispname = s_epname;
         s_epname += "::SOURCE";
         //iplistaction.updateBookmark(src_bm_id, s_epname);
         if (s_eppath == null || s_eppath.isEmpty()) {
@@ -814,7 +846,36 @@ public class TransferAction extends NgbwSupport {
             return true;
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
-            reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+            //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+            reportUserError("Error, unable to list files on the source endpoint ID, \""+endpointId+"\".");
+            return false;
+        }
+    }
+
+    public boolean checkLs(String endpointId, String path) {
+        Map<String, String> params = new HashMap<String, String>();
+        if (path != null) {
+            params.put("path", path);
+            params.put("show_hidden","0");
+        }
+        try {
+            String resource = BaseTransferAPIClient.endpointPath(endpointId)
+                    + "/ls";
+            JSONTransferAPIClient.Result r = client.getResult(resource, params);
+            logger.info("Check contents of " + path + " on "
+                    + endpointId + ":");
+
+            JSONArray fileArray = r.document.getJSONArray("DATA");
+            for (int i = 0; i < fileArray.length(); i++) {
+                JSONObject fileObject = fileArray.getJSONObject(i);
+                String f_name = fileObject.getString("name");
+                String f_type = fileObject.getString("type");
+                logger.info("Name:" + f_name + " Type:"+f_type);
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error("Check file list: "+e.toString());
+            reportUserError("Error, unable to find the current path of the endpoint ID, \""+endpointId+"\".");
             return false;
         }
     }
@@ -839,7 +900,8 @@ public class TransferAction extends NgbwSupport {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
-                reportUserError("The user directory on XSEDE Comet resource was failed to access.");
+                //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
+                reportUserError("Error, unable to access XSEDE Comet storage.");
                 return false;
             }
             return true;
