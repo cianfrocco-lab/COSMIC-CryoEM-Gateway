@@ -391,7 +391,6 @@ public class TransferAction extends NgbwSupport {
             }
             */
 
-            /*
             getDestinationInfo();
 
             logger.info("Destination Endpoint activation....");
@@ -413,7 +412,6 @@ public class TransferAction extends NgbwSupport {
                     return SUCCESS;
                 }
             }
-            */
 
             /*
             logger.info("Destination Endpoint status......");
