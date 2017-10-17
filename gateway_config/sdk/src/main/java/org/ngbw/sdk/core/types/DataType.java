@@ -8,10 +8,12 @@ package org.ngbw.sdk.core.types;
  * 
  * @author Roland H. Niedner
  * @author Paul Hoover
+ * @author Mona Wong
  * 
  */
 public enum DataType {
 	BLAST_OUTPUT,
+    DIRECTORY,
 	FASTA_OUTPUT,
     IMAGE,
 	MATRIX,
