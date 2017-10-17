@@ -194,7 +194,6 @@ public class ManageTasks extends DataManager
 		if (taskAction == null) {
 			addActionError("You must select an action to manipulate your tasks.");
 		} else {
-			//Long[] selectedIds = getSelectedIds();
 			String[] selectedIds = getSelectedIds();
 			if (selectedIds == null || selectedIds.length < 1) {
 				addActionError("You must select one or more tasks to " +
@@ -233,7 +232,6 @@ public class ManageTasks extends DataManager
 	
 	@SkipValidation
 	public String deleteSelected() {
-		//Long[] selectedIds = getSelectedIds();
 		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1) {
 			addActionError("You must select one or more tasks to delete them.");
@@ -459,14 +457,14 @@ public class ManageTasks extends DataManager
 	 *================================================================*/
 	@SuppressWarnings("unchecked")
 	public Map<String, List<TaskInputSourceDocument>> getInputMap() {
-        logger.info ( "MONA: entered ManageTasks.getInputMap()" );
-        logger.info ( "MONA: INPUT_MAP = " + getSessionAttribute ( INPUT_MAP ) );
+        //logger.info ( "MONA: entered ManageTasks.getInputMap()" );
+        //logger.info ( "MONA: INPUT_MAP = " + getSessionAttribute ( INPUT_MAP ) );
 		return (Map<String, List<TaskInputSourceDocument>>)getSessionAttribute(INPUT_MAP);
 	}
 	
 	public void setInputMap(Map<String, List<TaskInputSourceDocument>> inputMap) {
-        logger.info ( "MONA: entered ManageTasks.setInputMap()" );
-        logger.info ( "MONA: inputMap = " + inputMap );
+        //logger.info ( "MONA: entered ManageTasks.setInputMap()" );
+        //logger.info ( "MONA: inputMap = " + inputMap );
 		setSessionAttribute(INPUT_MAP, inputMap);
 	}
 	
@@ -1084,7 +1082,6 @@ public class ManageTasks extends DataManager
 		// get IDs of selected tasks to move
 		int moved = 0;
         String id;
-		//Long[] selectedIds = getSelectedIds();
 		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			return moved;
@@ -1098,7 +1095,6 @@ public class ManageTasks extends DataManager
 		// move selected tasks to target folder
 		else for (int i=0; i<selectedIds.length; i++) {
             id = selectedIds[i].split ( "-" )[1].trim();;
-			//Task task = getSelectedTask(selectedIds[i]);
 			Task task = getSelectedTask ( Long.parseLong ( id ) );
 			if (task == null)
 				addActionError("Error moving task with ID " +
@@ -1110,17 +1106,6 @@ public class ManageTasks extends DataManager
 				reportError(error, "Error moving task \"" + task.getLabel() +
 					"\" to folder \"" + folder.getLabel() + "\"");
 			}
-
-            /*
-            String[] parts = selectedIds[i].split ( "-" );
-            String className = parts[0].trim();
-            Long id = Long.parseLong ( parts[0].trim() );
-
-            if ( className.equals ( "UserDataItem" ) )
-            {
-            }
-            */
-
 		}
 		return moved;
 	}
@@ -1131,7 +1116,6 @@ public class ManageTasks extends DataManager
 	protected int deleteSelectedTasks() {
 		int deleted = 0;
         String id;
-		//Long[] selectedIds = getSelectedIds();
 		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			return deleted;

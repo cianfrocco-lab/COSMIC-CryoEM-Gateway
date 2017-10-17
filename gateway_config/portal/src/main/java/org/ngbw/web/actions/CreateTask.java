@@ -108,7 +108,7 @@ public class CreateTask extends ManageTasks
 	 *================================================================*/
 	@SkipValidation
 	public String create() {
-        logger.debug ( "MONA: entered CreateTask.create" );
+        //logger.debug ( "MONA: entered CreateTask.create" );
 		setTab(TASK_SUMMARY);
 		setInput(null);
 		setCurrentTask(null);
@@ -117,7 +117,7 @@ public class CreateTask extends ManageTasks
 
 	public String clone() 
 	{
-        logger.debug ( "MONA: entered CreateTask.clone" );
+        //logger.debug ( "MONA: entered CreateTask.clone" );
 		Task task = getRequestTask(TASK);
 		if (task == null) 
 		{
@@ -145,7 +145,7 @@ public class CreateTask extends ManageTasks
 	@SkipValidation
 	public String edit() 
 	{
-        logger.debug ( "MONA: entered CreateTask.edit" );
+        //logger.debug ( "MONA: entered CreateTask.edit" );
 		setTab(TASK_SUMMARY);
 		return INPUT;
 	}
@@ -157,42 +157,17 @@ public class CreateTask extends ManageTasks
 	@SkipValidation
 	public String execute() 
 	{
-        logger.debug ( "MONA: entered CreateTask.execute" );
-        logger.debug ( "MONA: label = " + getLabel() );
+        //logger.debug ( "MONA: entered CreateTask.execute" );
+        //logger.debug ( "MONA: label = " + getLabel() );
 		// make sure label gets saved if user has entered one
 		if (getLabel() != null && getLabel().length() > 0) 
 		{
 				getCurrentTask().setLabel(label);
 		}
 
-        logger.debug ( "MONA: getParameters = " + getParameters() );
+        //logger.debug ( "MONA: getParameters = " + getParameters() );
 		String[] button = (String[])getParameters().get("method:execute");
-        logger.debug ( "MONA: button = " + button );
-        // Debugging...
-        /*
-        if ( button != null )
-        {
-            logger.debug ( "MONA: button.length = " + button.length );
-            for ( int bi = 0; bi < button.length; bi++ )
-                logger.debug ( "MONA: bi = " + button[bi] );
-        }
-
-        String[] x = ( String[] ) getParameters().get ( "selectedIds" );
-        logger.debug ( "MONA: x1 = " + x );
-        logger.debug ( "MONA: x1.length = " + x.length );
-        for ( int xi = 0; xi < x.length; xi++ )
-            logger.debug ( "MONA: x1 = " + x[xi] );
-        x = ( String[] ) getParameters().get ( "struts.token.name" );
-        logger.debug ( "MONA: x2 = " + x );
-        logger.debug ( "MONA: x2.length = " + x.length );
-        for ( int xi = 0; xi < x.length; xi++ )
-            logger.debug ( "MONA: x2 = " + x[xi] );
-        x = ( String[] ) getParameters().get ( "token" );
-        logger.debug ( "MONA: x3 = " + x );
-        logger.debug ( "MONA: x3.length = " + x.length );
-        for ( int xi = 0; xi < x.length; xi++ )
-            logger.debug ( "MONA: x3 = " + x[xi] );
-        */
+        //logger.debug ( "MONA: button = " + button );
 
 		if (button != null && button.length > 0) 
 		{
@@ -211,9 +186,8 @@ public class CreateTask extends ManageTasks
 			}
             else if ( button[0].equals ( SELECT_DATA ) ) 
 			{
-				//Long[] selectedIds = getSelectedIds();
 				String[] selectedIds = getSelectedIds();
-                logger.debug ( "MONA: selectedIds = " + selectedIds );
+                //logger.debug ( "MONA: selectedIds = " + selectedIds );
 				if (selectedIds == null || selectedIds.length < 1) 
 				{
 					addActionError("You must select one or more data items "+ "to set them as input to the current task.");
@@ -290,8 +264,8 @@ public class CreateTask extends ManageTasks
 
 	String disabledMessage(Task task)
 	{
-        logger.debug ( "MONA: entered CreateTask.disabledMessage" );
-        logger.debug ( "MONA: task = " + task );
+        //logger.debug ( "MONA: entered CreateTask.disabledMessage" );
+        //logger.debug ( "MONA: task = " + task );
 		if (task == null)
 		{
 			task = getCurrentTask();
@@ -317,7 +291,7 @@ public class CreateTask extends ManageTasks
 	*/
 	public String run()
 	{
-        logger.debug ( "MONA: entered CreateTask.run" );
+        //logger.debug ( "MONA: entered CreateTask.run" );
 		// get selected task ID from request param, if present
 		String[] taskId = (String[])getParameters().get(ID);
 		if (taskId != null && taskId.length > 0)
@@ -371,7 +345,7 @@ public class CreateTask extends ManageTasks
 
 	@SkipValidation
 	public String cancel() {
-        logger.debug ( "MONA: entered CreateTask.cancel" );
+        //logger.debug ( "MONA: entered CreateTask.cancel" );
 		clearErrorsAndMessages();
 		String[] button = (String[])getParameters().get("method:cancel");
 		if (button != null && button.length > 0) {
@@ -390,7 +364,7 @@ public class CreateTask extends ManageTasks
 
 	@SkipValidation
 	public String changeTab() throws Exception {
-        logger.debug ( "MONA: entered CreateTask.changeTab" );
+        //logger.debug ( "MONA: entered CreateTask.changeTab" );
 		String[] button = (String[])getParameters().get("label");
         //logger.debug ( "MONA: button = " + button );
 		if (button != null && button.length > 0) {
@@ -416,7 +390,7 @@ public class CreateTask extends ManageTasks
 
 	@SkipValidation
 	public String changeDataTab() throws Exception {
-        logger.debug ( "MONA: entered CreateTask.changeDataTab" );
+        //logger.debug ( "MONA: entered CreateTask.changeDataTab" );
 		// get selected tab from request param, if present
 		String[] tab = (String[])getParameters().get(TAB);
 		if (tab != null && tab.length > 0) {
@@ -436,7 +410,7 @@ public class CreateTask extends ManageTasks
 
 	@SkipValidation
 	public String selectTool() throws Exception {
-        logger.debug ( "MONA: entered CreateTask.selectTool" );
+        //logger.debug ( "MONA: entered CreateTask.selectTool" );
 		Folder folder = getCurrentFolder();
 		if (folder == null) {
 			addActionError("You must create a folder first before you can select a tool to create a task");
@@ -500,13 +474,13 @@ public class CreateTask extends ManageTasks
 	 * Create task form property accessor methods
 	 *================================================================*/
 	public String getTab() {
-        logger.debug ( "MONA: entered CreateTask.getTab" );
+        //logger.debug ( "MONA: entered CreateTask.getTab" );
 		return tab;
 	}
 
 	public void setTab(String tab) {
-        logger.debug ( "MONA: entered CreateTask.setTab" );
-        logger.debug ( "MONA: tab = " + tab );
+        //logger.debug ( "MONA: entered CreateTask.setTab" );
+        //logger.debug ( "MONA: tab = " + tab );
 		if (isValidTab(tab))
 			this.tab = tab;
 		else throw new RuntimeException("CreateTask.setTab() was called " +
@@ -514,9 +488,9 @@ public class CreateTask extends ManageTasks
 	}
 
 	public Task getCurrentTask() {
-        logger.debug ( "MONA: entered CreateTask.getCurrentTask" );
+        //logger.debug ( "MONA: entered CreateTask.getCurrentTask" );
 		Task task = super.getCurrentTask();
-        logger.debug ( "MONA: task = " + task );
+        //logger.debug ( "MONA: task = " + task );
 		if (task == null) {
 
 			// This creates a new Task() object
@@ -529,31 +503,27 @@ public class CreateTask extends ManageTasks
 	}
 
 	public void setCurrentTask(Task task) {
-        logger.debug ( "MONA: entered CreateTask.setCurrentTask" );
-        logger.debug ( "MONA: task = " + task );
+        //logger.debug ( "MONA: entered CreateTask.setCurrentTask" );
+        //logger.debug ( "MONA: task = " + task );
 		super.setCurrentTask(null);
 		if (task != null) {
 			// get input of task and store it properly
 			Map<String, List<TaskInputSourceDocument>> inputMap = null;
 			try {
-				//inputMap = new HashMap<String, List<TaskInputSourceDocument>>( task.input());
 				inputMap = new HashMap<String, List<TaskInputSourceDocument>>();
 				for (Map.Entry<String, List<TaskInputSourceDocument>> entry : task.input().entrySet()) {
-                    logger.debug ( "MONA: entry = " + entry );
+                    //logger.debug ( "MONA: entry = " + entry );
     				List<TaskInputSourceDocument> newList = new ArrayList<TaskInputSourceDocument>();
 
     				for (TaskInputSourceDocument doc : entry.getValue())
-                    {
-                        logger.debug ( "MONA: doc = " + doc );
-        					newList.add(new TaskInputSourceDocument(doc));
-                    }
+        				newList.add(new TaskInputSourceDocument(doc));
 
     				inputMap.put(entry.getKey(), newList);
 				}
 			} catch (Throwable error) {
 				reportError(error, "Error retrieving new task's input map");
 			} finally {
-                logger.debug ( "MONA: inputMap = " + inputMap );
+                //logger.debug ( "MONA: inputMap = " + inputMap );
 				if (inputMap != null && inputMap.size() > 0) {
 					// store entire input map in the session
 					setInputMap(inputMap);
@@ -579,12 +549,12 @@ public class CreateTask extends ManageTasks
 	 * Task summary page property accessor methods
 	 *================================================================*/
 	public void addTaskInput(String parameter, List<TaskInputSourceDocument> input) {
-        logger.debug ( "MONA: entered CreateTask.addTaskInput" );
-        logger.debug ( "MONA: parameter = " + parameter );
-        logger.debug ( "MONA: input = " + input );
+        //logger.debug ( "MONA: entered CreateTask.addTaskInput" );
+        //logger.debug ( "MONA: parameter = " + parameter );
+        //logger.debug ( "MONA: input = " + input );
 		try {
 			Map<String, List<TaskInputSourceDocument>> inputMap = getInputMap();
-            logger.debug ( "MONA: inputMap = " + inputMap );
+            //logger.debug ( "MONA: inputMap = " + inputMap );
 			if (parameter == null)
 				throw new NullPointerException("Parameter key is null.");
 			else if (input != null) {
@@ -604,19 +574,18 @@ public class CreateTask extends ManageTasks
 	}
 
 	public String getLabel() {
-        logger.debug ( "MONA: entered CreateTask.getLabel" );
+        //logger.debug ( "MONA: entered CreateTask.getLabel" );
 		return label;
 	}
 
 	public void setLabel(String label) {
-        logger.debug ( "MONA: entered CreateTask.setLabel" );
+        //logger.debug ( "MONA: entered CreateTask.setLabel" );
 		this.label = label;
 	}
 
 	@SuppressWarnings("unchecked")
-	//public List getInput() {
 	public List<TaskInputSourceDocument> getInput() {
-        logger.debug ( "MONA: entered CreateTask.getInput" );
+        //logger.debug ( "MONA: entered CreateTask.getInput" );
 		return (List<TaskInputSourceDocument>)getSessionAttribute(INPUT_DATA);
 	}
 
@@ -629,11 +598,11 @@ public class CreateTask extends ManageTasks
 	@SuppressWarnings("unchecked")
 	//public void setInput ( List input ) {
 	public void setInput(List<TaskInputSourceDocument> input) {
-        logger.debug ( "MONA: entered CreateTask.setInput" );
-        logger.debug ( "MONA: input = " + input );
+        //logger.debug ( "MONA: entered CreateTask.setInput" );
+        //logger.debug ( "MONA: input = " + input );
 		setSessionAttribute(INPUT_DATA, input);
 		String tool = getTool();
-        logger.debug ( "MONA: tool = " + tool );
+        //logger.debug ( "MONA: tool = " + tool );
 		if (tool != null) {
 			String inputParam = getMainInputParameter(tool);
 			if (inputParam != null)
@@ -642,14 +611,14 @@ public class CreateTask extends ManageTasks
 	}
 
 	public boolean hasInput() {
-        logger.debug ( "MONA: entered CreateTask.hasInput" );
+        //logger.debug ( "MONA: entered CreateTask.hasInput" );
 		return (getInput() != null);
 	}
 
 	public int getInputCount() {
-        logger.debug ( "MONA: entered CreateTask.getInputCount" );
+        //logger.debug ( "MONA: entered CreateTask.getInputCount" );
 		List<TaskInputSourceDocument> input = getInput();
-        logger.debug ( "MONA: input = " + input );
+        //logger.debug ( "MONA: input = " + input );
 		if (input == null)
 			return 0;
 		else return input.size();
@@ -657,7 +626,7 @@ public class CreateTask extends ManageTasks
 
 	public void setTool(String tool) 
 	{
-        logger.debug ( "MONA: entered CreateTask.setTool" );
+        //logger.debug ( "MONA: entered CreateTask.setTool" );
 		// if the tool changes, the parameters must be cleared, but the main input must be preserved
 		Task task = getCurrentTask();
 		String currentTool = getTool();
@@ -698,12 +667,12 @@ public class CreateTask extends ManageTasks
 	}
 
 	public boolean hasTool() {
-        logger.debug ( "MONA: entered CreateTask.hasTool" );
+        //logger.debug ( "MONA: entered CreateTask.hasTool" );
 		return getTool() != null;
 	}
 
 	public boolean hasParameters() {
-        logger.debug ( "MONA: entered CreateTask.hasParameters" );
+        //logger.debug ( "MONA: entered CreateTask.hasParameters" );
 		Task task = getCurrentTask();
 		if (task == null)
 			return false;
@@ -731,9 +700,9 @@ public class CreateTask extends ManageTasks
 	}
 
 	public Map<String, List<TaskInputSourceDocument>> getParameterInput() {
-        logger.debug ( "MONA: entered CreateTask.getParameterInput" );
+        //logger.debug ( "MONA: entered CreateTask.getParameterInput" );
 		Map<String, List<TaskInputSourceDocument>> input = getInputMap();
-        logger.debug ( "MONA: input = " + input );
+        //logger.debug ( "MONA: input = " + input );
 		if (input == null)
 			return null;
 		else {
@@ -747,7 +716,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	public int getParameterCount() {
-        logger.debug ( "MONA: entered CreateTask.getParameterCount" );
+        //logger.debug ( "MONA: entered CreateTask.getParameterCount" );
 		Task task = getCurrentTask();
 		if (task == null)
 			return 0;
@@ -773,31 +742,31 @@ public class CreateTask extends ManageTasks
 	// error till validation of all fields are done
 	public boolean validateTask() throws Exception
 	{
-        logger.debug ( "MONA: entered CreateTask.validateTask" );
+        //logger.debug ( "MONA: entered CreateTask.validateTask" );
 		Task task = getCurrentTask();
-        logger.debug ( "MONA: task = " + task );
+        //logger.debug ( "MONA: task = " + task );
 		StringBuffer errors = new StringBuffer();
 		if (task == null)
 		{
 			return false;
 		}
 		String label = task.getLabel();
-        logger.debug ( "MONA: label = " + label );
+        //logger.debug ( "MONA: label = " + label );
 		if (label == null || label.trim().equals("")) 
 		{
 			errors.append("Please enter a description for your task. ");
 		}
 		String tool = task.getToolId();
-        logger.debug ( "MONA: tool = " + tool );
+        //logger.debug ( "MONA: tool = " + tool );
 		if (tool == null)
 		{
 			errors.append("Please choose a tool for your analysis. ");
 		}
 		String inputParam = getMainInputParameter(tool);
-        logger.debug ( "MONA: inputParam = " + inputParam );
+        //logger.debug ( "MONA: inputParam = " + inputParam );
 
 		Map<String, List<TaskInputSourceDocument>> inputMap = getInputMap();
-        logger.debug ( "MONA: inputMap = " + inputMap );
+        //logger.debug ( "MONA: inputMap = " + inputMap );
 		if (inputParam == null || inputMap == null || inputMap.containsKey(inputParam) == false) 
 		{
 			errors.append("Please choose one or more data items for the task. ");
@@ -821,7 +790,7 @@ public class CreateTask extends ManageTasks
 	//a more complex treatment of tool mode
 	//public List<UserDataItem> getInputData() {
 	public List<? extends FolderItem> getInputData() {
-        logger.debug ( "MONA: entered CreateTask.getInputData" );
+        //logger.debug ( "MONA: entered CreateTask.getInputData" );
         //logger.debug ( "MONA: inputData 1 = " + inputData );
 		// get the input data list stored in the action
 		if (inputData != null) {
@@ -855,8 +824,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	public boolean hasInputData() {
-        logger.debug ( "MONA: entered CreateTask.hasInputData" );
-		//List<UserDataItem> inputData = getInputData();
+        //logger.debug ( "MONA: entered CreateTask.hasInputData" );
 		List<? extends FolderItem> inputData = getInputData();
         //logger.debug ( "MONA: inputData = " + inputData );
 		return (inputData != null && inputData.size() > 0);
@@ -865,8 +833,8 @@ public class CreateTask extends ManageTasks
 	//TODO: add the proper interface and get rid of this method!
 	//public List<UserDataItem> getMappedInput() {
 	public List<? extends FolderItem> getMappedInput() {
-        logger.debug ( "MONA: entered CreateTask.getMappedInput" );
-        logger.debug ( "MONA: mappedInput = " + mappedInput );
+        //logger.debug ( "MONA: entered CreateTask.getMappedInput" );
+        //logger.debug ( "MONA: mappedInput = " + mappedInput );
 		// get the mapped input list stored in the action
 		if (mappedInput != null) {
 			return mappedInput;
@@ -874,30 +842,28 @@ public class CreateTask extends ManageTasks
 		// if not found, construct the proper mapped input list
 		else {
 			List<TaskInputSourceDocument> input = getInput();
-            logger.debug ( "MONA: input = " + input );
+            //logger.debug ( "MONA: input = " + input );
 			unmappedInputCount = 0;
 			if (input == null) {
 				mappedInput = null;
 			} else {
-                logger.debug ( "MONA: input.size = " + input.size() );
+                //logger.debug ( "MONA: input.size = " + input.size() );
 				WorkbenchSession session = getWorkbenchSession();
-				//mappedInput = new Vector<UserDataItem>(input.size());
 				mappedInput = new Vector<FolderItem> ( input.size() );
 				for (TaskInputSourceDocument inputDocument : input) {
-                    logger.debug ( "MONA: inputDocument = " + inputDocument );
-                    logger.debug ( "MONA: inputDocument class name = " + inputDocument.getClass().getName() );
+                    //logger.debug ( "MONA: inputDocument = " + inputDocument );
+                    //logger.debug ( "MONA: inputDocument class name = " + inputDocument.getClass().getName() );
 					try {
 						Long id = Long.parseLong(inputDocument.getName());
-                        logger.debug ( "MONA: id = " + id );
-						//UserDataItem dataItem = session.findUserDataItem(id);
+                        //logger.debug ( "MONA: id = " + id );
                         DataType type = inputDocument.getDataType();
-                        logger.debug ( "MONA: type = " + type );
+                        //logger.debug ( "MONA: type = " + type );
 						FolderItem dataItem = null;
                         if ( type == DataType.DIRECTORY )
 						    dataItem = session.findUserDataDirItem ( id );
                         else
 						    dataItem = session.findUserDataItem ( id );
-                        logger.debug ( "MONA: dataItem = " + dataItem );
+                        //logger.debug ( "MONA: dataItem = " + dataItem );
 
 						if (dataItem != null)
 							mappedInput.add(dataItem);
@@ -906,7 +872,7 @@ public class CreateTask extends ManageTasks
 						unmappedInputCount++;
 						continue;
 					}
-                    logger.debug ( "MONA: mappedInput = " + mappedInput );
+                    //logger.debug ( "MONA: mappedInput = " + mappedInput );
 				}
 				if (mappedInput.size() < 1)
 					mappedInput = null;
@@ -921,13 +887,13 @@ public class CreateTask extends ManageTasks
 	}
 
 	public boolean hasMappedInput() {
-        logger.debug ( "MONA: entered CreateTask.hasMappedInput" );
+        //logger.debug ( "MONA: entered CreateTask.hasMappedInput" );
 		return (getMappedInput() != null);
 	}
 
 	//TODO: add the proper interface and get rid of this method!
 	public int getUnmappedInputCount() {
-        logger.debug ( "MONA: entered CreateTask.getUnmappedInputCount" );
+        //logger.debug ( "MONA: entered CreateTask.getUnmappedInputCount" );
 		// get the unmapped input count stored in the action
 		if (unmappedInputCount != null) {
 			return unmappedInputCount;
@@ -947,7 +913,7 @@ public class CreateTask extends ManageTasks
 						Long id = Long.parseLong(inputDocument.getName());
 						//UserDataItem dataItem = session.findUserDataItem(id);
                         DataType type = inputDocument.getDataType();
-                        logger.debug ( "MONA: type = " + type );
+                        //logger.debug ( "MONA: type = " + type );
 						FolderItem dataItem = null;
                         if ( type == DataType.DIRECTORY )
 						    dataItem = session.findUserDataDirItem ( id );
@@ -972,7 +938,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	public boolean hasUnmappedInput() {
-        logger.debug ( "MONA: entered CreateTask.hasUnmappedInput" );
+        //logger.debug ( "MONA: entered CreateTask.hasUnmappedInput" );
 		return (getUnmappedInputCount() > 0);
 	}
 
@@ -980,7 +946,7 @@ public class CreateTask extends ManageTasks
 	 * Task tool selection page property accessor methods
 	 *================================================================*/
 	public boolean isCurrentTool(String tool) {
-        logger.debug ( "MONA: entered CreateTask.isCurrentTool" );
+        //logger.debug ( "MONA: entered CreateTask.isCurrentTool" );
 		String currentTool = getTool();
 		if (tool == null || currentTool == null)
 			return false;
@@ -991,7 +957,7 @@ public class CreateTask extends ManageTasks
 	 * Internal property accessor methods
 	 *================================================================*/
 	protected Task getRequestTask(String parameter) {
-        logger.debug ( "MONA: entered CreateTask.getRequestTask" );
+        //logger.debug ( "MONA: entered CreateTask.getRequestTask" );
 		String taskId = getRequestParameter(parameter);
 		if (taskId == null)
 			return null;
@@ -1004,7 +970,7 @@ public class CreateTask extends ManageTasks
 
 	protected Task cloneTask(Task task) 
 	{
-        logger.debug ( "MONA: entered CreateTask.cloneTask" );
+        //logger.debug ( "MONA: entered CreateTask.cloneTask" );
 		if (task == null)
 		{
 			return null;
@@ -1037,7 +1003,7 @@ public class CreateTask extends ManageTasks
 	/* Set parameters into task */
 	protected void setParameters(Task task, Map<String, String> parameters)  throws Exception
 	{
-        logger.debug ( "MONA: entered CreateTask.setParameters" );
+        //logger.debug ( "MONA: entered CreateTask.setParameters" );
 		if (task == null)
 		{
 			return;
@@ -1057,7 +1023,7 @@ public class CreateTask extends ManageTasks
 
 	protected void clearParameters(Task task) 
 	{
-        logger.debug ( "MONA: entered CreateTask.clearParameters" );
+        //logger.debug ( "MONA: entered CreateTask.clearParameters" );
 		if (task == null)
 		{
 			return;
@@ -1072,7 +1038,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected void setInput(Task task, Map<String, List<TaskInputSourceDocument>> input) {
-        logger.debug ( "MONA: entered CreateTask.setInput" );
+        //logger.debug ( "MONA: entered CreateTask.setInput" );
 		if (task == null)
 			return;
 		else {
@@ -1087,7 +1053,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected void clearInput(Task task) {
-        logger.debug ( "MONA: entered CreateTask.clearInput" );
+        //logger.debug ( "MONA: entered CreateTask.clearInput" );
 		if (task == null)
 			return;
 		else try {
@@ -1101,7 +1067,7 @@ public class CreateTask extends ManageTasks
 	 * Convenience methods
 	 *================================================================*/
 	protected ParameterValidator getParameterValidator(String tool) {
-        logger.debug ( "MONA: entered CreateTask.getParameterValidator" );
+        //logger.debug ( "MONA: entered CreateTask.getParameterValidator" );
 		try {
 			if (tool == null)
 				throw new NullPointerException("Selected tool is null.");
@@ -1143,7 +1109,7 @@ public class CreateTask extends ManageTasks
 
 	private Task saveTask() 
 	{
-        logger.debug ( "MONA: entered CreateTask.saveTask()" );
+        //logger.debug ( "MONA: entered CreateTask.saveTask()" );
 		try 
 		{
 			WorkbenchSession session = getWorkbenchSession();
@@ -1159,10 +1125,8 @@ public class CreateTask extends ManageTasks
 			else if (task == null)
 				throw new NullPointerException("No task is currently selected.");
             
-            //logger.debug ( "MONA: here 10" );
 			setInput(task, getInputMap());
 			task.setStage(TaskRunStage.READY);
-            //logger.debug ( "MONA: here 11" );
 
 			// Here's where task actually gets saved.
 			if (task.toolParameters().keySet().contains(TOOL_GUI_OPENED))
@@ -1171,12 +1135,10 @@ public class CreateTask extends ManageTasks
 				task.toolParameters().remove(TOOL_GUI_OPENED);
 			}
 			task = session.saveTask(task, folder);
-            //logger.debug ( "MONA: here 12" );
 
 			logger.debug(getUsernameString() + "SAVE TASK taskId = " + task.getTaskId() + ", task.getToolId() is " + task.getToolId()); 
 			setCurrentTask(null);
 			refreshFolderTaskTabs();
-            //logger.debug ( "MONA: here 13" );
 			return task;
 		} catch (Throwable error) 
 		{
@@ -1187,7 +1149,7 @@ public class CreateTask extends ManageTasks
 
 	private Task saveAndRunTask() throws DisabledResourceException 
 	{
-        logger.debug ( "MONA: entered CreateTask.saveAndRunTask()" );
+        //logger.debug ( "MONA: entered CreateTask.saveAndRunTask()" );
 		try 
 		{
 			Workbench workbench = getWorkbench();
@@ -1240,7 +1202,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected boolean isValidTab(String tab) {
-        logger.debug ( "MONA: entered CreateTask.isValidTab()" );
+        //logger.debug ( "MONA: entered CreateTask.isValidTab()" );
 		if (tab == null) return false;
 		else if (tab.equals(TASK_SUMMARY) ||
 			tab.equals(SELECT_DATA) ||
@@ -1251,7 +1213,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected String getSelectedTool(String tool) {
-        logger.debug ( "MONA: entered CreateTask.getSelectedTool()" );
+        //logger.debug ( "MONA: entered CreateTask.getSelectedTool()" );
 		Collection<String> tools = getTools();
 		if (tool == null || tools == null || tools.size() < 1)
 			return null;
@@ -1264,45 +1226,18 @@ public class CreateTask extends ManageTasks
 
 	@SuppressWarnings("unchecked")
 	protected String setSelectedInputData() {
-        logger.debug ( "MONA: entered CreateTask.setSelectedInputData" );
-		//Long[] selectedIds = getSelectedIds();
+        //logger.debug ( "MONA: entered CreateTask.setSelectedInputData" );
 		String[] selectedIds = getSelectedIds();
-        logger.debug ( "MONA: selectedIds = " + selectedIds );
+        //logger.debug ( "MONA: selectedIds = " + selectedIds );
 		List<TaskInputSourceDocument> input =
 			new Vector<TaskInputSourceDocument>(selectedIds.length);
         //logger.debug ( "MONA: selectedIds.length = " + selectedIds.length );
 		if (selectedIds.length == 1) {
-            /* Original
-			UserDataItem dataItem = getSelectedData(selectedIds[0]);
-			if (dataItem == null) {
-				reportUserError("Error selecting data item with ID " +
-					selectedIds[0] + ": item not found in current folder.");
-				setTab(SELECT_DATA);
-			} else {
-				SourceDocument sourceDocument =
-					getWorkbenchSession().getSourceDocument(dataItem);
-				TaskInputSourceDocument inputDocument = null;
-				try {
-					inputDocument = new TaskInputSourceDocument(sourceDocument);
-				} catch (Throwable error) {
-					reportError(error, "Error creating new TaskInputSourceDocument");
-					addActionError("There was an error adding your selected " +
-						"input data to your task.");
-					return INPUT;
-				}
-				inputDocument.setName(Long.toString(dataItem.getUserDataId()));
-				input.add(inputDocument);
-				setInput(input);
-				reportUserMessage("Data item \"" + truncateText(dataItem.getLabel()) +
-					"\" successfully set as input to current task.");
-			}
-            */
-
             String[] parts = selectedIds[0].split ( "-" );
             String className = parts[0].trim();
-            logger.debug ( "MONA: className = " + className );
+            //logger.debug ( "MONA: className = " + className );
             Long id = Long.parseLong ( parts[1].trim() );
-            logger.debug ( "MONA: id = " + id );
+            //logger.debug ( "MONA: id = " + id );
                                                
             if ( className.equals ( "UserDataItem" ) )
             {
@@ -1344,7 +1279,7 @@ public class CreateTask extends ManageTasks
             else if ( className.equals ( "UserDataDirItem" ) )
             {
 			    UserDataDirItem dataItem = getSelectedDirData ( id );
-                logger.debug ( "MONA: dataItem = " + dataItem );
+                //logger.debug ( "MONA: dataItem = " + dataItem );
 			    if ( dataItem == null )
                 {
 				    reportUserError ( "Error selecting data item with ID " +
@@ -1353,13 +1288,9 @@ public class CreateTask extends ManageTasks
 			    }
                 else
                 {
-                    /*
-				    SourceDocument sourceDocument =
-					    getWorkbenchSession().getSourceDocument ( dataItem );
-                    */
                     SourceDocument sourceDocument =
                         ( SourceDocument ) dataItem;
-                    logger.debug ( "MONA: sourceDocument = " + sourceDocument );
+                    //logger.debug ( "MONA: sourceDocument = " + sourceDocument );
 				    TaskInputSourceDocument inputDocument = null;
 				    try
                     {
@@ -1369,7 +1300,6 @@ public class CreateTask extends ManageTasks
 				    }
                     catch ( Throwable error )
                     {
-                        //logger.debug ( "MONA: error 1" );
 					    reportError ( error,
                             "Error creating new TaskInputSourceDocument" );
 					    addActionError (
@@ -1506,7 +1436,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected void dumpToolParameters(Task task) {
-        logger.debug ( "MONA: entered CreateTask.dumpToolParameters()" );
+        //logger.debug ( "MONA: entered CreateTask.dumpToolParameters()" );
 		if (task == null)
 			return;
 		int i = 1;
@@ -1580,7 +1510,7 @@ public class CreateTask extends ManageTasks
 	}
 
 	protected void dumpToolParameters() {
-        logger.debug ( "MONA: entered CreateTask.dumpToolParameters(2)" );
+        //logger.debug ( "MONA: entered CreateTask.dumpToolParameters(2)" );
 		dumpToolParameters(getCurrentTask());
 	}
 }
