@@ -8,7 +8,7 @@
 <div class="form-group">
   <div class="col-xs-10">
     <h4>Transfer Relion directories, particle stacks, and 3D volumes using
-        the data file transfer service Globus</h4> 
+        the file transfer service Globus</h4> 
     <s:url var="transferUrl" action="transfer"/>
     <s:a href="%{transferUrl}" cssClass="btn btn-primary">Go</s:a>
     <br>
