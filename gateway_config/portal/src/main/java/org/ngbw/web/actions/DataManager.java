@@ -2,7 +2,6 @@ package org.ngbw.web.actions;
 
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,14 +27,15 @@ import org.ngbw.sdk.database.Folder;
 import org.ngbw.sdk.database.FolderItem;
 import org.ngbw.sdk.database.SourceDocument;
 import org.ngbw.sdk.database.User;
+import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.UserDataItem;
-import org.ngbw.sdk.database.util.UserDataItemSortableField;
 import org.ngbw.web.model.Page;
 import org.ngbw.web.model.Tab;
 import org.ngbw.web.model.TabbedPanel;
 import org.ngbw.web.model.impl.ConceptComparator;
 import org.ngbw.web.model.impl.ListPage;
 import org.ngbw.web.model.impl.RecordFieldTypeComparator;
+
 
 /**
  * Struts action class to process all user data-related requests
@@ -108,7 +108,7 @@ public class DataManager extends FolderManager
 
 	// data list form properties
 	private List<RecordFieldType> fields;
-	private Long[] selectedIds;
+	private String[] selectedIds;
 	private String dataAction;
 	private Long targetFolder;
 
@@ -119,17 +119,21 @@ public class DataManager extends FolderManager
 	/*================================================================
 	 * Action methods
 	 *================================================================*/
-	public String list() {
+	public String list()
+    {
+        //logger.debug ( "MONA : entered list()" );
 		Folder folder = getRequestFolder(ID);
+        //logger.debug ( "MONA : folder 1 = " + folder );
 		if (folder == null)
 			folder = getCurrentFolder();
+        //logger.debug ( "MONA : folder 2 = " + folder );
 		if (folder == null) {
 			reportUserError("You must select a folder to view its data.");
 			return HOME;
 		} else {
 			if (isCurrentFolder(folder) == false)
 				setCurrentFolder(folder);
-			TabbedPanel<UserDataItem> tabs = getFolderDataTabs();
+			TabbedPanel<? extends FolderItem> tabs = getFolderDataTabs();
 			String tab = getRequestParameter(TAB);
 			if (tab != null)
 				tabs.setCurrentTab(tab);
@@ -165,6 +169,7 @@ public class DataManager extends FolderManager
 
 	@SkipValidation
 	public String display() {
+        //logger.debug ( "MONA : entered display()" );
 		// get selected data ID from request param, if present
 		String[] dataId = (String[])getParameters().get(ID);
 		if (dataId != null && dataId.length > 0) {
@@ -214,7 +219,7 @@ public class DataManager extends FolderManager
 		if (dataAction == null) {
 			addActionError("You must select an action to manipulate your data.");
 		} else {
-			Long[] selectedIds = getSelectedIds();
+			String[] selectedIds = getSelectedIds();
 			if (selectedIds == null || selectedIds.length < 1) {
 				addActionError("You must select one or more data items to " +
 					dataAction.toLowerCase() + " them.");
@@ -259,7 +264,7 @@ public class DataManager extends FolderManager
 
 	@SkipValidation
 	public String deleteSelected() {
-		Long[] selectedIds = getSelectedIds();
+		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1) {
 			addActionError("You must select one or more data items to delete them.");
 		} else {
@@ -287,11 +292,12 @@ public class DataManager extends FolderManager
 	/*================================================================
 	 * Data list form property accessor methods
 	 *================================================================*/
-	public Long[] getSelectedIds() {
+	public String[] getSelectedIds() {
 		return selectedIds;
 	}
 
-	public void setSelectedIds(Long[] selectedIds) {
+	public void setSelectedIds ( String[] selectedIds )
+    {
 		this.selectedIds = selectedIds;
 	}
 
@@ -315,9 +321,11 @@ public class DataManager extends FolderManager
 	 * Data list page property accessor methods
 	 *================================================================*/
 	@SuppressWarnings("unchecked")
-	public TabbedPanel<UserDataItem> getFolderDataTabs() {
-		TabbedPanel<UserDataItem> folderData =
+	public TabbedPanel<? extends FolderItem> getFolderDataTabs() {
+        //logger.debug ( "MONA : entered getFolderDataTabs()" );
+		TabbedPanel<? extends FolderItem> folderData =
 			(TabbedPanel<UserDataItem>)getSessionAttribute(FOLDER_DATA);
+        //logger.debug ( "MONA : folderData = " + folderData );
 		if (folderData == null ||
 			folderData.isParentFolder(getCurrentFolder()) == false)
 			folderData = refreshFolderDataTabs();
@@ -325,35 +333,40 @@ public class DataManager extends FolderManager
 	}
 
 	@SuppressWarnings("unchecked")
-	public void setFolderDataTabs(TabbedPanel<UserDataItem> folderData) {
+	public void setFolderDataTabs(TabbedPanel<? extends FolderItem> folderData) {
+        //logger.debug ( "MONA : entered DataManager.setFolerDataTabs" );
+        //logger.debug ( "MONA : folderData = " + folderData );
 		setSessionAttribute(FOLDER_DATA, folderData);
 	}
 
 	public boolean hasFolderData() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+        //logger.debug ( "MONA: entered DataManager.hasFolderData()" );
+		TabbedPanel<? extends FolderItem> folderData = getFolderDataTabs();
+        //logger.debug ( "MONA : folderData = " + folderData );
+        //logger.debug ( "MONA : folderData 2 = " + folderData.getTabs().getTotalNumberOfElements() );
 		return (folderData != null && folderData.getTabs().getTotalNumberOfElements() > 0);
 	}
 
 	public List<String> getTabLabels() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return null;
 		else return folderData.getTabLabels();
 	}
 
 	public String getFirstTabLabel() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return null;
 		else return folderData.getFirstTabLabel();
 	}
 
 	public String getCurrentTabLabel() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return null;
 		else {
-			Tab<UserDataItem> currentTab = folderData.getCurrentTab();
+			Tab<?> currentTab = folderData.getCurrentTab();
 			if (currentTab == null)
 				return null;
 			else return currentTab.getLabel();
@@ -396,24 +409,33 @@ public class DataManager extends FolderManager
 		
 
 	public int getCurrentTabSize() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return 0;
-		else return folderData.getCurrentTabSize();
+		else {
+            //logger.debug ( "MONA : currentTabSize = " + folderData.getCurrentTabSize() );
+            return folderData.getCurrentTabSize();
+        }
 	}
 
+    
 	//TODO: add sort functionality to user interface
-	public List<UserDataItem> getCurrentDataTab() 
+	public List<?> getCurrentDataTab() 
 	{
+        //logger.debug ( "MONA: entered getCurrentDataTab()" );
         // added this or else new Globus transfer files won't show up in UI
         // without logout/login
 		refreshFolderDataTabs();
 		try
 		{
-			TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+			TabbedPanel<?> folderData = getFolderDataTabs();
+
 			if (folderData == null)
 				return null;
-			else return folderData.getCurrentTabContents();
+			else {
+                logger.debug ( "content = " + folderData.getCurrentTabContents() );
+                return folderData.getCurrentTabContents();
+            }
 		}
 		catch(Exception e)
 		{
@@ -422,13 +444,43 @@ public class DataManager extends FolderManager
 		}
 	}
 
+
+    // Added by Mona to also show new Globus directory data.  Function
+    // modelled after the above getCurrentDataTab()
+	//TODO: add sort functionality to user interface
+	public List<? extends FolderItem> getCurrentAllDataTab() 
+	{
+        //logger.debug ( "MONA: entered getCurrentAllDataTab()" );
+        // added this or else new Globus transfer files won't show up in UI
+        // without logout/login
+		refreshFolderDataTabs();
+		try
+		{
+			TabbedPanel<? extends FolderItem> folderData = getFolderDataTabs();
+            logger.debug ( "folderData = " + folderData );
+
+			if (folderData == null)
+				return null;
+			else {
+                logger.debug ( "content = " + folderData.getCurrentTabContents() );
+                return folderData.getCurrentTabContents();
+            }
+		}
+		catch(Exception e)
+		{
+			logger.error("", e);
+			return null;
+		}
+	}
+
+
 	@SuppressWarnings("unchecked")
 	public Enum getCurrentTabType() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return null;
 		else {
-			Tab<UserDataItem> currentTab = folderData.getCurrentTab();
+			Tab<?> currentTab = folderData.getCurrentTab();
 			if (currentTab == null)
 				return null;
 			else return (Enum)currentTab.getProperty(DATA_TAB_TYPE);
@@ -438,11 +490,11 @@ public class DataManager extends FolderManager
 	@SuppressWarnings("unchecked")
 	public Map<UserDataItem, GenericDataRecordCollection<IndexedDataRecord>>
 		getCurrentTabDataRecordMap() {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return null;
 		else {
-			Tab<UserDataItem> currentTab = folderData.getCurrentTab();
+			Tab<?> currentTab = folderData.getCurrentTab();
 			if (currentTab == null)
 				return null;
 			else return (Map<UserDataItem, GenericDataRecordCollection<IndexedDataRecord>>)
@@ -452,11 +504,11 @@ public class DataManager extends FolderManager
 
 	public void setCurrentTabDataRecordMap(
 		Map<UserDataItem, GenericDataRecordCollection<IndexedDataRecord>> dataRecordMap) {
-		TabbedPanel<UserDataItem> folderData = getFolderDataTabs();
+		TabbedPanel<?> folderData = getFolderDataTabs();
 		if (folderData == null)
 			return;
 		else {
-			Tab<UserDataItem> currentTab = folderData.getCurrentTab();
+			Tab<?> currentTab = folderData.getCurrentTab();
 			if (currentTab == null)
 				return;
 			else if (dataRecordMap != null)
@@ -633,10 +685,32 @@ public class DataManager extends FolderManager
 	}
 
 	public String getLabel(UserDataItem dataItem) {
+        //logger.debug ( "MONA : entered DataManager.getLabel() 1" );
 		if (dataItem == null)
 			return null;
 		else return truncateText(dataItem.getLabel());
 	}
+
+	public String getLabel ( UserDataDirItem dataItem )
+    {
+        //logger.debug ( "MONA : entered DataManager.getLabel() 2" );
+		if ( dataItem == null )
+			return null;
+		else
+            return truncateText ( dataItem.getLabel() );
+	}
+
+    public String getClassName ( UserDataItem item )
+    {
+        //logger.debug ( "MONA : entered DataManager.getClassName() 1" );
+        return ( "UserDataItem" );
+    }
+
+    public String getClassName ( UserDataDirItem item )
+    {
+        //logger.debug ( "MONA : entered DataManager.getClassName() 2" );
+        return ( "UserDataDirItem" );
+    }
 
 	// BIG_FILES
 	public long getDataLength(UserDataItem dataItem) {
@@ -654,6 +728,24 @@ public class DataManager extends FolderManager
 			return 0;
 		}
 	}
+
+	public long getDataLength ( UserDataDirItem dataItem )
+    {
+		if ( dataItem == null )
+		{
+			return 0;
+		}
+		try
+		{
+			return dataItem.getSize();
+		}
+		catch ( Exception e )
+		{
+			logger.error ( "", e );
+			return 0;
+		}
+	}
+
 
 	public String getOwner(UserDataItem dataItem) {
 		if (dataItem == null)
@@ -691,6 +783,23 @@ public class DataManager extends FolderManager
 		}
 	}
 
+	public String getCreationDate ( UserDataDirItem dataItem )
+    {
+		if ( dataItem == null )
+			return null;
+		else try
+        {
+			return formatDate ( dataItem.getCreationDate() );
+		}
+        catch (Throwable error)
+        {
+			reportError ( error,
+                "Error retrieving creation date of data item " +
+				dataItem.getUserDataId() );
+			return null;
+		}
+	}
+
 	public String getEntityType(UserDataItem dataItem) {
 		if (dataItem == null)
 			return null;
@@ -703,10 +812,28 @@ public class DataManager extends FolderManager
 		else return getConceptLabel("DataType", dataItem.getDataType().toString());
 	}
 
+	public String getDataType ( UserDataDirItem dataItem )
+    {
+		if ( dataItem == null )
+			return null;
+		else
+            return getConceptLabel ( "DataType",
+                dataItem.getDataType().toString() );
+	}
+
 	public String getDataFormat(UserDataItem dataItem) {
 		if (dataItem == null)
 			return null;
 		else return getConceptLabel("DataFormat", dataItem.getDataFormat().toString());
+	}
+
+	public String getDataFormat ( UserDataDirItem dataItem )
+    {
+		if ( dataItem == null )
+			return null;
+		else
+            return getConceptLabel ( "DataFormat",
+                dataItem.getDataFormat().toString() );
 	}
 
 	/*================================================================
@@ -1041,7 +1168,7 @@ public class DataManager extends FolderManager
 	/*================================================================
 	 * Page methods
 	 *================================================================*/
-	public Page<? extends FolderItem> getCurrentPage() {
+	public Page<?> getCurrentPage() {
 		return getFolderDataTabs().getCurrentTab().getContents();
 	}
 
@@ -1057,12 +1184,12 @@ public class DataManager extends FolderManager
 	public void setPageSize(Integer pageSize) {
 		try {
 			getController().setUserPreference(DATA_PAGE_SIZE, pageSize.toString());
-			TabbedPanel<UserDataItem> dataPanel = getFolderDataTabs();
+			TabbedPanel<?> dataPanel = getFolderDataTabs();
 			if (dataPanel != null && pageSize != null) {
-				for (Tab<UserDataItem> dataTab : dataPanel.getTabs().getAllElements()) {
-					List<UserDataItem> dataList = dataTab.getContents().getAllElements();
+				for (Tab<?> dataTab : dataPanel.getTabs().getAllElements()) {
+					List<?> dataList = dataTab.getContents().getAllElements();
 					dataTab.setContents(
-						new ListPage<UserDataItem>(dataList, pageSize));
+						new ListPage(dataList, pageSize));
 				}
 			}
 		} catch (Throwable error) {
@@ -1146,25 +1273,72 @@ public class DataManager extends FolderManager
 		}
 	}
 
+	protected UserDataDirItem getSelectedDirData ( Long dataId )
+    {
+		try
+        {
+			WorkbenchSession session = getWorkbenchSession();
+			if ( session == null )
+				throw new NullPointerException ( "No session is present." );
+			else
+                return session.findUserDataDirItem ( dataId );
+		}
+        catch ( Throwable error )
+        {
+			reportError ( error, "Error retrieving selected data item" );
+			return null;
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	protected List<SourceDocument> getSelectedDocuments() {
 		return (List<SourceDocument>)getSessionAttribute(SELECTED_DATA_ITEMS);
 	}
 
 	protected void setSelectedDocuments() {
-		Long[] selectedIds = getSelectedIds();
+        //logger.debug ( "MONA : entered DataManager.setSelectedDocuments()" );
+		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			clearSessionAttribute(SELECTED_DATA_ITEMS);
 		else {
 			List<SourceDocument> documents =
 				new Vector<SourceDocument>(selectedIds.length);
+
 			for (int i=0; i<selectedIds.length; i++) {
-				UserDataItem dataItem = getSelectedData(selectedIds[i]);
+                /* Original
+			    UserDataItem dataItem = getSelectedData(selectedIds[i]);
 				if (dataItem == null)
-					throw new NullPointerException("Data item with ID " +
-						selectedIds[i] + " was not found.");
+				    throw new NullPointerException("Data item with ID " +
+					    selectedIds[i] + " was not found.");
 				else documents.add(dataItem);
+                */
+
+                String[] parts = selectedIds[i].split ( "-" );
+                String className = parts[0].trim();
+                Long id = Long.parseLong ( parts[1].trim() );
+
+                if ( className.equals ( "UserDataItem" ) )
+                {
+				    UserDataItem dataItem = getSelectedData ( id );
+				    if ( dataItem == null )
+					    throw new NullPointerException (
+                            "Data item with ID " + id + " was not found.");
+				    else
+                        documents.add ( dataItem );
+                }
+                /*
+                else if ( className.equals ( "UserDataDirItem" ) )
+                {
+				    UserDataDirItem dataItem = getSelectedDirData ( id );
+				    if ( dataItem == null )
+					    throw new NullPointerException (
+                            "Data item with ID " + id + " was not found.");
+				    else
+                        documents.add ( dataItem );
+                }
+                */
 			}
+
 			if (documents.size() > 0)
 				setSessionAttribute(SELECTED_DATA_ITEMS, documents);
 			else clearSessionAttribute(SELECTED_DATA_ITEMS);
@@ -1194,14 +1368,19 @@ public class DataManager extends FolderManager
 
 	@SuppressWarnings("unchecked")
 	//###
-	protected TabbedPanel<UserDataItem> refreshFolderDataTabs() 
+    /* Updated to also include new Globus folder data items.
+     */
+	//protected TabbedPanel<T> refreshFolderDataTabs() 
+	protected TabbedPanel<? extends FolderItem> refreshFolderDataTabs() 
 	{
+        //logger.debug ( "MONA : entered DataManager.refreshFolderDataTabs()" );
 		try 
 		{
 			Workbench workbench = getWorkbench();
 			WorkbenchSession session = getWorkbenchSession();
 			Folder folder = getCurrentFolder();
 			TabbedPanel<UserDataItem> folderData = null;
+
 			if (workbench == null)
 			{
 				throw new NullPointerException("No workbench is present.");
@@ -1214,8 +1393,11 @@ public class DataManager extends FolderManager
 			{
 				throw new NullPointerException("No folder is currently selected.");
 			}
+
 			// retrieve user's preferred data tab sort type
+            // Looks like this isn't settable by the user and defaults to "recordType" (Mona)
 			String dataTabSortType = getDataTabSortType();
+            //logger.debug ( "MONA : entered dataTabSortType = " + dataTabSortType );
 			if (dataTabSortType == null)
 			{
 				dataTabSortType = RECORD_TYPE;
@@ -1231,17 +1413,22 @@ public class DataManager extends FolderManager
 			{
 				dataMap = workbench.sortDataItemsByRecordType(folder);
 			}
+            //logger.debug ( "MONA : dataMap = " + dataMap );
 
-			if (dataMap != null && dataMap.size() > 0)
+            // Now add to the dataMap Globus folder data items
+			List allDataList = folder.findDataAllItems();
+            //logger.debug ( "MONA : allDataList = " + allDataList );
+            //logger.debug ( "MONA : allDataList.size = " + allDataList.size() );
+
+			if ( allDataList != null &&  allDataList.size() > 0 )
 			{
 				folderData = new TabbedPanel<UserDataItem>(folder);
-				List<Tab<UserDataItem>> dataTabs =
-				new Vector<Tab<UserDataItem>>(dataMap.size());
 				String pageSize = getController().getUserPreference(DATA_PAGE_SIZE);
+                //logger.debug ( "MONA : pageSize = " + pageSize );
 
 				// physical view tab = All Data Tab
 				Page<UserDataItem> allDataPage = null;
-				List<UserDataItem> allDataList = folder.findDataItems();
+
 				if (pageSize != null) 
 				{
 					try 
@@ -1251,15 +1438,23 @@ public class DataManager extends FolderManager
 					{
 						allDataPage = new ListPage<UserDataItem>(allDataList);
 					} 
-				} else 
-				{
-					allDataPage = new ListPage<UserDataItem>(allDataList);
 				}
+                else 
+					allDataPage = new ListPage<UserDataItem>(allDataList);
+                //
+                //logger.debug ( "MONA : allDataPage = " + allDataPage );
+                //logger.debug ( "MONA : allDataPage.getPageSize = " + allDataPage.getPageSize() );
 				Tab<UserDataItem> allDataTab = new Tab<UserDataItem>(allDataPage, ALL_DATA_TAB);
+                //logger.debug ( "MONA : allDataTab = " + allDataTab );
+				List<Tab<UserDataItem>> dataTabs =
+                    new Vector<Tab<UserDataItem>> ( allDataList.size() );
 				dataTabs.add(allDataTab);
+                //logger.debug ( "MONA : allDataTab = " + allDataTab );
 				folderData.setTabs(new ListPage<Tab<UserDataItem>>(dataTabs));
+                //logger.debug ( "MONA : folderData = " + folderData );
 				folderData.sortTabs();
 			}
+
 			setFolderDataTabs(folderData);
 			return folderData;
 		} 
@@ -1290,10 +1485,39 @@ public class DataManager extends FolderManager
 			return false;
 		}
 	}
+
+	protected boolean deleteData ( UserDataDirItem dataItem )
+    {
+		try
+        {
+			WorkbenchSession session = getWorkbenchSession();
+			if ( session == null )
+				throw new NullPointerException ( "No session is present." );
+			else if ( dataItem == null )
+				throw new NullPointerException ( "Data item was not found." );
+			else
+            {
+				Long id = dataItem.getUserDataId();
+				session.deleteUserDataDirItem ( dataItem );
+				dataItem = session.findUserDataDirItem ( id );
+
+				if ( dataItem == null )
+					return true;
+				else
+                    return false;
+			}
+		}
+        catch ( Throwable error )
+        {
+			reportError ( error, "Error deleting data item" );
+			return false;
+		}
+	}
+
 	protected int moveSelectedDataItems() {
 		// get IDs of selected data items to move
 		int moved = 0;
-		Long[] selectedIds = getSelectedIds();
+		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			return moved;
 
@@ -1305,17 +1529,44 @@ public class DataManager extends FolderManager
 
 		// move selected data items to target folder
 		else for (int i=0; i<selectedIds.length; i++) {
-			UserDataItem dataItem = getSelectedData(selectedIds[i]);
-			if (dataItem == null)
-				addActionError("Error moving data item with ID " +
-					selectedIds[i] + ": item not found.");
-			else try {
-				getWorkbenchSession().move(dataItem, folder);
-				moved++;
-			} catch (Throwable error) {
-				reportError(error, "Error moving data item \"" + dataItem.getLabel() +
-					"\" to folder \"" + folder.getLabel() + "\"");
-			}
+            String[] parts = selectedIds[i].split ( "-" );
+            String className = parts[0].trim();
+            Long id = Long.parseLong ( parts[1].trim() );
+
+            if ( className.equals ( "UserDataItem" ) )
+            {
+			    UserDataItem dataItem = getSelectedData ( id );
+			    if ( dataItem == null )
+				    addActionError ( "Error moving data item with ID " + id +
+                        ": item not found." );
+			    else try
+                {
+				    getWorkbenchSession().move ( dataItem, folder );
+				    moved++;
+			    } catch ( Throwable error )
+                {
+				    reportError ( error, "Error moving data item \"" +
+                        dataItem.getLabel() + "\" to folder \"" +
+                        folder.getLabel() + "\"" );
+			    }
+            }
+            else if ( className.equals ( "UserDataDirItem" ) )
+            {
+			    UserDataDirItem dataItem = getSelectedDirData ( id );
+			    if ( dataItem == null )
+				    addActionError ( "Error moving data item with ID " + id +
+                        ": item not found." );
+			    else try
+                {
+				    getWorkbenchSession().move ( dataItem, folder );
+				    moved++;
+			    } catch ( Throwable error )
+                {
+				    reportError ( error, "Error moving data item \"" +
+                        dataItem.getLabel() + "\" to folder \"" +
+                        folder.getLabel() + "\"" );
+			    }
+            }
 		}
 		return moved;
 	}
@@ -1323,7 +1574,7 @@ public class DataManager extends FolderManager
 	protected int copySelectedDataItems() {
 		// get IDs of selected data items to copy
 		int copied = 0;
-		Long[] selectedIds = getSelectedIds();
+		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			return copied;
 
@@ -1335,44 +1586,103 @@ public class DataManager extends FolderManager
 
 		// copy selected data items to target folder
 		else for (int i=0; i<selectedIds.length; i++) {
-			UserDataItem dataItem = getSelectedData(selectedIds[i]);
-			if (dataItem == null)
-				addActionError("Error copying data item with ID " +
-					selectedIds[i] + ": item not found.");
-			else try {
-				getWorkbenchSession().copy(dataItem, folder);
-				copied++;
-			} catch (Throwable error) {
-				reportError(error, "Error copying data item \"" + dataItem.getLabel() +
-					"\" to folder \"" + folder.getLabel() + "\"");
-			}
+            String[] parts = selectedIds[i].split ( "-" );
+            String className = parts[0].trim();
+            Long id = Long.parseLong ( parts[1].trim() );
+
+            if ( className.equals ( "UserDataItem" ) )
+            {
+			    UserDataItem dataItem = getSelectedData ( id );
+			    if ( dataItem == null )
+				    addActionError ( "Error copying data item with ID " +
+					    id + ": item not found." );
+			    else try
+                {
+				    getWorkbenchSession().copy ( dataItem, folder );
+				    copied++;
+			    } catch ( Throwable error )
+                {
+				    reportError ( error, "Error copying data item \"" +
+                        dataItem.getLabel() + "\" to folder \"" +
+                        folder.getLabel() + "\"" );
+			    }
+            }
+            else if ( className.equals ( "UserDataDirItem" ) )
+            {
+			    UserDataDirItem dataItem = getSelectedDirData ( id );
+			    if ( dataItem == null )
+				    addActionError ( "Error copying data item with ID " +
+					    id + ": item not found." );
+			    else try
+                {
+				    getWorkbenchSession().copy ( dataItem, folder );
+				    copied++;
+			    } catch ( Throwable error )
+                {
+				    reportError ( error, "Error copying data item \"" +
+                        dataItem.getLabel() + "\" to folder \"" +
+                        folder.getLabel() + "\"" );
+			    }
+            }
 		}
 		return copied;
 	}
 
 	protected int deleteSelectedDataItems() {
 		int deleted = 0;
-		Long[] selectedIds = getSelectedIds();
+		String[] selectedIds = getSelectedIds();
 		if (selectedIds == null || selectedIds.length < 1)
 			return deleted;
 		else {
 			User user = null;
 			
 			for (int i=0; i<selectedIds.length; i++) {
-				UserDataItem dataItem = getSelectedData(selectedIds[i]);
-				if (dataItem == null)
-					addActionError("Error deleting data item with ID " +
-							selectedIds[i] + ": item not found.");
-				else try {
-					if (deleteData(dataItem))
-					{
-						user = dataItem.getUser();
-						deleted++;
-					}
-				} catch (Throwable error) {
-					reportError(error, "Error deleting data item \"" +
+                String[] parts = selectedIds[i].split ( "-" );
+                String className = parts[0].trim();
+                Long id = Long.parseLong ( parts[1].trim() );
+
+                if ( className.equals ( "UserDataItem" ) )
+                {
+			        UserDataItem dataItem = getSelectedData ( id );
+
+			        if ( dataItem == null )
+					    addActionError ( "Error deleting data item with ID " +
+					        id + ": item not found." );
+			        else try
+                    {
+					    if ( deleteData ( dataItem ) )
+					    {
+						    user = dataItem.getUser();
+						    deleted++;
+					    }
+			        }
+                    catch ( Throwable error )
+                    {
+					    reportError ( error, "Error deleting data item \"" +
 							dataItem.getLabel() + "\"");
-				}
+			        }
+                }
+                else if ( className.equals ( "UserDataDirItem" ) )
+                {
+			        UserDataDirItem dataItem = getSelectedDirData ( id );
+
+			        if ( dataItem == null )
+					    addActionError ( "Error deleting data item with ID " +
+					        id + ": item not found." );
+			        else try
+                    {
+					    if ( deleteData ( dataItem ) )
+					    {
+						    user = dataItem.getUser();
+						    deleted++;
+					    }
+			        }
+                    catch ( Throwable error )
+                    {
+					    reportError ( error, "Error deleting data item \"" +
+							dataItem.getLabel() + "\"");
+			        }
+                }
 			}
 			
 			if ( user != null )
