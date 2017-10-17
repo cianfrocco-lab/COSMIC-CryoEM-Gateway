@@ -658,7 +658,7 @@ public class UserDataDirItem extends FolderItem
 	@Override
 	void load(Connection dbConn) throws IOException, SQLException
 	{
-        log.debug ( "MONA : entered load()" );
+        //log.debug ( "MONA : entered load()" );
 		super.load(dbConn);
 
         /*
