@@ -21,6 +21,8 @@ CREATE TABLE `transfer_record` (
   `SYNC_LEVEL` int(1),
   `FAULTS` int(5),
   `DIRECTORIES` int(5),
+  `FILE_NAMES` varchar(500),
+  `DIRECTORY_NAMES` varchar(500),
   `FILES` int(5),
   `FILES_SKIPPED` int(5),
   `BYTE_TRANSFERRED` bigint(20),
@@ -85,6 +87,12 @@ public class TransferRecord implements Serializable {
     @Column(name="ENCLOSING_FOLDER_ID")
     private Long enclosingFolderId;
 
+    @Column(name = "FILE_NAMES")
+    private String fileNames;
+
+    @Column(name = "DIRECTORY_NAMES")
+    private String directoryNames;
+
     public Long getId() {
         return id;
     }
@@ -113,6 +121,8 @@ public class TransferRecord implements Serializable {
     public Integer getFilesSkipped() {return filesSkipped;}
     public Long getByteTransferred() { return byteTransferred;}
     public Long getEnclosingFolderId() { return enclosingFolderId;}
+    public String getFileNames() { return fileNames;}
+    public String getDirectoryNames() { return directoryNames;}
 
     public void setId(Long id) {
         this.id = id;
@@ -142,5 +152,8 @@ public class TransferRecord implements Serializable {
     public void setFilesSkipped(Integer filesSkipped) { this.filesSkipped = filesSkipped; }
     public void setByteTransferred(Long byteTransferred) { this.byteTransferred = byteTransferred; }
     public void setEnclosingFolderId(Long enclosingFolderId) { this.enclosingFolderId = enclosingFolderId; }
+    public void setFileNames(String fileNames) { this.fileNames = fileNames; }
+    public void setDirectoryNames(String directoryNames) { this.directoryNames = directoryNames; }
+
 }
 
