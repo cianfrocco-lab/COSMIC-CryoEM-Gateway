@@ -4,16 +4,28 @@
   <title>Login</title>
   <content tag="menu">Home</content>
 </head>
+
 <body onLoad="detectBrowser()"/>
 <%-- BEGIN MAIN CONTENT AREA --%>
+<%--
 <div class="col-xs-5">
-    <%--
     <b><font size="+1">Please click on the "Login" button in the above menu to get authorization to use the COSMIC2 Science Gateway.</font><p>
         
         You will be redirected to the Globus OAuth2 login page where you can choose your organization.  After you've successfully authenticated with your organization, you will be automatically returned to the COSMIC2 gateway as an authorized user.</b>
+</div>
     --%>
-<s:url id="loginUrl" action="login"/>
-<s:a cssClass="btn btn-primary" href="%{loginUrl}">Login</s:a>
+  <div class="col-xs-10">
+      <h2>Welcome to COSMIC<sup>2</sup>!</h2> 
+
+      This is a <i>freely available</i>, science gateway for cryo-EM structure determination.<br><br>
+
+      Please login below with your university credentials and then you are ready to go!<br><br> 
+
+    <s:url id="loginUrl" action="login"/>
+        <s:a cssClass="btn btn-primary" href="%{loginUrl}">Login</s:a><br><br>
+
+      Questions about this login process?
+      <a href="https://cosmic-cryoem.org/user-authentication/">Please read more here.</a><br><br>
 </div>
 
 <%-- previous CIPRES user login... --%>
