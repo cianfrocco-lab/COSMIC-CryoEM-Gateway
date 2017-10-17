@@ -7,21 +7,39 @@
 <s:if test="%{hasFolderData()}">
   <h2>All Data</h2>
   <div>
+    <b>Upload Relion directories, particle stacks, and 3D volumes using
+    the Globus data transfer service.<br>
+    Upload 3D volume and other small files (&lt; 200 MB) using your
+    browser.</b><br>
+    <s:url var="transferUrl" action="transfer"/>
+    <s:a href="%{transferUrl}" cssClass="btn btn-primary">
+        Globus upload</s:a>
     <s:url id="uploadDataUrl" action="pasteData" method="upload"
         includeParams="none"/>
     <s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">
-        Upload Data</s:a>
+        Browser upload</s:a>
+    <!-- https://getbootstrap.com/docs/3.3/javascript/
+    <a class="btn btn-primary" role="button" data-toggle="collapse"
+        href="#collapseExample" aria-expanded="false"
+        aria-controls="collapseExample"> Collapse example</a>
+    -->
+    <button class="btn btn-primary" type="button" data-toggle="collapse"
+        data-target="#collapseExample" aria-expanded="false"
+        aria-controls="collapseExample"> Collapse example </button>
+        <div class="collapse" id="collapseExample">
+            We can put the browser upload page here?!
+        </div>
   </div>
 
   <div class="callout">
-    <s:if test="%{currentTabSize != 1}">
+    <s:if test="%{currentTabSize == 1}">
+      There is currently 1 data item in this folder.
+    </s:if>
+    <s:else>
       There are currently <s:property value="%{currentTabSize}"/>
       data items in this folder.
       (Items <s:property value="%{thisPageFirstElementNumber + 1}"/> -
       <s:property value="%{thisPageLastElementNumber + 1}"/> are shown here.)
-    </s:if>
-    <s:else>
-      There is currently 1 data item in this folder.
     </s:else>
   </div>
   <s:url id="firstPageUrl" action="data" method="setPage" includeParams="none">
@@ -45,7 +63,7 @@
     records on each page
   </s:form>
   <s:form name="selectData" action="data" theme="simple">
-    <h4>Use Data</h4>
+    <h4>Data</h4>
     <table class="table table-striped">
       <!-- Field Headers -->
       <thead>
@@ -53,7 +71,9 @@
           <s:checkbox cssClass="table-data-checkbox" name="allChecked"/>
           Select all
         </th>
-        <th>User Data ID</th>
+        <!-- Data ID is not useful and no longer valid since we have 2 different data types now
+        <th>Data ID</th>
+        -->
         <s:if test="%{isCurrentTabUnknown()}">
           <th>Label</th>
           <s:set name="action" value="top"/>
@@ -65,20 +85,22 @@
         <s:elseif test="%{isCurrentTabPhysical()}">
           <th>Name</th>
           <th>Bytes</th>
-          <th>Data Type</th>
+          <th>Format</th>
           <th>Date Created</th>
         </s:elseif>
       </thead>
       
       <!-- Data Item Rows -->
       <s:set name="action" value="top"/>
-      <s:iterator value="currentDataTab" id="dataItem" status="status">
+      <s:iterator value="currentAllDataTab" id="dataItem" status="status">
         <s:set name="dataId" value="%{#dataItem.userDataId}"/>
         <tr>
           <td>
             <s:checkbox cssClass="table-data-checkbox" name="selectedIds" fieldValue="%{#dataId}"
               value="%{selectedIds.{^ #this == #dataId}.size > 0}" theme="simple"/>
           </td>
+          <!-- See above comment about Data ID column.  Keeping the following code in case we
+               want to add a link to show row item details or content...
           <td>
             <s:url id="dataUrl" action="data" method="display" includeParams="none">
               <s:param name="id" value="%{#dataId}"/>
@@ -89,12 +111,13 @@
               </s:a>
             </span>
           </td>
-          
+          --> 
           <!-- Row in the "All Data" tab -->
           <s:if test="%{isCurrentTabPhysical()}">
+              <!-- <td><s:property value="%{#action.getLabel(#dataItem)}"/></td> -->
             <td><s:property value="%{#action.getLabel(#dataItem)}"/></td>
             <td><s:property value="%{#action.getDataLength(#dataItem)}"/></td>
-            <td><s:property value="%{#action.getDataType(#dataItem)}"/></td>
+            <td><s:property value="%{#action.getDataFormat(#dataItem)}"/></td>
             <td><s:property value="%{#action.getCreationDate(#dataItem)}"/></td>
           </s:if>
           
