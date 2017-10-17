@@ -7,9 +7,9 @@
 </head>
 <body>
 <div class="callout">
-  <h5>
+  <h2>
     Welcome
-  </h5>
+  </h2>
 </div>
 
 <s:if test="%{isRegistered()}">
