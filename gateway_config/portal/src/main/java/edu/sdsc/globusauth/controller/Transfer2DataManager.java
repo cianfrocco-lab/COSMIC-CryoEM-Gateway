@@ -7,205 +7,94 @@
 
 package edu.sdsc.globusauth.controller;
 
-/*
-import java.util.Calendar;
-import java.util.Date;
-
-//import org.ngbw.sdk.*;
-import org.ngbw.sdk.database.GlobusTransferFolder;
-
-import edu.sdsc.globusauth.model.OauthProfile;
-import edu.sdsc.globusauth.model.User;
-import edu.sdsc.globusauth.util.HibernateUtil;
-import edu.sdsc.globusauth.util.StringUtils;
-import edu.sdsc.globusauth.util.UserRole;
-
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-
-*/
-
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.ngbw.sdk.database.Folder;
-import org.ngbw.sdk.database.GlobusFolder;
+import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.UserDataItem;
-import org.ngbw.sdk.WorkbenchSession;
-//import org.ngbw.web.actions.DataManager;
-//import org.ngbw.web.actions.NgbwSupport;
-import org.ngbw.web.controllers.FolderController;
+import org.ngbw.web.actions.NgbwSupport;
 
 import edu.sdsc.globusauth.model.TransferRecord;
-import edu.sdsc.globusauth.util.OauthConstants;
-import edu.sdsc.globusauth.util.OauthUtils;
 
 
-//public class Transfer2DataManager extends NgbwSupport
-public class Transfer2DataManager
+public class Transfer2DataManager extends NgbwSupport
 {
     private static final Log log = LogFactory.getLog
         ( Transfer2DataManager.class );
 
     /**
-     * If the incoming newTransferRecord.getStatus() == "SUCCEEDED", then
-     * compare current status in database and if they differ, this means the
-     * Globus transfer info needs to flow to the CIPRES framework so data
-     * can show up in UI and be available for job submission.
+     * Setup CIPRES data items for the new Globus transferred files and
+     * directories.
      * @return - number of data items created; null if invalid incoming
      *      parameters or newTransferRecord.getStatus() != "SUCCEEDED"
      **/
-    public int setupDataItems
-        ( TransferRecord newTransferRecord, ProfileManager profileManager,
-          String destination_path, WorkbenchSession wbs )
+    public int setupDataItems ( TransferRecord transfer_record,
+        String destination_path )
     {
-        if ( newTransferRecord == null || profileManager == null ||
-            destination_path == null || wbs == null || 
-            destination_path.trim().equals ( "" ) ||
-            ! newTransferRecord.getStatus().equals ( "SUCCEEDED" ) )
+        //log.debug ( "MONA : Transfer2DataManager.setupDataItems()" );
+        //log.debug ( "MONA : transfer_record = " + transfer_record );
+        //log.debug ( "MONA : destination_path = " + destination_path );
+
+        if ( transfer_record == null || destination_path == null ||
+            destination_path.trim().equals ( "" ) )
             return ( 0 );
 
-        //NgbwSupport x = new NgbwSupport();
-        log.debug ( "MONA : Transfer2DataManager.setupDataItems() 3" );
-        //x.debug ( "MONA : destination_path = " + destination_path );
-        //debug ( "MONA : wbs = " + wbs );
-        //x.debug ( "MONA : newTransferRecord = " + newTransferRecord );
-        //x.debug ( "MONA : newTransferRecord id = " + newTransferRecord.getId() );
-        //x.debug ( "MONA : newTransferRecord userid = " + newTransferRecord.getUserId() );
-        //x.debug ( "MONA : newTransferRecord status = " + newTransferRecord.getStatus() );
-        //x.debug ( "MONA : newTransferRecord folder id = " + newTransferRecord.getEnclosingFolderId() );
-        //x.debug ( "MONA : newTransferRecord task id = " + newTransferRecord.getTaskId() );
-        //debug ( "MONA : newTransferRecord filenames = " + newTransferRecord.getFileNames() );
-        //debug ( "MONA : newTransferRecord directory names = " + newTransferRecord.getDirectoryNames() );
-
-        List <TransferRecord> transferRecords =
-            profileManager.loadRecordByTaskId
-            ( newTransferRecord.getTaskId() );
-        //x.debug ( "MONA : transferRecords = " + transferRecords );
-        //x.debug ( "MONA : transferRecords.size() = " + transferRecords.size() );
-
-        if ( transferRecords.isEmpty() )
-            return ( 0 );
-
-        int saved = 0;
-        TransferRecord oldTransferRecord = transferRecords.get ( 0 );
-        //x.debug ( "MONA : oldTransferRecord = " + oldTransferRecord );
-        //x.debug ( "MONA : oldTransferRecord id = " + oldTransferRecord.getId() );
-        //x.debug ( "MONA : oldTransferRecord userid = " + oldTransferRecord.getUserId() );
-        //x.debug ( "MONA : oldTransferRecord status = " + oldTransferRecord.getStatus() );
-        //x.debug ( "MONA : oldTransferRecord folder id = " + oldTransferRecord.getEnclosingFolderId() );
-        //debug ( "MONA : oldTransferRecord filenames = " + oldTransferRecord.getFileNames() );
-        //debug ( "MONA : oldTransferRecord directory names = " + oldTransferRecord.getDirectoryNames() );
-
-        // If status has not changed, don't continue
-        if ( newTransferRecord.getStatus().equals
-            ( oldTransferRecord.getStatus() ) )
-            return ( saved );
-
-        /*
-        FolderController controller = getFolderController();
-        x.debug ( "MONA : controller = " + controller );
-
-        // Get the folder the user selected to store this transfer in
-        Folder folder;
-        folder = getCurrentFolder();
-        x.debug ( "MONA : folder 1 = " + folder );
-        x.debug ( "MONA : folder label = " + folder.getLabel() );
-        x.debug ( "MONA : folder uuid = " + folder.getUUID() );
-        */
-
-        // Get the folder the user selected to store this transfer in
+        //log.debug ( "MONA : transfer_record.getFileNames() = " + transfer_record.getFileNames() );
+        // Get the folder the user selected to store the transfer to
         Folder folder;
         try
         {
             folder = new Folder
-                ( oldTransferRecord.getEnclosingFolderId().longValue() );
-            //x.debug ( "MONA : folder 2 = " + folder );
-            log.debug ( "MONA : folder label = " + folder.getLabel() );
-            //setCurrentFolder ( folder );
-            //x.debug ( "MONA : folder uuid = " + folder.getUUID() );
-
-            /*
-            List<UserDataItem> dataitems = folder.findDataItems();
-            x.debug ( "MONA : folder dataitems = " + dataitems );
-            x.debug ( "MONA : dataitems size = " + dataitems.size() );
-            for ( UserDataItem dataitem : dataitems )
-            {
-                x.debug ( "MONA : dataitem = " + dataitem );
-                x.debug ( "MONA : dataitem label = " + dataitem.getLabel() );
-            }
-            */
+                ( transfer_record.getEnclosingFolderId().longValue() );
+            //log.debug ( "MONA : folder label = " + folder.getLabel() );
         }
         catch ( Exception e )
         {
             log.error ( "System Error: cannot get folder with ID = " +
-                oldTransferRecord.getEnclosingFolderId().longValue() );
-            return ( saved );
+                transfer_record.getEnclosingFolderId().longValue() );
+            return ( 0 );
         }
 
-        // Check and handle files...
-        String file = oldTransferRecord.getFileNames();
-        if ( file != null && ! file.trim().equals ( "" ) )
-        {
-            String files[] = file.split ( "\\|" );
-            //x.debug ( "MONA : files length = " + files.length );
-            String path_file = "";
+        int saved = saveFiles ( transfer_record, destination_path, folder );
+        saved += saveDirectories ( transfer_record, destination_path, folder );
 
-            if ( files != null && files.length > 0 )
-            {
-                //x.debug ( "MONA : files 0 = " + files[0] );
-                UserDataItem dataItem;
-                try
-                {
-                    for ( String filename : files )
-                    {
-                        path_file = destination_path + filename;
-                        log.debug ( "MONA : about to save file = " +
-                            filename );
-                        dataItem = new UserDataItem ( destination_path +
-                            filename, folder );
-                        //x.debug ( "MONA : dataItem 1 = " + dataItem );
-                        dataItem.setLabel ( filename );
-                        dataItem = wbs.saveUserDataItem ( dataItem, folder );
-                        saved++;
-                        //x.debug ( "MONA : dataItem = " + dataItem );
-                    }
-                    folder.save();
-                }
+        return ( saved );
+    }
 
-                catch ( Exception e )
-                {
-                    log.error
-                        ( "System Error : cannot save Globus transferred file " +
-                          path_file + "(" + e + ")" );
-                }
-                //refreshFolderDataTabs();
-                //refreshFolders();
-            }
-        }
+
+    /**
+     * Save the given TransferRecord's directories
+     * @return - number of files saved (>= 0 )
+     **/
+    private int saveDirectories ( TransferRecord transfer_record,
+        String destination_path, Folder folder )
+    {
+        if ( transfer_record == null || destination_path == null ||
+            destination_path.trim().equals ( "" ) || folder == null )
+            return ( 0 );
+
+        int saved = 0;
 
         // Check and handle directories...
-        String dirString = oldTransferRecord.getDirectoryNames();
+        String dirString = transfer_record.getDirectoryNames();
+        //log.debug ( "MONA : dirString = " + dirString );
         if ( dirString != null && ! dirString.trim().equals ( "" ) )
         {
             String dirs[] = dirString.split ( "\\|" );
-            log.debug ( "MONA : dirs length = " + dirs.length );
+            //log.debug ( "MONA : dirs length = " + dirs.length );
             if ( dirs != null && dirs.length > 0 )
             {
-                log.debug ( "MONA : dirs 0 = " + dirs[0] );
-                GlobusFolder folderItem;
+                //log.debug ( "MONA : dirs 0 = " + dirs[0] );
+                UserDataDirItem folderItem = null;
 
                 try
                 {
                     for ( String dir : dirs )
                     {
-                        log.debug ( "MONA : dir = " + dir );
-                        folderItem = new GlobusFolder ( folder );
-                            //newTransferRecord.getId(),
-                            //destination_path + dir );
-                        log.debug ( "MONA : folderItem = " + folderItem );
+                        folderItem = new UserDataDirItem ( folder,
+                            transfer_record.getId(), destination_path + dir );
+                        //log.debug ( "MONA : folderItem = " + folderItem );
                         folderItem.save();
                         saved++;
                     }
@@ -213,9 +102,70 @@ public class Transfer2DataManager
 
                 catch ( Exception e )
                 {
+                    reportUserError (
+                        "Unable to setup Globus transferred data item (" +
+                        e + ")" );
+                    addActionError ( 
+                        "Unable to setup Globus transferred data item (" +
+                        e + ")" );
+                    //reportError(error, "Error creating new TaskInputSourceDocument");
                     log.error
-                        ( "System Error : cannot create Globus transferred directory ("
+                        ( "System Error : cannot create data item for Globus transferred directory ("
                         + e + ")" );
+                }
+            }
+        }
+
+        return ( saved );
+    }
+
+
+    /*
+     * Save the given TransferRecord's file(s)
+     * @return - number of files saved (>= 0 )
+     */
+    private int saveFiles ( TransferRecord tr, String destination_path,
+        Folder folder )
+    {
+        //log.debug ( "MONA : Transfer2DataManager.saveFiles()" );
+        if ( tr == null || destination_path == null ||
+            destination_path.trim().equals ( "" ) || folder == null )
+            return ( 0 );
+
+        int saved = 0;
+        String file = tr.getFileNames();
+        //log.debug ( "MONA : file = " + file );
+
+        if ( file != null && ! file.trim().equals ( "" ) )
+        {
+            String files[] = file.split ( "\\|" );
+            //log.debug ( "MONA : files = " + files );
+            String path_file = "";
+
+            if ( files != null && files.length > 0 )
+            {
+                UserDataItem dataItem = null;
+
+                try
+                {
+                    for ( String filename : files )
+                    {
+                        path_file = destination_path + filename;
+                        //log.debug ( "MONA : path_file = " + path_file );
+                        dataItem = new UserDataItem ( destination_path +
+                            filename, folder );
+                        dataItem.setLabel ( filename );
+                        dataItem.setEnclosingFolder ( folder );
+                        dataItem.save();
+                        saved++;
+                    }
+                }
+
+                catch ( Exception e )
+                {
+                    log.error
+                        ( "System Error : cannot save Globus transferred file " +
+                          path_file + "(" + e + ")" );
                 }
             }
         }
