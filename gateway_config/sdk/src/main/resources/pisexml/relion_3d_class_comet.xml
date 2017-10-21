@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D classification</title>
-    <version>1.4</version>
+    <version>2.1.b1 (Last updated 2017.09.15)</version>
     <description>Perform 3D classification of single particles with 3D model using Relion</description>
     <authors>S. H. W. Scheres</authors>
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
@@ -66,8 +66,9 @@ Mike -->
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
-				 "ntasks-per-node=24\\n" .
-				 "nodes=1\\n"
+				 "ntasks-per-node=15\\n" .
+				 "node_exclusive=1\\n" .
+				 "nodes=10\\n"
 				</code>
 			</format>
 			<group>1</group>
@@ -96,11 +97,11 @@ Mike -->
 	  </attributes>	  
 	</parameter>
 	
-<!-- Retrieve compressed file containing Relion outputs -->
+<!-- output all results files -->
 	<parameter type="Results">
-	  <name>relion_output</name>
+	  <name>all_outputfiles</name>
 	  <attributes>
-	    <filenames>output.tar.gz</filenames>
+	    <filenames>*</filenames>
 	  </attributes>
 	</parameter>
 	  	
@@ -134,38 +135,13 @@ Mike -->
 			    <language>perl</language>
 			    <code>"--angpix $value"</code>
 		    </format>
-            <vdef>
-                <value>-1</value>
-            </vdef>
             <ctrls>
                 <ctrl>
                     <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
                     <language>perl</language>
-                    <code>$angpix &lt; 0.01 &amp;&amp; $angpix != -1</code>
+                    <code>$angpix &lt; 0.01</code>
                 </ctrl>
             </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>iter</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Number of iterations (iter)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--iter $value"</code>
-		    </format>
-		    <vdef>
-			    <value>25</value>
-		    </vdef>
-		    <ctrls>
-			    <ctrl>
-                    <message>Please enter an integer > 0 for the number of iterations</message>
-				    <language>perl</language>
-				    <code>$iter &lt; 1</code>
-			    </ctrl>
-		    </ctrls>
 	    </attributes>
     </parameter>
 
@@ -515,7 +491,6 @@ Mike -->
     </parameter>
 
     <!-- set the run time -->		
-    <!-- will be calculated by the submit script instead of having user set it
     <parameter type="Float" issimple="1" ismandatory="1">
 	    <name>runtime</name>
 	    <attributes>
@@ -543,7 +518,6 @@ Mike -->
 		    </format>
 	    </attributes>
     </parameter>
-    -->
 
     <parameter type="String" issimple="1" ismandatory="1">
 	    <name>o</name>
