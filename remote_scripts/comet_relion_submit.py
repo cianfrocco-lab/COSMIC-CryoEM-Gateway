@@ -8,6 +8,118 @@ import subprocess
 import string
 import shutil
 import math
+import zipfile 
+
+def prepareRelionRun(inputline):
+	tmplog=open('_tmplog','w')
+	tmplog.write(inputline)
+	
+	inputZipFile=inputline.split()[returnEntryNumber(inputline,'--i')]
+	#outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
+	
+	pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+	ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
+
+	tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
+	userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
+	tmplog.write('\n'+userdir)
+
+	cmd='ln -s %s/%s %s/' %(userdir,inputZipFile.split('/')[0],pwd)
+	tmplog.write('\n'+cmd)
+	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).wait()
+
+	pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
+        o1=open('_tmp2.txt','w')
+        o1.write('%s\n'%(pwd))
+        o1.close()
+
+	tmplog.write(inputZipFile)
+
+	if not os.path.exists('%s' %(inputZipFile)):
+	#Print error since could not find input star file
+		pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
+		o1=open('_tmp1.txt','w')
+		o1.write('%s\n'%(pwd))
+		o1.close()	
+		print 'Error=4' 
+		sys.exit()
+	
+	#Get starfile name
+	starfilename='%s' %(inputZipFile)
+
+	#Create output dirs
+	if '--ref' in inputline:
+                if '--auto_refine' not in inputline:
+                        os.makedirs('Class3D_cosmic')
+                        os.makedirs('Class3D_cosmic/job001/')
+                        outdir='Class3D_cosmic/job001'
+        if '--ref' not in inputline:
+                os.makedirs('Class2D_cosmic')
+                os.makedirs('Class2D_cosmic/job001')
+                outdir='Class2D_cosmic/job001'
+        if '--auto_refine' in inputline:
+                os.makedirs('Refine3D_cosmic')
+                os.makedirs('Refine3D_cosmic/job001')
+                outdir='Refine3D_cosmic/job001'
+
+	#Calculate number of nodes given number of lines in starfile
+	numLines=len(open(starfilename,'r').readlines())
+	nodes=1
+	runtime=8
+	if numLines > 10000:
+		nodes=2		
+		runtime=12
+	if numLines > 20000:
+                nodes=3
+		runtime=12
+	if numLines > 30000:
+        	nodes=4   
+		runtime=12    
+	if numLines > 40000:
+                nodes=5	
+		runtime=18
+	if numLines > 50000:
+                nodes=6
+		runtime=18
+	if numLines > 60000:
+                nodes=7
+		runtime=24
+	if numLines > 80000:
+                nodes=8
+		runtime=24
+	if numLines > 100000:
+                nodes=10
+		runtime=24
+	#>> Write number to scheduler.conf
+	if not os.path.exists('scheduler.conf'):
+		print 'Error=1'
+		sys.exit()
+	nodes=1
+	outwrite=open('scheduler.conf','a')
+	outwrite.write('nodes=%i\n' %(nodes))
+	outwrite.close()
+
+	#Replace zipfile name in relion command 
+	inputline_list=inputline.split()
+	inputline_list[returnEntryNumber(inputline,'--i')]=starfilename
+	inputline_list[returnEntryNumber(inputline,'--o')]='%s/run' %(outdir)
+	if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map': 
+		inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'
+
+	#Join list into single string
+        relion_command=' '.join(inputline_list)	
+	return relion_command,outdir,runtime,nodes #print 'cmd="%s"' %(relion_command)
+
+def returnEntryNumber(inputlist,queryString):
+	'''Returns entry number in list for a given string in a list'''
+	counter=1
+	output=0
+	for entry in inputlist.split(): 
+		if entry == queryString:
+			output=counter
+		counter=counter+1
+	return output
 
 def log(filename, message):
     f = open(filename, "a")
@@ -30,6 +142,28 @@ def getProperties(filename):
         propDict[name]= value
     propFile.close()
     return propDict
+
+def createEpilog(self):
+        rfile = open(lib.epilogue, "w") 
+        text = """#!/bin/bash
+        date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > %s/term.txt
+        squeue -j $SLURM_JOB_ID -l >> %s/term.txt
+        echo "This file created by srun of: $*" >> %s/term.txt
+        """ % (lib.jobdir, lib.jobdir, lib.jobdir) 
+        rfile.write(textwrap.dedent(text));
+        rfile.close();
+        os.chmod(lib.epilogue, 0744);
+
+# Function to run the gateway_submit_attribute script
+def runGSA ( gateway_user, jobid ):
+        cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % ("%s@cosmic2.sdsc.edu" % gateway_user, jobid)
+        log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output =  p.communicate()[0]
+        retval = p.returncode
+        log("./_JOBINFO.TXT", "\ngateway_submit_attributes retval (%s) output (%s)\n" % (retval,output))
+	return retval 
+
 
 def submitJob(job_properties={}, runfile='batch_command.run', statusfile='batch_comand.status',cmdfile='batch_command.cmdline'):
     log(statusfile, "submit_job start\n")
@@ -75,16 +209,9 @@ def submitJob(job_properties={}, runfile='batch_command.run', statusfile='batch_
         log("./_JOBINFO.TXT", "\nJOBID=%s\n" % jobid)
         log("./_JOBINFO.TXT", "\njob_properties (%s)\n" % (job_properties,))
         gatewayuser = string.split(job_properties['User\\'],'=')[1]
-        log("./_JOBINFO.TXT", "\ngatewayuser (%s)\n" % (gatewayuser,))
-        log("./_JOBINFO.TXT","\nChargeFactor=1.0\n")
-        # gateway_submit_attributes is a post-submit script to record
-        # which gateway user submitted this jobid
-        cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % ("%s@nsgportal.org" % gatewayuser, jobid)
-        log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        output =  p.communicate()[0]
-        retval = p.returncode
-        log("./_JOBINFO.TXT", "\ngateway_submit_attributes retval (%s) output (%s)\n" % (retval,output))
+	log("./_JOBINFO.TXT", "\ngatewayuser (%s)\n" % (gatewayuser,))
+	log("./_JOBINFO.TXT","\nChargeFactor=1.0\nncores=%s" %(job_properties['cores']))
+	runGSA ( gatewayuser, jobid )
         return 0
     else:
         print "Error, sbatch says: %s" % output
@@ -98,18 +225,29 @@ parser.add_argument('--url')
 parser.add_argument('--', dest='doubledash')
 parser.add_argument('commandline')
 args = vars(parser.parse_args())
-args['account'] = 'hvd125'
+args['account'] = 'csd547'
 
+pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
+o1=open('_tmp2.txt','w')
+o1.write('%s\n'%(pwd))
+o1.close()
 os.system('pwd')
 properties_dict = getProperties('./scheduler.conf')
-runhours = float(properties_dict['runhours'])
-nodes = int(properties_dict['nodes'])
-ntaskspernode = int(properties_dict['cores_per_node'])
+#runhours = float(properties_dict['runhours'])
+#nodes = int(properties_dict['nodes']) ###>> Nodes are calculated in this script  - see prepareRelionRun
+#ntaskspernode = int(properties_dict['cores_per_node'])
+ntaskspernode = int(properties_dict['ntasks-per-node'])
 #fname = properties_dict['fname']
+jobdir = os.getcwd()
+relion_command,outdir,runhours,nodes=prepareRelionRun(args['commandline'])
 runminutes = math.ceil(60 * runhours)
 hours, minutes = divmod(runminutes, 60)
 runtime = "%02d:%02d:00" % (hours, minutes)
-jobdir = os.getcwd()
+#nodes = int(properties_dict['nodes'])
+ntaskspernode = int(properties_dict['ntasks-per-node'])
+o1=open('_JOBINFO.TXT','a')
+o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+o1.close()
 shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
 jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
 print jobproperties_dict
@@ -117,10 +255,14 @@ print "jobfinfo JobHandle (%s)" % jobproperties_dict['JobHandle']
 mailuser = jobproperties_dict['email']
 jobname = jobproperties_dict['JobHandle']
 
+#Prepare relion command, unzip file, calculate number of nodes
+#relion_command=prepareRelionRun(args['commandline'])
+#nodes = int(properties_dict['nodes'])
+ntaskspernode = int(properties_dict['ntasks-per-node'])
 text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
 #SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
-#SBATCH --partition=compute           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
 #SBATCH -J %s        # Job name
 #SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
 #SBATCH --mail-user=%s
@@ -130,29 +272,46 @@ text = """#!/bin/sh
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
-#SBATCH --nodes=%s  # Total number of nodes requested (16 cores/node)
-#SBATCH --ntasks-per-node=%s             # Total number of mpi tasks requested
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+##SBATCH --gres=gpu:p100:4    #only p100 nodes
+
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 module load python
 module load gsl
+module load %s
 source $HOME/.bashrc
-
-cd '%s'
-ibrun -v %s 1>>stdout.txt 2>>stderr.txt
-/bin/tar -cvzf output.tar.gz ./*
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+ibrun -np 5 --tpr 4 %s --j 4 1>>stdout.txt 2>>stderr.txt
+/bin/tar -cvzf output.tar.gz %s/
 """ \
 % \
-(jobname, runtime, mailuser, args['account'], nodes, ntaskspernode, jobdir, args['commandline'])
+('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,relion_command,outdir)
 
+#P100: relion/2.1.b1_p100
+#K80: relion/2.1.b1
 runfile = "./batch_command.run"
 statusfile = "./batch_command.status"
 cmdfile = "./batch_command.cmdline"
 debugfile = "./nsgdebug"
-
 FO = open(runfile, mode='w')
 FO.write(text)
 FO.flush()
 os.fsync(FO.fileno())
 FO.close()
-
 rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+# Following output to done.txt is needed by the gateway framework
+#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
+#echo "retval=$rc">> done.txt
+donefile = "done.txt"
+#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
+d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+FO = open(donefile, mode='a')
+FO.write(d+"\n")
+FO.write("retval=" + str(rc) + "\n")
+FO.flush()
+os.fsync(FO.fileno())
+FO.close()
 
