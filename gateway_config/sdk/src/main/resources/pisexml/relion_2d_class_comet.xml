@@ -255,33 +255,6 @@ Mike -->
     </parameter>
     -->
 
-    <parameter type="String" issimple="1" ismandatory="1">
-	    <name>o</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Output directory name</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--o $value"</code>
-		    </format>
-		    <comment>
-			    <value>Name of output directory (--o).</value>
-		    </comment>
-        <vdef>
-			    <value>output_directory</value>
-		    </vdef>
-		    <ctrls>
-			    <ctrl>
-				    <message>Please enter a string for the output directory name</message>
-				    <language>perl</language>
-				    <code>!$o</code>
-			    </ctrl>
-		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <!-- Advanced parameters -->
-
     <parameter type="Integer" issimple="1" ismandatory="1">
 	    <name>psi_step</name>
 	    <attributes>
@@ -352,6 +325,33 @@ Mike -->
                     <message>Please enter an integer > 0 for the pixel search range step size (in pixels)</message>
 				    <language>perl</language>
 				    <code>$offset_step &lt; 1</code>
+			    </ctrl>
+		    </ctrls>
+	    </attributes>
+    </parameter>
+
+    <!-- Advanced Parameters -->
+
+    <parameter type="String" ismandatory="1">
+	    <name>o</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Output directory name</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--o $value"</code>
+		    </format>
+		    <comment>
+			    <value>Name of output directory (--o).</value>
+		    </comment>
+            <vdef>
+			    <value>output</value>
+		    </vdef>
+		    <ctrls>
+			    <ctrl>
+				    <message>Please enter a string for the output directory name</message>
+				    <language>perl</language>
+				    <code>!$o</code>
 			    </ctrl>
 		    </ctrls>
 	    </attributes>
