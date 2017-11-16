@@ -283,12 +283,6 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="String" issimple="1" ismandatory="1">
-	    <name>o</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Output directory name (o)</prompt>
-
     <parameter type="String" ismandatory="1">
 	    <name>o</name>
 	    <attributes>
