@@ -23,12 +23,14 @@
         href="#collapseExample" aria-expanded="false"
         aria-controls="collapseExample"> Collapse example</a>
     -->
+    <!--
     <button class="btn btn-primary" type="button" data-toggle="collapse"
         data-target="#collapseExample" aria-expanded="false"
         aria-controls="collapseExample"> Collapse example </button>
         <div class="collapse" id="collapseExample">
             We can put the browser upload page here?!
         </div>
+    -->
   </div>
 
   <div class="callout">
@@ -190,9 +192,15 @@
     There is currently no data in this folder.<br/>What would you like to do?
   </div>
   <div class="button-group">
-    <s:url id="uploadDataUrl" action="pasteData" method="upload" includeParams="none"/>
-    <s:a href="%{uploadDataUrl}" cssClass="btn btn-primary">Upload Data</s:a>
-    <s:url id="createTaskUrl" action="createTask" method="create" includeParams="none"/>
+    <s:url var="transferUrl" action="transfer"/>
+    <s:a href="%{transferUrl}" cssClass="btn btn-primary">Upload Data via
+        Globus</s:a>
+    <s:url id="uploadDataUrl" action="pasteData" method="upload"
+        includeParams="none"/>
+    <s:a href="%{uploadDataUrl}" cssClass="btn btn-primary">Upload Data via
+        browser</s:a>
+    <s:url id="createTaskUrl" action="createTask" method="create"
+        includeParams="none"/>
     <s:a href="%{createTaskUrl}" cssClass="btn btn-primary">Create a Task</s:a>
   </div>
 </s:else>
