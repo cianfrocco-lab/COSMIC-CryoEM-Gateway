@@ -13,7 +13,7 @@
     browser.</b><br>
     <s:url var="transferUrl" action="transfer"/>
     <s:a href="%{transferUrl}" cssClass="btn btn-primary">
-        Globus upload</s:a>
+        Globus upload / download</s:a>
     <s:url id="uploadDataUrl" action="pasteData" method="upload"
         includeParams="none"/>
     <s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">
