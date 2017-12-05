@@ -7,6 +7,7 @@
 <h2>Upload Data Files</h2>
 <div class="form-group">
   <div class="col-xs-10">
+    <!--
     <h4>Transfer Relion directories, particle stacks, and 3D volumes using
         the file transfer service Globus</h4> 
     <s:url var="transferUrl" action="transfer"/>
@@ -14,7 +15,8 @@
     <br>
     <br>
     <hr class="hr-bluedots">
-    <h5>Optional: Upload 3D volumes here (and files smaller than 200 MB)</h5>
+    -->
+    <h5>Upload 3D volumes here (and files smaller than 200 MB)</h5>
 <s:form action="pasteData" theme="simple" method="POST" enctype="multipart/form-data" cssClass="form-horizontal" role="form">
   <%--
   <div class="form-group">
