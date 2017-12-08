@@ -254,6 +254,9 @@ print jobproperties_dict
 print "jobfinfo JobHandle (%s)" % jobproperties_dict['JobHandle']
 mailuser = jobproperties_dict['email']
 jobname = jobproperties_dict['JobHandle']
+for line in open('_JOBINFO.TXT','r'):
+	if 'User\ Name=' in line: 
+		username=line.split('=')[-1].strip()
 
 #Prepare relion command, unzip file, calculate number of nodes
 #relion_command=prepareRelionRun(args['commandline'])
@@ -284,10 +287,10 @@ source $HOME/.bashrc
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 ibrun -np 5 --tpr 4 %s --j 4 1>>stdout.txt 2>>stderr.txt
-/bin/tar -cvzf output.tar.gz %s/
+/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
 """ \
 % \
-('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,relion_command,outdir)
+('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,relion_command,username,'Class2D_cosmic/job001')
 
 #P100: relion/2.1.b1_p100
 #K80: relion/2.1.b1
