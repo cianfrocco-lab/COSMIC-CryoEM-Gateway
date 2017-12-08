@@ -252,6 +252,8 @@ Mike -->
 	    </attributes>
     </parameter>
 
+    <!-- Advanced Parameters -->
+
     <!-- set the run time -->		
     <parameter type="Float" issimple="1" ismandatory="1">
 	    <name>runtime</name>
@@ -281,18 +283,21 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="String" issimple="1" ismandatory="1">
+    <parameter type="String" ismandatory="1">
 	    <name>o</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Output directory name (o)</prompt>
+		    <prompt>Output directory name</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--o $value"</code>
 		    </format>
 		    <comment>
-			    <value>Name of output directory.</value>
+			    <value>Name of output directory (--o).</value>
 		    </comment>
+            <vdef>
+			    <value>output</value>
+		    </vdef>
 		    <ctrls>
 			    <ctrl>
 				    <message>Please enter a string for the output directory name</message>
@@ -303,8 +308,6 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <!-- Advanced parameters -->
-    
     <parameter type="Switch">
 	    <name>ctf</name>
 	    <attributes>

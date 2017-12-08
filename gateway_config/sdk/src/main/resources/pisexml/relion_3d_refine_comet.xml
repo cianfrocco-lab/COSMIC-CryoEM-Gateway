@@ -424,7 +424,9 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="String" issimple="1" ismandatory="1">
+    <!-- Advanced parameters -->
+
+    <parameter type="String" ismandatory="1">
 	    <name>o</name>
 	    <attributes>
 		    <group>1</group>
@@ -436,6 +438,9 @@ Mike -->
 		    <comment>
 			    <value>Name of output directory.</value>
 		    </comment>
+            <vdef>
+                <value>output</value>
+            </vdef>
             <ctrls>
                 <ctrl>
                     <message>Please enter a string for the output directory name</message>
@@ -445,8 +450,6 @@ Mike -->
             </ctrls>
 	    </attributes>
     </parameter>
-
-    <!-- Advanced parameters -->
 
     <parameter type="Excl" ismandatory="1">
 	    <name>healpix_order</name>

@@ -82,10 +82,8 @@ public class CreateTask extends ManageTasks
 
 	// error message constants
 	public static final String CANNOT_SUBMIT =
-		"Sorry, job submission from your account has been temporarily suspended. Most " +
-		"likely this is due to heavy consumption of community resources from this account. " +
-		"For information on reactivating your account, or if you think you received " +
-		"this message in error, please contact " + EMAIL_SERVICE_ADDR;
+		"Sorry, job submission from your account has been temporarily suspended. Most likely this is due to heavy consumption of community resources from this account. For information on reactivating your account, or if you think you received this message in error, please contact " +
+        EMAIL_SERVICE_ADDR;
 
 	/*================================================================
 	 * Properties
