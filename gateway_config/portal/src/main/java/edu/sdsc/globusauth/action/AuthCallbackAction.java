@@ -44,14 +44,15 @@ public class AuthCallbackAction extends FolderManager {
     private String authurl;
     private String profileurl;
     private Properties config;
-    private ActionMapper actionMapper;
-    private UrlHelper urlHelper;
+    // private ActionMapper actionMapper;
+    // private UrlHelper urlHelper;
 
     private JsonFactory jsonFactory = new JacksonFactory();
     private ProfileManager profileManager;
     private OauthProfile profile;
 
     public AuthCallbackAction() {
+        //logger.debug ( "MONA: AuthCallbackAction.AuthCallbackAction()" );
         profileManager = new ProfileManager();
         profile = new OauthProfile();
     }
@@ -213,7 +214,10 @@ public class AuthCallbackAction extends FolderManager {
                         profile.setInstitution("");
                         //profile = profileManager.add(profile);
                         long userid = registerUser();
-                        if ( userid == -1L) return "failure";
+                        if ( userid == -1L) {
+                            logger.debug ( "MONA: here 1" );
+                            return "failure";
+                        }
 
                         profile.setUserId(userid);
                         profileManager.addUser(profile);
@@ -228,7 +232,11 @@ public class AuthCallbackAction extends FolderManager {
                         redirect_flag = false;
                         profile.setEmail(db_profile.getEmail());
                         profile.setIdentityId(db_profile.getIdentityId());
-                        if (!activateLogin(null,db_profile.getLinkUsername())) return "failure";
+                        if (!activateLogin(null,db_profile.getLinkUsername()))
+                        {
+                            logger.debug ( "MONA: here 2" );
+                            return "failure";
+                        }
 
                         getSession().put("user_id",db_profile.getUserId());
                         getSession().put(OauthConstants.EMAIL, db_profile.getEmail());
@@ -287,8 +295,9 @@ public class AuthCallbackAction extends FolderManager {
                     */
 
                     EndpointListAction iplistaction = new EndpointListAction(accesstoken,username);
-                    iplistaction.my_endpoint_list();
-                    List<Map<String,Object>> bookmarklist = iplistaction.getBookmarklist();
+                    //iplistaction.my_endpoint_list();
+                    //List<Map<String,Object>> bookmarklist = iplistaction.getBookmarklist();
+					List<Map<String,Object>> bookmarklist = iplistaction.my_bookmark_list();
 
                     if (bookmarklist != null && bookmarklist.size() > 0) {
                         boolean flag = false;
@@ -296,9 +305,9 @@ public class AuthCallbackAction extends FolderManager {
                             Map<String, Object> bmmap = bookmarklist.get(i);
                             String bname = (String) bmmap.get("name");
                             String[] bnamea = bname.split("::");
-                            if (bnamea.length == 3) {
+                            if (bnamea.length == 2) {
                                 flag = true;
-                                if (bnamea[2].equals("SOURCE")) {
+                                if (bnamea[1].equals("SOURCE")) {
                                     //in case the source is Comet
                                     /*
                                     getSession().put(OauthConstants.SRC_BOOKMARK_ID, (String) bmmap.get("id"));
@@ -372,7 +381,8 @@ public class AuthCallbackAction extends FolderManager {
 
                         }
                     } else {
-                        return "dataendpoints";
+                        // return "dataendpoints";
+						return "transfer";
                     }
                 }
                 if (redirect_flag) {
@@ -383,6 +393,7 @@ public class AuthCallbackAction extends FolderManager {
             } else {
                 OAuthSystemException oauth_ex = new OAuthSystemException("Mismatching Oauth States");
                 reportError(oauth_ex,"Mismatching Oauth States");
+                logger.debug ( "MONA: here 3" );
                 return "failure";
                 // Something went wrong with state value matching
                 // throw new OAuthSystemException("Mismatching Oauth States");
@@ -479,6 +490,7 @@ public class AuthCallbackAction extends FolderManager {
         return true;
     }
 
+	/*
     @Inject
     public void setActionMapper(ActionMapper actionMapper) {
         this.actionMapper = actionMapper;
@@ -488,6 +500,7 @@ public class AuthCallbackAction extends FolderManager {
     public void setUrlHelper(UrlHelper urlHelper) {
         this.urlHelper = urlHelper;
     }
+	*/
 
     public String getAuthurl() {
         return authurl;
