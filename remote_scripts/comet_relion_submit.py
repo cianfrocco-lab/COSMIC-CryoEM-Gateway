@@ -54,15 +54,31 @@ def prepareRelionRun(inputline):
                         os.makedirs('Class3D_cosmic')
                         os.makedirs('Class3D_cosmic/job001/')
                         outdir='Class3D_cosmic/job001'
-        if '--ref' not in inputline:
+			#Get num iters: 
+			varcounter=0
+			for variable in inputline.split():
+        			if variable == '--iter':
+                			iter_position=varcounter
+        			varcounter=varcounter+1
+			numiters=inputline.split()[iter_position+1]
+
+	if '--ref' not in inputline:
                 os.makedirs('Class2D_cosmic')
                 os.makedirs('Class2D_cosmic/job001')
                 outdir='Class2D_cosmic/job001'
+		#Get num iters: 
+                varcounter=0
+                for variable in inputline.split():
+	                if variable == '--iter':
+         	               iter_position=varcounter
+                        varcounter=varcounter+1
+                numiters=inputline.split()[iter_position+1]
+
         if '--auto_refine' in inputline:
                 os.makedirs('Refine3D_cosmic')
                 os.makedirs('Refine3D_cosmic/job001')
                 outdir='Refine3D_cosmic/job001'
-
+		numiters=-1
 	#Calculate number of nodes given number of lines in starfile
 	numLines=len(open(starfilename,'r').readlines())
 	nodes=1
@@ -109,7 +125,7 @@ def prepareRelionRun(inputline):
 
 	#Join list into single string
         relion_command=' '.join(inputline_list)	
-	return relion_command,outdir,runtime,nodes #print 'cmd="%s"' %(relion_command)
+	return relion_command,outdir,runtime,nodes,numiters #print 'cmd="%s"' %(relion_command)
 
 def returnEntryNumber(inputlist,queryString):
 	'''Returns entry number in list for a given string in a list'''
@@ -239,7 +255,7 @@ properties_dict = getProperties('./scheduler.conf')
 ntaskspernode = int(properties_dict['ntasks-per-node'])
 #fname = properties_dict['fname']
 jobdir = os.getcwd()
-relion_command,outdir,runhours,nodes=prepareRelionRun(args['commandline'])
+relion_command,outdir,runhours,nodes,numiters=prepareRelionRun(args['commandline'])
 runminutes = math.ceil(60 * runhours)
 hours, minutes = divmod(runminutes, 60)
 runtime = "%02d:%02d:00" % (hours, minutes)
@@ -254,6 +270,9 @@ print jobproperties_dict
 print "jobfinfo JobHandle (%s)" % jobproperties_dict['JobHandle']
 mailuser = jobproperties_dict['email']
 jobname = jobproperties_dict['JobHandle']
+for line in open('_JOBINFO.TXT','r'):
+	if 'User\ Name=' in line: 
+		username=line.split('=')[-1].strip()
 
 #Prepare relion command, unzip file, calculate number of nodes
 #relion_command=prepareRelionRun(args['commandline'])
@@ -283,11 +302,12 @@ module load %s
 source $HOME/.bashrc
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s
 ibrun -np 5 --tpr 4 %s --j 4 1>>stdout.txt 2>>stderr.txt
-/bin/tar -cvzf output.tar.gz %s/
+/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
 """ \
 % \
-('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,relion_command,outdir)
+('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,outdir.split('_cosmic')[0],outdir,numiters,relion_command,username,outdir)
 
 #P100: relion/2.1.b1_p100
 #K80: relion/2.1.b1
