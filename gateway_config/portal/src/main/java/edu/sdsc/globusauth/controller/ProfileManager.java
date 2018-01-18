@@ -11,6 +11,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
 
 import edu.sdsc.globusauth.controller.Transfer2DataManager;
@@ -142,44 +143,70 @@ public class ProfileManager extends HibernateUtil {
      **/
     public int updateRecord ( TransferRecord tr, String destination_path )
     {
+        //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
+        //log.debug ( "MONA: tr = " + tr );
+        //log.debug ( "MONA: destination_path = " + destination_path );
+        //log.debug ( "MONA: tr.getSrcEndpointname = " + tr.getSrcEndpointname() );
+        //log.debug ( "MONA: tr.getDestEndpointname = " + tr.getDestEndpointname() );
+
         // Check incoming parameters
         if ( tr == null || destination_path == null ||
             destination_path.trim().equals ( "" ) )
             return ( 0 );
 
-        int saved = 0;
+        String globusRoot =
+            Workbench.getInstance().getProperties().getProperty
+            ( "database.globusRoot" );
+        //log.debug ( "MONA: globusRoot = " + globusRoot );
         String status = tr.getStatus();
+        //log.debug ( "MONA: status = " + status );
 
-        // First, if the new record has SUCCEEDED status, then we will get
-        // its info from the transfer_record table and create a new
-        // document needed by the CIPRES workflow
-        if ( status.equals ( "SUCCEEDED" ) )
+        // If the transfer is to the COSMIC2 gateway, then we will create
+        // the appropriate user data dir item; otherwise, the transfer is
+        // from the COSMIC2 gateway so no need to create a user data dir item
+        if ( destination_path.startsWith ( globusRoot ) )
         {
-            List <TransferRecord> trs = loadRecordByTaskId ( tr.getTaskId() );
+            int saved = 0;
 
-            if ( ! trs.isEmpty() )
+            // First, if the new record has SUCCEEDED status, then we will get
+            // its info from the transfer_record table and create a new
+            // document needed by the CIPRES workflow
+            if ( status.equals ( "SUCCEEDED" ) )
             {
-                TransferRecord old_tr = trs.get ( 0 );
+                //log.debug ( "MONA: tr.getTaskId() = " + tr.getTaskId() );
+                List <TransferRecord> trs =
+                    loadRecordByTaskId ( tr.getTaskId() );
+                //log.debug ( "MONA: trs = " + trs );
 
-                if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
+                if ( ! trs.isEmpty() )
                 {
-                    Transfer2DataManager dataManager = new
-                        Transfer2DataManager();
-                    saved = dataManager.setupDataItems ( old_tr,
-                        destination_path );
+                    TransferRecord old_tr = trs.get ( 0 );
+                    //log.debug ( "MONA: old_tr = " + old_tr );
+                    //log.debug ( "MONA: old_tr.getSrcEndpointname = " + old_tr.getSrcEndpointname() );
+                    //log.debug ( "MONA: old_tr.getDestEndpointname = " + old_tr.getDestEndpointname() );
+
+                    //if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
+                    if ( ! status.equals ( old_tr.getStatus() ) )
+                    {
+                        Transfer2DataManager dataManager = new
+                            Transfer2DataManager();
+                        saved = dataManager.setupDataItems ( old_tr,
+                            destination_path );
+                    }
                 }
             }
+
+            if ( saved == 0 )
+                return ( 0 );
         }
 
-        if ( saved == 0 )
-            return ( 0 );
-
-        // Now update the record
+        // Now update the transfer record
         Session session = HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
 
         //Record update
-        String u_sql = "update TransferRecord set status = :status, completionTime = :ctime, "
+        String u_sql =
+            "update TransferRecord set status = :status, completionTime = :ctime, "
                 + "filesTransferred = :ft, faults = :faults, directories = :dir, files = :file, "
                 + "filesSkipped = :fs, byteTransferred = :bt"
                 + " where taskId = :taskId";
