@@ -1123,7 +1123,7 @@ public class ManageTasks extends DataManager
 			User user = null;
 			
 			for (int i=0; i<selectedIds.length; i++) {
-                id = selectedIds[i].split ( "-" )[1].trim();
+                id = selectedIds[i];
 				//Task task = getSelectedTask(selectedIds[i]);
 				Task task = getSelectedTask ( Long.parseLong ( id ) );
 				if (task == null)
