@@ -1,8 +1,16 @@
 /*
- * This class is meant to encapsulate the userdata_dir database table
+ * This class is meant to encapsulate the userdata_dir database table and
+ * is used to represent a user data item that is a directory; this means
+ * DataType = DIRECTORY for all entries so no need for that column in the
+ * table.  Also since this class implements SourceDocument, it will "pretend"
+ * to be a SourceDocument object without actually using a SourceDocumentRow
+ * like UserDataItem does.  We did this because the directories represented
+ * by this class is NOT to be moved from its location.
+ *
+ * @author Mona Wong
  */
-package org.ngbw.sdk.database;
 
+package org.ngbw.sdk.database;
 
 import java.io.File;
 import java.io.IOException;
@@ -120,26 +128,16 @@ public class UserDataDirItem extends FolderItem
         ConnectionSource.DATABASE_PROP_PREFIX + "globusRoot";
 	private static final String KEY_NAME = "USERDATA_ID";
 	private static final String TABLE_NAME = "userdata_dir";
-    /*
-	private final Column<String> m_comment = new StringColumn("COMMENT", true, 255);
-	private final Column<Boolean> m_groupReadable = new BooleanColumn("GROUP_READABLE", false);
-	private final Column<Boolean> m_worldReadable = new BooleanColumn("WORLD_READABLE", false);
-    */
     private final Column<String> m_dataFormat = new StringColumn
         ( "DATAFORMAT", false, 255 );
     private final Column<String> m_dataType = new StringColumn ( "DATATYPE",
         false, 255 );
     private final Column<Long> m_size = new LongColumn ( "SIZE", false );
-    /*
-    private final Column<Long> m_sourceDocumentId = new LongColumn
-        ( "SOURCE_DOCUMENT_ID", false );
-    */
     private final Column<Long> m_transferRecordId = new LongColumn
         ( "TR_ID", false );
 	private final Column<String> m_uuid = new StringColumn("UUID", false, 46);
     private Boolean m_validated = true;
 	private PreferenceMap m_preferences;
-    //private SourceDocumentRow m_sourceDocument = null;
 
 
 	// constructors
@@ -208,7 +206,7 @@ public class UserDataDirItem extends FolderItem
         String dir ) throws IOException
 	{
 		this();
-        log.debug ( "MONA: entered UserDataDirItem() 4" );
+        //log.debug ( "MONA: entered UserDataDirItem() 4" );
         //log.debug ( "MONA : enclosingFolder = " + enclosingFolder );
         //log.debug ( "MONA : transferRecordId = " + transferRecordId );
         //log.debug ( "MONA : dir = " + dir );
@@ -264,11 +262,13 @@ public class UserDataDirItem extends FolderItem
 		load(dbConn);
 	}
 
+
     public UserDataDirItem ( UserDataDirItem otherItem,
         Folder enclosingFolder ) throws  IOException, SQLException
     {
         this ( enclosingFolder );
         //this((SourceDocument) otherItem, enclosingFolder);
+        //log.debug ( "MONA : entered UserDataDirItem() 6" );
 
         setLabel ( otherItem.getLabel() );
         setUUID ( generateUUID() );
@@ -286,10 +286,42 @@ public class UserDataDirItem extends FolderItem
         */
     }
 
+    /*
+     * @return null if any incoming argument is null
+     */
+	public UserDataDirItem ( Folder enclosingFolder, Long transferRecordId,
+        String label, long size ) throws WorkbenchException
+	{
+		this();
+        //log.debug ( "MONA: entered UserDataDirItem() 7" );
+        //log.debug ( "MONA : enclosingFolder = " + enclosingFolder );
+        //log.debug ( "MONA : transferRecordId = " + transferRecordId );
+        //log.debug ( "MONA : label = " + label );
+        //log.debug ( "MONA : size = " + size );
+
+        // Check incoming arguments
+        if ( enclosingFolder == null || enclosingFolder.isNew() ||
+            transferRecordId == null || label == null )
+			throw new WorkbenchException
+                ( "Error creating Globus folder items!" );
+
+		setUserId ( enclosingFolder.getUserId() );
+		setGroupId ( enclosingFolder.getGroupId() );
+		setEnclosingFolderId ( enclosingFolder.getFolderId() );
+        setDataFormat ( DataFormat.STAR );
+        setDataType ( DataType.DIRECTORY );
+		setUUID ( generateUUID() );
+		setCreationDate ( Calendar.getInstance().getTime() );
+        setLabel ( label );
+        setTransferRecordId ( transferRecordId ); 
+        setSize ( ( Long ) size );
+	}
+
+
 	private UserDataDirItem()
 	{
 		super ( TABLE_NAME, KEY_NAME, 255 );
-        //log.debug ( "MONA : entered UserDataDirItem() 6" );
+        //log.debug ( "MONA : entered UserDataDirItem() 8" );
         //log.debug ( "MONA : TABLE_NAME = " + TABLE_NAME );
         //log.debug ( "MONA : KEY_NAME = " + KEY_NAME );
         //log.debug ( "MONA : m_uuid = " + getUUID() );
@@ -298,6 +330,7 @@ public class UserDataDirItem extends FolderItem
 		construct ( m_dataType, m_dataFormat, m_uuid, m_transferRecordId,
             m_size );
             //m_size, m_sourceDocumentId );
+		//construct ( m_dataFormat, m_uuid, m_transferRecordId, m_size );
 	}
 
 
@@ -650,7 +683,7 @@ public class UserDataDirItem extends FolderItem
         //m_sourceDocument.save(dbConn);
                             
         //m_sourceDocumentId.setValue(m_sourceDocument.getSourceDocumentId());
-                                     
+
         super.save(dbConn);
     }
 
@@ -974,6 +1007,7 @@ public class UserDataDirItem extends FolderItem
         //log.debug ( "MONA : entered UserDataDirItem.getDataType()" );
         //log.debug ( "MONA : m_dataType = " + m_dataType.getValue() );
         return DataType.valueOf ( m_dataType.getValue() );
+        //return DataType.DIRECTORY;
     }
 
     public void setDataType ( DataType dataType )
