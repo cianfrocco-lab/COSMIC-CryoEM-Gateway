@@ -62,9 +62,12 @@
               value="%{selectedIds.{^ #this == #dataItem.userDataId}.size > 0}" theme="simple"
               onclick="ids.check(this)"/>
             -->
-            <s:checkbox name="selectedIds" fieldValue="%{#action.getClassName(#dataItem)}-%{#dataItem.userDataId}"
-              value="%{selectedIds.{^ #this == #dataItem.userDataId}.size > 0}" theme="simple"
-              onclick="ids.check(this)"/>
+            <!-- Mona: included classname to distinguish between files and
+            directories -->
+            <s:checkbox name="selectedIds"
+                fieldValue="%{#action.getClassName(#dataItem)}-%{#dataItem.userDataId}"
+                value="%{selectedIds.{^ #this == #dataItem.userDataId}.size > 0}"
+                theme="simple" onclick="ids.check(this)"/>
           </td>
           <td><s:property value="%{#action.getLabel(#dataItem)}"/></td>
           <td><s:property value="%{#action.getDataLength(#dataItem)}"/></td>
