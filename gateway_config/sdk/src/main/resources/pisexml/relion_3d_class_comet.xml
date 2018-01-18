@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D classification</title>
-    <version>2.1.b1 (Last updated 2017.09.15)</version>
+    <version>2.1.b1 - last updated 2017.09.15</version>
     <description>Perform 3D classification of single particles with 3D model using Relion</description>
     <authors>S. H. W. Scheres</authors>
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
