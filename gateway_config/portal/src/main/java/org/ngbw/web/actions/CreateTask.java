@@ -207,14 +207,14 @@ public class CreateTask extends ManageTasks
 							return LIST;
 						} else 
 						{
-							reportUserError("1Error saving task \"" + getLabel() + "\"");
+							reportUserError("Error saving task \"" + getLabel() + "\"");
 							return INPUT;
 						}
 					} 
 					return INPUT;
 				} catch(Throwable error)
 				{
-					reportUserError(error, "2Error saving task \"" + getLabel() + "\"");
+					reportUserError(error, "Error saving task \"" + getLabel() + "\"");
 					return ERROR;
 				}
 			} else if (button[0].equals(SAVE_AND_RUN_TASK))
@@ -238,7 +238,7 @@ public class CreateTask extends ManageTasks
 								return LIST;
 							} else
 							{
-								reportUserError("3Error saving task \"" + getLabel() + "\"");
+								reportUserError("Error saving task \"" + getLabel() + "\"");
 								return INPUT;
 							}
 						}
