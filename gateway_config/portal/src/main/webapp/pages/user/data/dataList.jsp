@@ -98,8 +98,16 @@
         <s:set name="dataId" value="%{#dataItem.userDataId}"/>
         <tr>
           <td>
+            <!--
             <s:checkbox cssClass="table-data-checkbox" name="selectedIds" fieldValue="%{#dataId}"
               value="%{selectedIds.{^ #this == #dataId}.size > 0}" theme="simple"/>
+            -->
+            <!-- Mona: included classname to distinguish between files and
+            directories -->
+            <s:checkbox cssClass="table-data-checkbox" name="selectedIds"
+                fieldValue="%{#action.getClassName(#dataItem)}-%{#dataId}"
+                value="%{selectedIds.{^ #this == #dataId}.size > 0}"
+                theme="simple"/>
           </td>
           <!-- See above comment about Data ID column.  Keeping the following code in case we
                want to add a link to show row item details or content...
