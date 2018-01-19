@@ -26,7 +26,11 @@ public class EndpointListAction extends NgbwSupport {
     private JSONTransferAPIClient client;
     private List<Map<String,Object>> iplist;
     private List<Map<String,Object>> bookmarklist;
-    //private Map<String, Object> ipmap;
+    private Map<String,String> myendpoints;
+    private String searchValue;
+    private String searchLabel;
+    private String myendpointName;
+    private String myendpointValue;
 
     public EndpointListAction() {}
     public EndpointListAction(String accesstoken,
@@ -47,15 +51,108 @@ public class EndpointListAction extends NgbwSupport {
 
         client = new JSONTransferAPIClient(username, null, null);
         client.setAuthenticator(authenticator);
-        //my_endpoint_search("my-gcp-endpoints");
-        my_endpoint_list();
+
+        my_endpoint_search("administered-by-me");
+
+        logger.info("search label: "+searchLabel);
+        logger.info("search value: "+searchValue);
+        logger.info("my emdpoint name: "+myendpointName);
+        logger.info("my endpoint value: "+myendpointValue);
+
+        if ((searchLabel != null && searchLabel.trim().length() > 0) &&
+                (searchValue != null && searchValue.trim().length() > 0)) {
+            add_my_endpoint(searchLabel,searchValue);
+            searchLabel ="";
+            searchValue ="";
+        } else if ((myendpointName != null && myendpointName.trim().length() > 0) &&
+                (myendpointValue != null && myendpointValue.trim().length() > 0)) {
+            add_my_endpoint(myendpointName,myendpointValue);
+            myendpointName="";
+            myendpointValue="";
+        } else {
+            bookmarklist = my_bookmark_list();
+        }
+
         return SUCCESS;
+    }
+
+    public void add_my_endpoint(String name, String value) throws Exception {
+        bookmarklist = my_bookmark_list();
+        if (bookmarklist != null && bookmarklist.size() > 0) {
+            boolean flag = false;
+            for (int i = 0; i < bookmarklist.size(); i++) {
+                Map<String, Object> bmmap = bookmarklist.get(i);
+                if (value.trim().equals((String) bmmap.get("endpoint_id"))) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                String bm_id = createBookmark(name, value, "/~/");
+                Map<String, Object> bmmap = new HashMap<String, Object>();
+                bmmap.put("id", bm_id);
+                bmmap.put("name", name);
+                bmmap.put("disp_name", name);
+                bmmap.put("endpoint_id", value);
+                bmmap.put("path", "/~/");
+                bookmarklist.add(bmmap);
+            }
+        } else {
+            bookmarklist = new ArrayList<>();
+            String ipname = name + "::SOURCE";
+
+            String bm_id = createBookmark(name, value, "/~/");
+            Map<String, Object> bmmap = new HashMap<String, Object>();
+            bmmap.put("id", bm_id);
+            bmmap.put("name", ipname);
+            bmmap.put("disp_name", name);
+            bmmap.put("endpoint_id", value);
+            bmmap.put("path", "/~/");
+            bookmarklist.add(bmmap);
+        }
+    }
+
+    public List<Map<String,Object>> add_my_endpoint_transfer(String name, String value) throws Exception {
+        List<Map<String,Object>> bmlist = my_bookmark_list();
+        if (bmlist != null && bmlist.size() > 0) {
+            boolean flag = false;
+            for (int i = 0; i < bmlist.size(); i++) {
+                Map<String, Object> bmmap = bmlist.get(i);
+                if (value.trim().equals((String) bmmap.get("endpoint_id"))) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                String bm_id = createBookmark(name, value, "/~/");
+                Map<String, Object> bmmap = new HashMap<String, Object>();
+                bmmap.put("id", bm_id);
+                bmmap.put("name", name);
+                bmmap.put("disp_name", name);
+                bmmap.put("endpoint_id", value);
+                bmmap.put("path", "/~/");
+                bmlist.add(bmmap);
+            }
+        } else {
+            bmlist = new ArrayList<>();
+            String ipname = name + "::SOURCE";
+
+            String bm_id = createBookmark(ipname, value, "/~/");
+            Map<String, Object> bmmap = new HashMap<String, Object>();
+            bmmap.put("id", bm_id);
+            bmmap.put("name", ipname);
+            bmmap.put("disp_name", name);
+            bmmap.put("endpoint_id", value);
+            bmmap.put("path", "/~/");
+            bmlist.add(bmmap);
+        }
+
+        return bmlist;
     }
 
     public void my_endpoint_list() throws Exception {
         bookmarklist = new ArrayList<>();
-        my_endpoint_search("my-gcp-endpoints");
-        //my_endpoint_search("my-endpoints");
+        my_endpoint_search("administered-by-me");
         if (iplist != null && iplist.size() > 0) {
             List<Map<String,Object>> bmlist = my_bookmark_list();
             if (bmlist != null && bmlist.size() > 0) {
@@ -72,12 +169,12 @@ public class EndpointListAction extends NgbwSupport {
                         }
                     }
                     if(!flag) {
-                        String disp_ipname = (String) ipmap.get("canonical_name");
-                        String ipname = disp_ipname + "::MYGCPEP";
-                        String bm_id = createBookmark(ipname,eid,"/~/");
+                        String disp_ipname = (String) ipmap.get("display_name");
+                        //String ipname = disp_ipname + "::MYGCPEP";
+                        String bm_id = createBookmark(disp_ipname,eid,"/~/");
                         Map<String,Object> bmmap = new HashMap<String, Object>();
                         bmmap.put("id", bm_id);
-                        bmmap.put("name", ipname);
+                        bmmap.put("name", disp_ipname);
                         bmmap.put("disp_name", disp_ipname);
                         bmmap.put("endpoint_id", eid);
                         bmmap.put("path", "/~/");
@@ -89,12 +186,12 @@ public class EndpointListAction extends NgbwSupport {
                 for (int i=0; i<iplist.size(); i++) {
                     Map<String, Object> ipmap = iplist.get(i);
                     String eid = (String) ipmap.get("id");
-                    String disp_ipname = (String) ipmap.get("canonical_name");
-                    String ipname = disp_ipname + "::MYGCPEP";
-                    String bm_id = createBookmark(ipname,eid,"/~/");
+                    String disp_ipname = (String) ipmap.get("display_name");
+                    //String ipname = disp_ipname + "::MYGCPEP";
+                    String bm_id = createBookmark(disp_ipname,eid,"/~/");
                     Map<String,Object> bmmap = new HashMap<String, Object>();
                     bmmap.put("id", bm_id);
-                    bmmap.put("name", ipname);
+                    bmmap.put("name", disp_ipname);
                     bmmap.put("disp_name", disp_ipname);
                     bmmap.put("endpoint_id", eid);
                     bmmap.put("path", "/~/");
@@ -107,6 +204,7 @@ public class EndpointListAction extends NgbwSupport {
     public void my_endpoint_search(String scope) throws Exception {
         JSONTransferAPIClient.Result r;
         iplist = new ArrayList<>();
+		myendpoints = new HashMap<String, String>();
 
         String resource = "/endpoint_search";
         Map<String, String> params = new HashMap<String, String>();
@@ -116,13 +214,49 @@ public class EndpointListAction extends NgbwSupport {
         r = client.getResult(resource, params);
         JSONArray data = r.document.getJSONArray("DATA");
         if (data.length() > 0) {
+			String disp_name = null;
             for (int i = 0; i < data.length(); i++) {
+                disp_name = data.getJSONObject(i).getString("display_name");
+                if (disp_name == null || disp_name.equals("null")) {
+                    disp_name = data.getJSONObject(i).getString("canonical_name");
+                    if (disp_name == null || disp_name.equals("null"))
+                        disp_name = data.getJSONObject(i).getString("username")+"#"+data.getJSONObject(i).getString("name");
+                }
+                myendpoints.put(data.getJSONObject(i).getString("id"),disp_name);
                 Map<String,Object> ipmap = new HashMap<String, Object>();
-                ipmap.put("canonical_name", data.getJSONObject(i).getString("canonical_name"));
+                ipmap.put("display_name", disp_name);
                 ipmap.put("id", data.getJSONObject(i).getString("id"));
                 iplist.add(ipmap);
+                logger.info("endpoint disp name: "+disp_name);
+                logger.info("endpoint id: "+data.getJSONObject(i).getString("id"));
             }
         }
+    }
+
+    public Map<String, String> my_endpoint_search_transfer(String scope) throws Exception {
+        JSONTransferAPIClient.Result r;
+        Map<String, String> myeps = new HashMap<String, String>();
+
+        String resource = "/endpoint_search";
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("filter_scope", scope);
+        r = client.getResult(resource, params);
+        JSONArray data = r.document.getJSONArray("DATA");
+        if (data.length() > 0) {
+            String disp_name = null;
+            for (int i = 0; i < data.length(); i++) {
+                disp_name = data.getJSONObject(i).getString("display_name");
+                if (disp_name == null || disp_name.equals("null")) {
+                    disp_name = data.getJSONObject(i).getString("canonical_name");
+                    if (disp_name == null || disp_name.equals("null"))
+                        disp_name = data.getJSONObject(i).getString("username")+"#"+data.getJSONObject(i).getString("name");
+                }
+                myeps.put(data.getJSONObject(i).getString("id"),disp_name);
+                logger.info("my endpoint disp name: "+disp_name);
+                logger.info("my endpoint id: "+data.getJSONObject(i).getString("id"));
+            }
+        }
+        return myeps;
     }
 
     public List<Map<String,Object>> my_bookmark_list() throws Exception {
@@ -134,23 +268,22 @@ public class EndpointListAction extends NgbwSupport {
         JSONArray data = r.document.getJSONArray("DATA");
         if (data.length() > 0) {
             for (int i = 0; i < data.length(); i++) {
-                Map<String,Object> ipmap = new HashMap<String, Object>();
+                Map<String, Object> ipmap = new HashMap<String, Object>();
                 String name = data.getJSONObject(i).getString("name");
-                String[] namea = name.split("::");
-                if (namea.length > 1) {
-                    ipmap.put("id", data.getJSONObject(i).getString("id"));
-                    ipmap.put("name", name);
-                    if (name.contains("SOURCE")) {
-                        ipmap.put("disp_name", namea[0]+" (Source) ");
-                    } else if (name.contains("DEST")) {
-                        ipmap.put("disp_name", namea[0]+" (Destination) ");
-                    } else {
-                        ipmap.put("disp_name", namea[0]);
-                    }
-                    ipmap.put("endpoint_id", data.getJSONObject(i).getString("endpoint_id"));
-                    ipmap.put("path", data.getJSONObject(i).getString("path"));
-                    bmlist.add(ipmap);
+                ipmap.put("id", data.getJSONObject(i).getString("id"));
+                ipmap.put("name", name);
+                if (name.contains("SOURCE")) {
+                    String[] namea = name.split("::");
+                    ipmap.put("disp_name", namea[0] + " (Source) ");
+                } else if (name.contains("DEST")) {
+                    String[] namea = name.split("::");
+                    ipmap.put("disp_name", namea[0] + " (Destination) ");
+                } else {
+                    ipmap.put("disp_name", name);
                 }
+                ipmap.put("endpoint_id", data.getJSONObject(i).getString("endpoint_id"));
+                ipmap.put("path", data.getJSONObject(i).getString("path"));
+                bmlist.add(ipmap);
             }
         }
         return bmlist;
@@ -194,6 +327,58 @@ public class EndpointListAction extends NgbwSupport {
         return bm_id;
     }
 
+    public Map<String, Object> removeBookmark(String id)throws Exception {
+        Map<String, Object> bmObj = new HashMap<String, Object>();
+        bmObj.put("index",-1);
+
+        bookmarklist = my_bookmark_list();
+        if (bookmarklist != null && bookmarklist.size() > 0) {
+            for (int i = 0; i < bookmarklist.size(); i++) {
+                Map<String, Object> bmmap = bookmarklist.get(i);
+                if (id.trim().equals((String) bmmap.get("id"))) {
+                    String name = (String) bmmap.get("name");
+                    if (name.contains("::SOURCE")) {
+                        bmObj.put("index",0);
+                    } else if (name.contains("::DEST")) {
+                        bmObj.put("index",1);
+                    } else {
+                        bmObj.put("index",2);
+                    }
+                    if (!deleteBookmark(id)) return bmObj;
+                    break;
+                }
+            }
+            int index = (Integer)bmObj.get("index");
+            if (index != -1 || index != 2) {
+                bookmarklist = my_bookmark_list();
+                if (bookmarklist != null && bookmarklist.size() > 0) {
+                    Map<String, Object> bmmap = bookmarklist.get(0);
+                    String bid = (String) bmmap.get("id");
+                    String bname = (String) bmmap.get("name");
+                    String epid = (String) bmmap.get("endpoint_id");
+                    String path = (String) bmmap.get("path");
+                    String d_name = (String) bmmap.get("disp_name");
+
+                    if (index == 0) {
+                        bname += "::SOURCE";
+                    } else if (index == 1) {
+                        bname += "::DEST";
+                    }
+                    updateBookmark(bid,bname);
+                    bmObj.put("id", bid);
+                    bmObj.put("name", bname);
+                    bmObj.put("disp_name", d_name);
+                    bmObj.put("endpoint_id", epid);
+                    bmObj.put("path", path);
+                } else {
+                    bmObj.put("index",3);
+                }
+            }
+        }
+
+        return bmObj;
+    }
+
     public boolean deleteBookmark(String id) {
         //throws IOException, JSONException, GeneralSecurityException, APIError {
         try {
@@ -214,4 +399,17 @@ public class EndpointListAction extends NgbwSupport {
 
     public List<Map<String,Object>> getIplist() {return iplist;}
     public List<Map<String,Object>> getBookmarklist() {return bookmarklist;}
+    public String getSearchLabel() { return searchLabel; }
+    public String getSearchValue() { return searchValue; }
+    public String getMyendpointName() { return myendpointName; }
+    public String getMyendpointValue() { return myendpointValue; }
+
+    public Map<String,String> getMyendpoints() {return myendpoints;}
+    public void setMyendpoints(Map<String,String> myendpoints) { this.myendpoints = myendpoints; }
+    public void setSearchLabel(String searchLabel) { this.searchLabel = searchLabel; }
+    public void setSearchValue(String searchValue) { this.searchValue = searchValue; }
+    public void setMyendpointName(String myendpointName) { this.myendpointName = myendpointName; }
+    public void setMyendpointValue(String myendpointValue) { this.myendpointValue = myendpointValue; }
+
 }
+

@@ -62,7 +62,7 @@ public final class OauthConstants {
 
     public static final String CALLER = "caller";
     public static final String AUTHENTICATION_SERVER_URL = "authentication_server_url";
-    public static final String CONFIG_FILE_PATH = "/Users/cyoun/globusauth/OAuth2.0_clientCredentials/resources/com/ibm/oauth/Oauth2Client.config";
+    //public static final String CONFIG_FILE_PATH = "/Users/cyoun/globusauth/OAuth2.0_clientCredentials/resources/com/ibm/oauth/Oauth2Client.config";
     public static final String RESOURCE_SERVER_URL = "resource_server_url";
     public static final String GRANT_TYPE = "grant_type";
     public static final String GRANT_TYPE_PASSWORD = "password";
@@ -80,6 +80,7 @@ public final class OauthConstants {
     public static final int HTTP_FORBIDDEN = 403;
     public static final int HTTP_UNAUTHORIZED = 401;
 
+	public static final String ENDPOINT_ACTIVATION_URI = "activate_endpoint_uri";
 
     //Prevents instantialtion
     private OauthConstants() {
