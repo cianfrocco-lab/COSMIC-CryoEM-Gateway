@@ -236,18 +236,6 @@ public class UserDataDirItem extends FolderItem
         setLabel ( ( String ) starInfo.get ( "label" ) );
         setTransferRecordId ( transferRecordId ); 
         setSize ( ( Long ) starInfo.get ( "size" ) ); 
-
-        /*
-        Properties configProps = ConnectionSource.getDatabaseConfiguration();
-        log.debug ( "MONA : configProps = " + configProps );
-        String fileRoot = configProps.getProperty ( FILE_ROOT_PROPERTY );
-        log.debug ( "MONA : fileRoot = " + fileRoot );
-        m_sourceDocument = new SourceDocumentRow();
-        log.debug ( "MONA : m_sourceDocument = " + m_sourceDocument );
-        log.debug ( "MONA : file = " + dir + "/" + ( String ) starInfo.get ( "filename" ) );
-        m_sourceDocument.setDataFromFile ( dir + "/" +
-            ( String ) starInfo.get ( "filename" ) );
-        */
 	}
 
 
@@ -330,7 +318,6 @@ public class UserDataDirItem extends FolderItem
 		construct ( m_dataType, m_dataFormat, m_uuid, m_transferRecordId,
             m_size );
             //m_size, m_sourceDocumentId );
-		//construct ( m_dataFormat, m_uuid, m_transferRecordId, m_size );
 	}
 
 
@@ -456,32 +443,6 @@ public class UserDataDirItem extends FolderItem
 		return m_preferences;
 	}
 
-    /*
-	public List<Task> findTasks() throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findTasks()" );
-		if (isNew())
-			return null;
-
-		return Task.findTasks(new LongCriterion("ENCLOSING_FOLDER_ID", m_key.getValue()));
-	}
-
-	public Task findTask(String label) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findTask()" );
-        //log.debug ( "MONA : label = " + label );
-		if (isNew())
-			return null;
-
-		List<Task> result = Task.findTasks(new LongCriterion("ENCLOSING_FOLDER_ID", m_key.getValue()), new StringCriterion("LABEL", label));
-
-		if (result.isEmpty())
-			return null;
-
-		return result.get(0);
-	}
-    */
-
 	public UserDataDirItem findDataDirItem(String label) throws IOException, SQLException
 	{
         //log.debug ( "MONA : entered findDataDirItem()" );
@@ -563,65 +524,6 @@ public class UserDataDirItem extends FolderItem
         }
     }       
 
-
-    /*
-	public List<UserDataDirItem> findSubFolders() throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findSubFolders()" );
-		if (isNew())
-			return null;
-
-		return findFolders(new LongCriterion("ENCLOSING_FOLDER_ID", m_key.getValue()));
-	}
-
-	public UserDataDirItem findSubFolder(String path) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findSubFolder()" );
-        //log.debug ( "MONA : path = " + path );
-		if (path.startsWith(SEPARATOR))
-			throw new WorkbenchException("Path must be relative");
-
-		return findFolder(m_key.getValue(), path, null);
-	}
-
-	public UserDataDirItem findOrCreateSubFolder(String path) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findOrCreateSubFolder()" );
-        //log.debug ( "MONA : path = " + path );
-		if (path.startsWith(SEPARATOR))
-			throw new WorkbenchException("Path must be relative");
-
-		return findFolder(m_key.getValue(), path, new User(getUserId()));
-	}
-
-	public static UserDataDirItem findFolder(String path) throws IOException, SQLException
-	{
-		if (!path.startsWith(SEPARATOR))
-			throw new WorkbenchException("Path must be absolute");
-
-		return findFolder(null, path.substring(1), null);
-	}
-
-	public static UserDataDirItem findOrCreateFolder(User owner, String path) throws IOException, SQLException
-	{
-		if (!path.startsWith(SEPARATOR))
-			throw new WorkbenchException("Path must be absolute");
-
-		return findFolder(null, path.substring(1), owner);
-	}
-
-	public static UserDataDirItem findFolderByUUID(String uuid) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findFolderByUUID()" );
-        //log.debug ( "MONA : uuid = " + uuid );
-		List<UserDataDirItem> folders = findFolders(new StringCriterion("UUID", uuid));
-
-		if (folders.isEmpty())
-			return null;
-
-		return folders.get(0);
-	}
-    */
 
 	@Override
 	public boolean equals(Object other)
@@ -715,53 +617,6 @@ public class UserDataDirItem extends FolderItem
 		m_key.reset();
 	}
 
-    /*
-	static List<UserDataDirItem> findFolders(Criterion... keys) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findFolders()" );
-        //log.debug ( "MONA : keys = " + keys );
-		StringBuilder stmtBuilder = new StringBuilder("SELECT USERDATA_ID FROM " + TABLE_NAME + " WHERE ");
-
-		stmtBuilder.append(keys[0].getPhrase());
-
-		for (int i = 1 ; i < keys.length ; i += 1) {
-			stmtBuilder.append(" AND ");
-			stmtBuilder.append(keys[i].getPhrase());
-		}
-
-		Connection dbConn = ConnectionManager.getConnectionSource().getConnection();
-		PreparedStatement selectStmt = null;
-		ResultSet folderRows = null;
-
-		try {
-			selectStmt = dbConn.prepareStatement(stmtBuilder.toString());
-
-			int index = 1;
-
-			for (int i = 0 ; i < keys.length ; i += 1)
-				index = keys[i].setParameter(selectStmt, index);
-
-			folderRows = selectStmt.executeQuery();
-
-			List<UserDataDirItem> folders = new ArrayList<UserDataDirItem>();
-
-			while (folderRows.next())
-				folders.add(new UserDataDirItem(dbConn, folderRows.getLong(1)));
-
-			return folders;
-		}
-		finally {
-			if (folderRows != null)
-				folderRows.close();
-
-			if (selectStmt != null)
-				selectStmt.close();
-
-			dbConn.close();
-		}
-	}
-    */
-
 	static void delete(Connection dbConn, long folderId) throws
         IOException, SQLException
 	{
@@ -794,135 +649,6 @@ public class UserDataDirItem extends FolderItem
                                              
         SourceDocumentRow.delete ( dbConn, sourceDocumentId );
     }
-
-
-    /*
-	private static UserDataDirItem findFolder ( Long enclosingFolderId,
-        String path, User owner ) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered findFolder()" );
-        //log.debug ( "MONA : enclosingFolderId = " + enclosingFolderId );
-        //log.debug ( "MONA : path = " + path );
-        //log.debug ( "MONA : owner = " + owner );
-		int index;
-		String[] folderNames = path.split("(?<!\\\\)" + SEPARATOR);
-
-		for (index = 0 ; index < folderNames.length ; index += 1)
-			folderNames[index] = folderNames[index].replaceAll("\\\\(.)", "$1");
-
-		index = 0;
-
-		UserDataDirItem result;
-
-		while (true) {
-			List<UserDataDirItem> folders = findFolders(new LongCriterion("ENCLOSING_FOLDER_ID", enclosingFolderId), new StringCriterion("LABEL", folderNames[index]));
-
-			if (folders.isEmpty()) {
-				if (owner != null) {
-					while (true) {
-						result = new UserDataDirItem(owner);
-
-						result.setEnclosingFolderId(enclosingFolderId);
-						result.setLabel(folderNames[index]);
-						result.save();
-
-						index += 1;
-
-						if (index == folderNames.length)
-							break;
-
-						enclosingFolderId = result.getFolderId();
-					}
-				}
-				else
-					result = null;
-
-				break;
-			}
-
-			result = folders.get(0);
-			index += 1;
-
-			if (index == folderNames.length)
-				break;
-
-			enclosingFolderId = result.getFolderId();
-		}
-
-		return result;
-	}
-
-	private static void deleteData(Connection dbConn, long folderId)
-        throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered deleteData()" );
-        //log.debug ( "MONA : folderId = " + folderId );
-		PreparedStatement selectStmt = dbConn.prepareStatement("SELECT USERDATA_ID FROM userdata WHERE ENCLOSING_FOLDER_ID = ?");
-		ResultSet dataRows = null;
-
-		try {
-			selectStmt.setLong(1, folderId);
-
-			dataRows = selectStmt.executeQuery();
-
-			while (dataRows.next())
-				UserDataDirItem.delete(dbConn, dataRows.getLong(1));
-		}
-		finally {
-			if (dataRows != null)
-				dataRows.close();
-
-			selectStmt.close();
-		}
-	}
-
-	private static void deleteTasks(Connection dbConn, long folderId)
-        throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered deleteTasks()" );
-        //log.debug ( "MONA : folderId = " + folderId );
-		PreparedStatement selectStmt = dbConn.prepareStatement("SELECT TASK_ID FROM tasks WHERE ENCLOSING_FOLDER_ID = ?");
-		ResultSet taskRows = null;
-
-		try {
-			selectStmt.setLong(1, folderId);
-
-			taskRows = selectStmt.executeQuery();
-
-			while (taskRows.next())
-				Task.delete(dbConn, taskRows.getLong(1));
-		}
-		finally {
-			if (taskRows != null)
-				taskRows.close();
-
-			selectStmt.close();
-		}
-	}
-
-	private static void deleteSubFolders(Connection dbConn, long folderId) throws IOException, SQLException
-	{
-        //log.debug ( "MONA : entered deleteSubFolders()" );
-        //log.debug ( "MONA : folderId = " + folderId );
-		PreparedStatement selectStmt = dbConn.prepareStatement("SELECT USERDATA_ID FROM folders WHERE ENCLOSING_FOLDER_ID = ?");
-		ResultSet folderRows = null;
-
-		try {
-			selectStmt.setLong(1, folderId);
-
-			folderRows = selectStmt.executeQuery();
-
-			while (folderRows.next())
-				Folder.delete(dbConn, folderRows.getLong(1));
-		}
-		finally {
-			if (folderRows != null)
-				folderRows.close();
-
-			selectStmt.close();
-		}
-	}
-    */
 
 
     /**
@@ -969,7 +695,7 @@ public class UserDataDirItem extends FolderItem
     @Override
     public byte[] getData() throws IOException, SQLException
     {
-        log.debug ( "MONA : entered UserDataDirItem.getData()" );
+        //log.debug ( "MONA : entered UserDataDirItem.getData()" );
         //return m_sourceDocument.getData();
         return null;
     }
@@ -977,7 +703,7 @@ public class UserDataDirItem extends FolderItem
     @Override
     public InputStream getDataAsStream() throws IOException, SQLException
     {
-        log.debug ( "MONA : entered UserDataDirItem.getDataAsStream()" );
+        //log.debug ( "MONA : entered UserDataDirItem.getDataAsStream()" );
         //return m_sourceDocument.getDataAsStream();
         return null;
     }
