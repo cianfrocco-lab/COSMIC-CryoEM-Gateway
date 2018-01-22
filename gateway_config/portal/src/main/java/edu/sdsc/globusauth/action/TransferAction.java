@@ -59,6 +59,8 @@ public class TransferAction extends NgbwSupport {
     private String searchLabel;
     private String myendpointName;
     private String myendpointValue;
+    private Integer filecount = 0;
+    private String selectedFiles;
 
     public TransferAction(){}
     public TransferAction(String filename,String filetype,
@@ -78,8 +80,6 @@ public class TransferAction extends NgbwSupport {
     }
 
     public String transfer() throws Exception {
-
-        //logger.debug ( "MONA: entered TransferAction.transfer()" );
 
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
         String username = (String) getSession().get(OauthConstants.PRIMARY_USERNAME);
@@ -168,7 +168,7 @@ public class TransferAction extends NgbwSupport {
                             s_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
                             s_eppath = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
                             s_epname = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_NAME);
-							s_dispname = s_epname;
+                            s_dispname = s_epname;
                             setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
                         } else {
@@ -200,8 +200,9 @@ public class TransferAction extends NgbwSupport {
 
                                     s_epbmid = d_epbmid;
                                     s_epid = d_epid;
+                                    //s_eppath = d_eppath;
                                     s_epname = d_epname;
-									s_dispname = d_epname.split("::")[0];
+                                    s_dispname = d_epname.split("::")[0];
                                     setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
 
                                 } else {
@@ -224,7 +225,7 @@ public class TransferAction extends NgbwSupport {
                                     if (iplistaction.deleteBookmark(s_epbmid)) {
                                         s_eppath = d_eppath;
                                         s_epbmid = iplistaction.createBookmark(s_epname, s_epid, s_eppath);
-										s_dispname = s_epname;
+                                        s_dispname = s_epname;
                                         setSourceInfo(s_epbmid, s_epid, s_eppath, s_epname);
                                     }
                                 }
@@ -242,6 +243,7 @@ public class TransferAction extends NgbwSupport {
                         String bname = (String) bmObj.get("name");
                         String epid = (String) bmObj.get("endpoint_id");
                         String path = (String) bmObj.get("path");
+                        //String d_name = (String) bmObj.get("disp_name");
                         setSourceInfo(bid,epid,path,bname);
                         getSourceInfo();
                     } else if (srcType == 1) {
@@ -249,6 +251,7 @@ public class TransferAction extends NgbwSupport {
                         String bname = (String) bmObj.get("name");
                         String epid = (String) bmObj.get("endpoint_id");
                         String path = (String) bmObj.get("path");
+                        //String d_name = (String) bmObj.get("disp_name");
                         setDestinationInfo(bid,epid,path,bname);
                         getDestinationInfo();
                     }
@@ -264,7 +267,7 @@ public class TransferAction extends NgbwSupport {
         logger.info("SRC Endpoint ID: "+s_epid);
         logger.info("SRC Path: "+s_eppath);
         logger.info("SRC Name: "+s_epname);
-		logger.info("SRC Display Name: "+s_dispname);
+        logger.info("SRC Display Name: "+s_dispname);
 
         //XSEDE endpoint
         String xsede_id = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
@@ -316,11 +319,9 @@ public class TransferAction extends NgbwSupport {
             }
 
             if(ep_status.get("is_connected")) {
-                displayLs(s_epid, s_eppath);
+                getCount(s_epid, s_eppath);
             } else {
-                //reportUserMessage("Source endpoint, "+s_epid+" is not connected.");
-                reportUserError ("Source endpoint, "+
-                    s_epname.split("::")[0] + ", is not connected.");
+                reportUserError ("Source endpoint, "+ s_epname.split("::")[0] + ", is not connected.");
             }
 
             getDestinationInfo();
@@ -330,7 +331,7 @@ public class TransferAction extends NgbwSupport {
                 ep_status = endpointStatus(d_epid);
                 if (!ep_status.get("activated")) {
                     //My GCP endpoint
-					if (!autoActivate(d_epid)) {
+                    if (!autoActivate(d_epid)) {
                         logger.error("Unable to auto activate destination endpoint, exiting");
                         reportUserMessage("Unable to auto activate destination endpoint, \""+d_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
                         return SUCCESS;
@@ -338,63 +339,18 @@ public class TransferAction extends NgbwSupport {
                     ep_status = endpointStatus(d_epid);
                 }
 
-				//check the file path
-				if(ep_status.get("is_connected")) {
+                //check the file path
+                if(ep_status.get("is_connected")) {
                     checkLs(d_epid, d_eppath);
-                } else
-                    reportUserError ( "\"" + d_dispname +
-                        "\" endpoint is not connected." );
+                } else {
+                    reportUserMessage("Destination endpoint, "+d_dispname+" is not connected.");
+                }
             }
 
             return SUCCESS;
         } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
 
-            //check the file/directory selection
-            List<String> session_files = getFileList("session_files");
-            List<String> session_dirs = getFileList("session_dirs");
-
-            List<String> filter_filenames = new ArrayList<>();
-            List<String> filter_dirnames = new ArrayList<>();
-
-            //logger.info ( "MONA: filenames = " + filenames );
-            if (filenames != null && filenames.size() > 0) {
-                for (String file : filenames) {
-                    logger.info("File name:" + file);
-                    for (String s: session_files)
-                        if (s.equals(file)) filter_filenames.add(file);
-                }
-            }
-
-            if (directorynames != null && directorynames.size() > 0) {
-                for (String dir : directorynames) {
-                    logger.info("Directory name:"+dir);
-                    for (String s: session_dirs)
-                        if (s.equals(dir)) filter_dirnames.add(dir);
-                }
-            }
-
-            /*
-            for (String file: filter_filenames)
-                logger.info("filter file name: "+file);
-            for (String dir: filter_dirnames)
-                logger.info("filtered dir name: "+dir);
-
-            boolean empty_flag = true;
-            if (getFilenames() != null && getFilenames().size() > 0) {
-                empty_flag = false;
-            } else if (getDirectorynames() != null && getDirectorynames().size() > 0){
-                empty_flag = false;
-            }
-            if (empty_flag) {
-                reportUserError("Please select at least one file.");
-                createUserDir(xsede_id,xsede_path);
-                displayLs(s_epid, s_eppath);
-                return SUCCESS;
-            }
-            */
-
             getDestinationInfo();
-
             logger.info("Destination Endpoint activation....");
             if (d_epname.contains("::")) {
                 logger.info("Destination Endpoint status......");
@@ -415,25 +371,18 @@ public class TransferAction extends NgbwSupport {
                 }
             }
 
-            /*
-            logger.info("Destination Endpoint status......");
-            if (!endpointStatus(d_epid)) {
-                logger.info("Destination Endpoint activation....");
-                if (d_epname.contains("::")) {
-                    //My GCP endpoint
-                    if (!autoActivate(s_epid)) {
-                        logger.error("Unable to auto activate destination endpoint, exiting");
-                        return "failure";
-                    }
+            List<String> filter_filenames = new ArrayList<>();
+            List<String> filter_dirnames = new ArrayList<>();
+            logger.info("Selected Files: "+selectedFiles);
+            String parts[] = selectedFiles.split(",");
+            for (int i = 0; i < parts.length; i += 2) {
+                if (parts[i].equals("folder")) {
+                    filter_dirnames.add(parts[i+1]);
                 } else {
-                    //XSEDE endpoint
-                    if (!delegateProxyActivation(d_epid)) {
-                        logger.error("Unable to activate destination endpoint using delegate proxy, exiting");
-                        return "failure";
-                    }
+                    //file
+                    filter_filenames.add(parts[i+1]);
                 }
             }
-            */
 
             JSONTransferAPIClient.Result r = client.getResult("/submission_id");
             String submissionId = r.document.getString("value");
@@ -451,7 +400,6 @@ public class TransferAction extends NgbwSupport {
             String file_names = null;
             String dir_names = null;
             String delim = "";
-            //logger.info ( "MONA: filter_filenames.size() = " + filter_filenames.size() );
             if (filter_filenames.size() > 0) {
                 file_names = "";
                 for (String file : filter_filenames) {
@@ -500,6 +448,7 @@ public class TransferAction extends NgbwSupport {
             */
 
             return "transferstatus";
+            //return SUCCESS;
         } else {
             return "failure";
         }
@@ -507,14 +456,14 @@ public class TransferAction extends NgbwSupport {
     }
 
     /* Not used since we are not using the above thread code to update the
-     * transfer record
+	** transfer record
     private String updateRecord(String taskId) throws Exception {
         TransferRecord tr = updateTask(taskId, null);
         ProfileManager profileManager = new ProfileManager();
         profileManager.updateRecord(tr);
         return tr.getStatus();
     }
-    */
+	*/
 
     @SuppressWarnings("unchecked")
     private List<String> getFileList(String id){
@@ -527,7 +476,7 @@ public class TransferAction extends NgbwSupport {
         s_eppath = (String) getSession().get(OauthConstants.SRC_ENDPOINT_PATH);
         s_epname = (String) getSession().get(OauthConstants.SRC_ENDPOINT_NAME);
         s_dispname = (String) getSession().get(OauthConstants.SRC_DISP_NAME);
-		logger.info("Get SRC Bookmark ID: "+s_epbmid);
+        logger.info("Get SRC Bookmark ID: "+s_epbmid);
         logger.info("Get SRC Endpoint ID: "+s_epid);
         logger.info("Get SRC Path: "+s_eppath);
         logger.info("Get SRC Name: "+s_epname);
@@ -569,7 +518,7 @@ public class TransferAction extends NgbwSupport {
         s_epid = request.getParameter("endpointId");
         s_eppath = request.getParameter("endpointPath");
         s_epname = request.getParameter("endpointName");
-		s_dispname = s_epname;
+        s_dispname = s_epname;
         s_epname += "::SOURCE";
         //iplistaction.updateBookmark(src_bm_id, s_epname);
         if (s_eppath == null || s_eppath.isEmpty()) {
@@ -596,6 +545,7 @@ public class TransferAction extends NgbwSupport {
         String si_bname = (String) bmmap.get("name");
         String si_epid = (String) bmmap.get("endpoint_id");
         String si_path = (String) bmmap.get("path");
+        //String si_d_name = (String) bmmap.get("disp_name");
         setSourceInfo(si_bid, si_epid, si_path, si_bname);
 
         String di_epbmid = "XSERVER";
@@ -813,7 +763,8 @@ public class TransferAction extends NgbwSupport {
             String resource = BaseTransferAPIClient.endpointPath(endpointId)
                     + "/ls";
             JSONTransferAPIClient.Result r = client.getResult(resource, params);
-            logger.info("Contents of " + path + " on " + endpointId + ":");
+            logger.info("Contents of " + path + " on "
+                    + endpointId + ":");
 
             JSONArray fileArray = r.document.getJSONArray("DATA");
             files = new ArrayList<>();
@@ -848,9 +799,35 @@ public class TransferAction extends NgbwSupport {
             return true;
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
-			reportUserError (
-                "Error, unable to list files on the source endpoint, " +
-                s_dispname );
+            //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+            reportUserError("Error, unable to list files on the source endpoint ID, \""+endpointId+"\".");
+            return false;
+        }
+    }
+
+    public boolean getCount(String endpointId, String path) {
+        //throws IOException, JSONException, GeneralSecurityException, APIError {
+        Map<String, String> params = new HashMap<String, String>();
+        if (path != null) {
+            params.put("path", path);
+            params.put("show_hidden","0");
+        }
+        try {
+            String resource = BaseTransferAPIClient.endpointPath(endpointId)
+                    + "/ls";
+            JSONTransferAPIClient.Result r = client.getResult(resource, params);
+            logger.info("Contents of " + path + " on "
+                    + endpointId + ":");
+
+            JSONArray fileArray = r.document.getJSONArray("DATA");
+            filecount = fileArray.length();
+            logger.info("File count:"+filecount);
+
+            return true;
+        } catch (Exception e) {
+            logger.error("Display file list: "+e.toString());
+            //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+            reportUserError("Error, unable to get file count on the source endpoint ID, \""+endpointId+"\".");
             return false;
         }
     }
@@ -903,7 +880,8 @@ public class TransferAction extends NgbwSupport {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
-				reportUserError("Error, unable to access XSEDE Comet storage.");
+                //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
+                reportUserError("Error, unable to access XSEDE Comet storage.");
                 return false;
             }
             return true;
@@ -912,8 +890,6 @@ public class TransferAction extends NgbwSupport {
 
     public void saveTask(String taskId,String fileNames, String dirNames)
             throws IOException, JSONException, GeneralSecurityException, APIError {
-        //logger.info ( "MONA: TransferAction.saveTask()" );
-        //logger.info ( "MONA: fileNames = " + fileNames );
         TransferRecord tr = new TransferRecord();
         String resource = "/task/" +  taskId;
         Map<String, String> params = new HashMap<String, String>();
@@ -954,7 +930,6 @@ public class TransferAction extends NgbwSupport {
         tr.setFiles(r.document.getInt("files"));
         tr.setDirectories(r.document.getInt("directories"));
         tr.setFilesSkipped(r.document.getInt("files_skipped"));
-        //logger.info ( "MONA: bytes = " + r.document.getLong ( "bytes_transferred" ) );
         tr.setByteTransferred(r.document.getLong("bytes_transferred"));
 
         Folder current_folder = getCurrentFolder();
@@ -1020,6 +995,8 @@ public class TransferAction extends NgbwSupport {
     public void setFilesize(Integer filesize) {this.filesize = filesize;}
     public List<TransferAction> getFiles() {return files;}
     public void setFiles(List<TransferAction> files) {this.files = files;}
+    public Integer getFilecount() {return filecount;}
+    public void setFilecount(Integer filecount) {this.filecount = filecount;}
 
     public List<String> getDirectorynames() {return directorynames;}
     public void setDirectorynames(List<String> directorynames) {this.directorynames = directorynames;}
@@ -1033,6 +1010,9 @@ public class TransferAction extends NgbwSupport {
 
     public void setActionType(String actionType) { this.actionType = actionType; }
     public String getActionType() { return actionType; }
+
+    public void setSelectedFiles(String selectedFiles) {this.selectedFiles = selectedFiles;}
+    public String getSelectedFiles() {return selectedFiles;}
 
     public String getSearchLabel() { return searchLabel; }
     public String getSearchValue() { return searchValue; }

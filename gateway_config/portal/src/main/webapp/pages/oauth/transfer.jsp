@@ -7,6 +7,12 @@
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="s" uri="/struts-tags" %>
+
+<%--
+<%@ taglib prefix="sj" uri="/struts-jquery-tags"%>
+<%@ taglib prefix="sjt" uri="/struts-jquery-tree-tags"%>
+--%>
+
 <html>
 <head>
     <title>Transfer</title>
@@ -14,18 +20,29 @@
     <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
           rel = "stylesheet">
     <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
-    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <!-- <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script> -->
 
     <style type="text/css">
         #bootstrapSelectForm .selectContainer .form-control-feedback {
             /* Adjust feedback icon position */
             right: -15px;
         }
+        #user-file-tree-container .file {
+            background: url('dist/themes/default/32px.png') no-repeat -102px -69px;
+            }
+        #user-file-tree-container .folder {
+            background: url('dist/themes/default/32px.png') no-repeat -260px -4px;
+            }
     </style>
+
+    <link rel="stylesheet" href="dist/themes/default/style.min.css" />
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="dist/jstree.min.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
-
+            <%--
             $("#transfer-file-list").submit(function() {
                 if(!$(':checkbox:checked').length) {
                     alert("Please select at least one file.");
@@ -33,6 +50,31 @@
                     return false;
                 }
                 return true;
+            });
+            --%>
+
+            $("#transfer-file-list").submit(function() {
+                var selectedElmsIds = [];
+                var selectedElmsTexts = [];
+                var selectedElmsTypes = [];
+                var selectedElms = $('#user-file-tree-container').jstree("get_selected", true);
+                $.each(selectedElms, function () {
+                    selectedElmsIds.push(this.type);
+                    selectedElmsIds.push(this.id);
+                    selectedElmsTexts.push(this.text);
+                    selectedElmsTypes.push(this.type);
+                });
+                //alert('Get Selected Ids: ' + selectedElmsIds.join(', '));
+                //alert('Get Selected Texts: ' + selectedElmsTexts.join(', '));
+                //alert('Get Selected Types: ' + selectedElmsTypes.join(', '));
+                if (selectedElmsIds.length > 0) {
+                    //setting to hidden field
+                    //document.getElementById('selectedFiles').value = selectedElmsIds.join(",");
+                    $('#selectedFiles').val(selectedElmsIds);
+                    return true;
+                }
+                alert("Please select at least one file.");
+                return false;
             });
 
         <%--
@@ -85,6 +127,23 @@
             //var ep = obj['endpointPath'].value;
             //alert(ep + " : " + sub_name + ' = ' + sub_value)
             //return false;
+        }
+
+        function get_file_list() {
+            var selectedElmsIds = [];
+            var selectedElmsTexts = [];
+            var selectedElmsTypes = [];
+            var selectedElms = $('#user-file-tree-container').jstree("get_selected", true);
+            $.each(selectedElms, function () {
+                selectedElmsIds.push(this.id);
+                selectedElmsTexts.push(this.text);
+                selectedElmsTypes.push(this.type);
+            });
+            alert('Get Selected Ids: ' + selectedElmsIds.join(', '));
+            alert('Get Selected Texts: ' + selectedElmsTexts.join(', '));
+            alert('Get Selected Types: ' + selectedElmsTypes.join(', '));
+            //setting to hidden field
+            document.getElementById('selectedFiles').value = selectedElmsIds.join(",");
         }
 
     </script>
@@ -158,10 +217,48 @@
 
     </script>
 
+    <script type="text/javascript">
+        $(function () {
+
+            $('#user-file-tree-container').jstree({
+                'plugins':["checkbox","types"],
+                'core': {
+                    'data': {
+                        'url': function (node) {
+                            //alert('url node id:' + node.id);
+                            //return node.id === '#' ?
+                            //    'filetree.action' :
+                            //    'filetree.action?nodeId='+node.id;
+                            return 'filetree.action';
+                        },
+                        'data': function (node) {
+                            //alert('data node id:' + node.id);
+                            return {'id': node.id};
+                        }
+                    }
+                },
+                'types' : {
+                    'folder' : { 'icon' : 'folder' },
+                    'file' : { 'valid_children' : [], 'icon' : 'file' }
+                }
+            });
+            <%--
+                .on('changed.jstree', function (e, data) {
+                var i, j, r = [];
+                for (i = 0, j = data.selected.length; i < j; i++) {
+                    r.push(data.instance.get_node(data.selected[i]).type.trim());
+                }
+                alert('Selected: ' + r.join(', '));
+            });
+            --%>
+
+        });
+
+    </script>
+
+    <%--<sj:head jqueryui="true" jquerytheme="redmond"/>--%>
 </head>
 <body>
-
-<h2>Globus Transfer Service</h2>
 
 <div class="container">
     <div class="row">
@@ -190,7 +287,7 @@
 </div>
 
 <%-- <div class="container"> --%>
-<h4>My Endpoints</h4>
+<h2>My Endpoints</h2>
 
 <s:if test="bookmarklist.size() > 0">
     <div class="row">
@@ -234,7 +331,7 @@
     </p>
 </s:else>
 
-<h4>XSEDE Endpoint</h4>
+<h2>XSEDE Endpoint</h2>
 <div class="row">
     <div class="col-md-7">
         <table class="table">
@@ -258,58 +355,28 @@
 
     <%-- <div class="page-header"> --%>
 <div>
-<h4> Transfer &nbsp;&nbsp;&nbsp;
+<h2>
+    Globus Transfer &nbsp;&nbsp;&nbsp;
 <s:if test="bookmarklist.size() > 0">
     <s:url var="transferUrl" action="transfer">
         <s:param name="transferLocation">true</s:param>
     </s:url>
     <s:a href="%{transferUrl}" cssClass="btn btn-primary">Switch Source and Destination</s:a>
 </s:if>
-</h4>
+</h2>
 </div>
 
 <s:if test="bookmarklist.size() > 0">
     <p><strong>Destination Endpoint:</strong> <s:property value="%{#session.dest_disp_name}"/></p>
     <p><strong>Source Endpoint:</strong> <s:property value="%{#session.src_disp_name}"/></p>
-    <s:if test="files != null && files.size() > 0">
-    <%-- <div class="form-group"> --%>
+    <s:if test="filecount > 0">
         <s:form id="transfer-file-list" cssClass="form-inline" action="transfer" method="POST" theme="simple">
-            <s:hidden name="endpointId" value="%{#session.src_endpoint_id}"/>
-            <s:hidden name="endpointPath" value="%{#session.src_endpoint_path}"/>
-            <s:hidden name="endpointName" value="%{#session.src_endpoint_name}"/>
-            <div class="row">
-                <div class="col-md-10">
-                    <table class="table">
-                        <th class="col-md-3 text-left">File / Folder</th>
-                        <th class="col-md-1 text-left">Size</th>
-                        <th class="col-md-1 text-center">Select</th>
-                        <s:iterator value="files" status="stat">
-                        <tr>
-                            <s:if test='filetype == "dir"'>
-                                <td class="col-md-3 text-left">
-                                    <i class="fa fa-folder fa-lg"></i>&nbsp;
-                                        <s:property value="filename"/>
-                                </td>
-                                <td class="col-md-1 text-left"><s:property value="filesize"/></td>
-                                <td class="col-md-1 text-center"><s:checkbox name="directorynames" fieldValue="%{filename}"/></td>
-                            </s:if>
-                            <s:else>
-                                <td class="col-md-3 text-left">
-                                    <i class="fa fa-file fa-lg"></i>&nbsp;
-                                        <s:property value="filename"/>
-                                </td>
-                                <td class="col-md-1 text-left"><s:property value="filesize"/></td>
-                                <td class="col-md-1 text-center"><s:checkbox name="filenames" fieldValue="%{filename}"/></td>
-                            </s:else>
-                        </tr>
-                        </s:iterator>
-                    </table>
-                </div>
-            </div>
-
+            <s:hidden id="selectedFiles" name="selectedFiles" value=""/>
+            <div id="user-file-tree-container" class="demo" style="margin-top:2em;"></div>
+            <p></p>
             <div class="form-group form-buttons">
                 <div class="col-md-10 pull-right">
-                    <s:submit name="transfer" value="Sync" cssClass="btn btn-primary"/>
+                    <s:submit name="transfer" value="Transfer" cssClass="btn btn-primary"/>
                 </div>
             </div>
         </s:form>

@@ -495,6 +495,11 @@
                 <param name="root">endpointlist</param>
             </result>
         </action>
+        <action name="filetree" class="edu.sdsc.globusauth.action.DynamicTreeAction" method="file_tree">
+            <result type="json" >
+                <param name="root">nodes</param>
+            </result>
+        </action>
     </package>
 
     <!--
