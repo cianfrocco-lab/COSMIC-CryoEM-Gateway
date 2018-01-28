@@ -7,7 +7,7 @@ import org.globusonline.transfer.Authenticator;
 import org.globusonline.transfer.GoauthAuthenticator;
 import org.globusonline.transfer.JSONTransferAPIClient;
 import org.json.JSONArray;
-//import org.ngbw.sdk.WorkbenchSession;
+import org.ngbw.sdk.database.TransferRecord;
 import org.ngbw.web.actions.NgbwSupport;
 
 import java.time.LocalDate;
@@ -54,7 +54,7 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("destination_endpoint_display_name", r.document.getString("destination_endpoint_display_name"));
             taskmap.put("request_time", r.document.getString("request_time")+" UTC");
             taskmap.put("status", r.document.getString("status"));
-			try {
+            try {
                 String c_time = r.document.getString("completion_time");
                 if (c_time != null)
                     taskmap.put("completion_time", c_time+" UTC");
@@ -73,7 +73,7 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("files", r.document.getInt("files"));
             taskmap.put("directories", r.document.getInt("directories"));
             taskmap.put("files_skipped", r.document.getInt("files_skipped"));
-	    	taskmap.put("bytes_transferred", humanReadableByteCount(r.document.getLong("bytes_transferred"),true));
+            taskmap.put("bytes_transferred", humanReadableByteCount(r.document.getLong("bytes_transferred"),true));
             statuslist.add(taskmap);
 
         } else {
@@ -92,7 +92,7 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("destination_endpoint_display_name", data.getJSONObject(i).getString("destination_endpoint_display_name"));
                     taskmap.put("request_time", data.getJSONObject(i).getString("request_time")+" UTC");
                     taskmap.put("status", data.getJSONObject(i).getString("status"));
-					try {
+                    try {
                         String c_time = data.getJSONObject(i).getString("completion_time");
                         if (c_time != null)
                             taskmap.put("completion_time", c_time+" UTC");
@@ -111,7 +111,7 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("files", data.getJSONObject(i).getInt("files"));
                     taskmap.put("directories", data.getJSONObject(i).getInt("directories"));
                     taskmap.put("files_skipped", data.getJSONObject(i).getInt("files_skipped"));
-		    taskmap.put("bytes_transferred", humanReadableByteCount(data.getJSONObject(i).getLong("bytes_transferred"),true));
+                    taskmap.put("bytes_transferred", humanReadableByteCount(data.getJSONObject(i).getLong("bytes_transferred"),true));
                     statuslist.add(taskmap);
                 }
             }
@@ -121,19 +121,13 @@ public class TransferStatusAction extends NgbwSupport {
         ProfileManager profileManager = new ProfileManager();
         TransferAction txaction = new TransferAction();
         Long user_id = (Long) getSession().get("user_id");
-        List<String> tr = profileManager.loadRecord(user_id);
-        if (tr != null && tr.size() > 0) {
+        List<String> trlist = profileManager.loadRecord(user_id);
+        if (trlist != null && trlist.size() > 0) {
             String dest_path = ( String ) getSession().get
-                ( OauthConstants.DEST_ENDPOINT_PATH );
-            /*
-            WorkbenchSession wbs = ( WorkbenchSession ) getSession().get
-                ( "workbenchSession" );
-            */
-            for (String taskid: tr)
-            {
-                //profileManager.updateRecord(txaction.updateTask(taskid,client));
-                profileManager.updateRecord (
-                    txaction.updateTask ( taskid,client ), dest_path );
+                    ( OauthConstants.DEST_ENDPOINT_PATH );
+            for (String taskid: trlist) {
+                TransferRecord tr = txaction.updateTask(taskid, client);
+                profileManager.updateRecord(tr, dest_path);
             }
         }
 

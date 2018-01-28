@@ -9,13 +9,13 @@
     <div class="form-group">
         <label class="col-xs-2 control-label">First Name</label>
         <div class="col-xs-10">
-            <s:textfield cssClass="form-control" name="profile.firstName" value="%{#session.first_name}"/>
+            <s:textfield cssClass="form-control" name="profile.firstname" value="%{#session.first_name}"/>
         </div>
     </div>
     <div class="form-group">
         <label class="col-xs-2 control-label">Last Name</label>
         <div class="col-xs-10">
-            <s:textfield cssClass="form-control" name="profile.lastName" value="%{#session.last_name}"/>
+            <s:textfield cssClass="form-control" name="profile.lastname" value="%{#session.last_name}"/>
         </div>
     </div>
     <div class="form-group">

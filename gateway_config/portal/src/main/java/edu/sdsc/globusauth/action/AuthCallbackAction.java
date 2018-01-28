@@ -21,7 +21,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
 import com.opensymphony.xwork2.inject.Inject;
 import edu.sdsc.globusauth.controller.ProfileManager;
-import edu.sdsc.globusauth.model.OauthProfile;
+//import edu.sdsc.globusauth.model.OauthProfile;
+import org.ngbw.sdk.database.OauthProfile;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
 import org.apache.log4j.Logger;
@@ -31,6 +32,7 @@ import org.apache.struts2.views.util.UrlHelper;
 import org.ngbw.sdk.UserAuthenticationException;
 import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.sdk.common.util.ValidationResult;
+import org.ngbw.sdk.database.TransferRecord;
 import org.ngbw.sdk.database.User;
 import org.ngbw.web.actions.FolderManager;
 import org.ngbw.web.controllers.SessionController;
@@ -52,7 +54,6 @@ public class AuthCallbackAction extends FolderManager {
     private OauthProfile profile;
 
     public AuthCallbackAction() {
-        //logger.debug ( "MONA: AuthCallbackAction.AuthCallbackAction()" );
         profileManager = new ProfileManager();
         profile = new OauthProfile();
     }
@@ -83,7 +84,7 @@ public class AuthCallbackAction extends FolderManager {
         String dataset_endpoint_id = config.getProperty(OauthConstants.DATASET_ENDPOINT_ID);
         String dataset_endpoint_base = config.getProperty(OauthConstants.DATASET_ENDPOINT_BASE);
         String dataset_endpoint_name = config.getProperty(OauthConstants.DATASET_ENDPOINT_NAME);
-		String endpoint_activation_uri = config.getProperty(OauthConstants.ENDPOINT_ACTIVATION_URI);
+        String endpoint_activation_uri = config.getProperty(OauthConstants.ENDPOINT_ACTIVATION_URI);
 
         // creates builder for flow object, necessary for oauth flow
         AuthorizationCodeFlow.Builder flowBuilder =
@@ -136,7 +137,7 @@ public class AuthCallbackAction extends FolderManager {
             // If we do have a "code" param, we're coming back from Globus Auth
             // and can start the process of exchanging an auth code for a token.
             String passed_state = request.getParameter(OauthConstants.STATE);
-
+            //logger.info("Passed state: "+passed_state);
             // Makes sure the state as the browser is sent back matches the one set when sent out from the
             // client
             if (!passed_state.isEmpty() && passed_state.equals(getSession().get(OauthConstants.OAUTH2_STATE))) {
@@ -160,7 +161,7 @@ public class AuthCallbackAction extends FolderManager {
 
                     getSession().remove(OauthConstants.OAUTH2_STATE);
                     // Parsing about the user
-                    logger.info("Token: " + tokenResponse.toPrettyString());
+                    // logger.info("Token: " + tokenResponse.toPrettyString());
                     IdToken id_token = IdToken.parse(jsonFactory, (String) tokenResponse.get(OauthConstants.ID_TOKEN));
                     logger.info("Id token: " + id_token.toString());
                     logger.info("Other tokens: "+tokenResponse.get("other_tokens"));
@@ -208,19 +209,16 @@ public class AuthCallbackAction extends FolderManager {
                         profile.setUsername(username);
                         profile.setLinkUsername(username);
                         profile.setIdentityId(identity);
-                        profile.setFirstName(names[0]);
-                        profile.setLastName(names[1]);
+                        profile.setFirstname(names[0]);
+                        profile.setLastname(names[1]);
                         profile.setEmail(email);
                         profile.setInstitution("");
                         //profile = profileManager.add(profile);
                         long userid = registerUser();
-                        if ( userid == -1L) {
-                            logger.debug ( "MONA: here 1" );
-                            return "failure";
-                        }
+                        if ( userid == -1L) return "failure";
 
                         profile.setUserId(userid);
-                        profileManager.addUser(profile);
+                        profileManager.addProfile(profile);
 
                         getSession().put("user_id",userid);
                         getSession().put(OauthConstants.EMAIL, email);
@@ -230,36 +228,26 @@ public class AuthCallbackAction extends FolderManager {
                     } else {
                         //transfer
                         redirect_flag = false;
+                        //logger.info("profile identity id:"+db_profile.getIdentityId());
                         profile.setEmail(db_profile.getEmail());
                         profile.setIdentityId(db_profile.getIdentityId());
-                        if (!activateLogin(null,db_profile.getLinkUsername()))
-                        {
-                            logger.debug ( "MONA: here 2" );
-                            return "failure";
-                        }
-
+                        if (!activateLogin(null,db_profile.getLinkUsername())) return "failure";
+                        //logger.info("profile user id:"+db_profile.getUserId());
                         getSession().put("user_id",db_profile.getUserId());
                         getSession().put(OauthConstants.EMAIL, db_profile.getEmail());
-                        getSession().put(OauthConstants.FIRST_NAME, db_profile.getFirstName());
-                        getSession().put(OauthConstants.LAST_NAME, db_profile.getLastName());
+                        getSession().put(OauthConstants.FIRST_NAME, db_profile.getFirstname());
+                        getSession().put(OauthConstants.LAST_NAME, db_profile.getLastname());
                         getSession().put(OauthConstants.INSTITUTION, db_profile.getInstitution());
 
                         //update transfer record
-                        List<String> tr = profileManager.loadRecord(db_profile.getUserId());
-                        if (tr != null && tr.size() > 0) {
+                        List<String> trlist = profileManager.loadRecord(db_profile.getUserId());
+                        if (trlist != null && trlist.size() > 0) {
                             String dest_path = dataset_endpoint_base +
-                                db_profile.getLinkUsername() + "/";
-                            /*
-                            WorkbenchSession wbs = ( WorkbenchSession ) 
-                                getSession().get ( "workbenchSession" );
-                            */
+                                    db_profile.getLinkUsername() + "/";
                             TransferAction txaction = new TransferAction(accesstoken,username);
-                            for (String taskid: tr)
-                            {
-                                //profileManager.updateRecord(txaction.updateTask(taskid,null));
-                                profileManager.updateRecord (
-                                    txaction.updateTask(taskid,null),
-                                    dest_path );
+                            for (String taskid: trlist) {
+                                TransferRecord tr = txaction.updateTask(taskid, null);
+                                profileManager.updateRecord(tr, dest_path);
                             }
                         }
                         //return "transfer";
@@ -272,7 +260,7 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.PRIMARY_USERNAME, username);
                     //getSession().put("link_username", linkusername);
                     getSession().put(OauthConstants.PRIMARY_IDENTITY, identity);
-					getSession().put(OauthConstants.ENDPOINT_ACTIVATION_URI, endpoint_activation_uri);
+                    getSession().put(OauthConstants.ENDPOINT_ACTIVATION_URI, endpoint_activation_uri);
 
                     //initial setup for source and destination endpoint
                     getSession().put(OauthConstants.DATASET_ENDPOINT_ID,dataset_endpoint_id);
@@ -297,8 +285,7 @@ public class AuthCallbackAction extends FolderManager {
                     EndpointListAction iplistaction = new EndpointListAction(accesstoken,username);
                     //iplistaction.my_endpoint_list();
                     //List<Map<String,Object>> bookmarklist = iplistaction.getBookmarklist();
-					List<Map<String,Object>> bookmarklist = iplistaction.my_bookmark_list();
-
+                    List<Map<String,Object>> bookmarklist = iplistaction.my_bookmark_list();
                     if (bookmarklist != null && bookmarklist.size() > 0) {
                         boolean flag = false;
                         for (int i=0; i<bookmarklist.size(); i++) {
@@ -381,8 +368,8 @@ public class AuthCallbackAction extends FolderManager {
 
                         }
                     } else {
-                        // return "dataendpoints";
-						return "transfer";
+                        //return "dataendpoints";
+                        return "transfer";
                     }
                 }
                 if (redirect_flag) {
@@ -393,10 +380,9 @@ public class AuthCallbackAction extends FolderManager {
             } else {
                 OAuthSystemException oauth_ex = new OAuthSystemException("Mismatching Oauth States");
                 reportError(oauth_ex,"Mismatching Oauth States");
-                logger.debug ( "MONA: here 3" );
                 return "failure";
                 // Something went wrong with state value matching
-                // throw new OAuthSystemException("Mismatching Oauth States");
+                //throw new OAuthSystemException("Mismatching Oauth States");
             }
         }
     }
@@ -414,7 +400,7 @@ public class AuthCallbackAction extends FolderManager {
         } else {
             String password = "Globus" + profile.getUsername() + Calendar.getInstance().getTimeInMillis();
             ValidationResult result = controller.registerUser(profile.getUsername(), password,
-                    profile.getEmail(), profile.getFirstName(), profile.getLastName(),
+                    profile.getEmail(), profile.getFirstname(), profile.getLastname(),
                     profile.getInstitution(), null);
             if (result == null) {
                 addActionError("Sorry, there was an error creating your account.");
@@ -467,8 +453,14 @@ public class AuthCallbackAction extends FolderManager {
             User existing_user = controller.getUserByEmail(profile.getEmail());
             if (existing_user == null) return false;
             username = existing_user.getUsername();
-            profile.setLinkUsername(username);
-            profileManager.updateLinkUsername(profile);
+            //profile.setLinkUsername(username);
+            //profileManager.updateLinkUsername(profile);
+            try {
+                profileManager.updateLinkUsername(profile.getIdentityId(), username);
+            } catch (Exception e) {
+                reportUserError(e.getMessage());
+                return false;
+            }
         } else {
             profile.setLinkUsername(username);
         }
@@ -490,7 +482,7 @@ public class AuthCallbackAction extends FolderManager {
         return true;
     }
 
-	/*
+    /*
     @Inject
     public void setActionMapper(ActionMapper actionMapper) {
         this.actionMapper = actionMapper;
@@ -500,7 +492,7 @@ public class AuthCallbackAction extends FolderManager {
     public void setUrlHelper(UrlHelper urlHelper) {
         this.urlHelper = urlHelper;
     }
-	*/
+    */
 
     public String getAuthurl() {
         return authurl;

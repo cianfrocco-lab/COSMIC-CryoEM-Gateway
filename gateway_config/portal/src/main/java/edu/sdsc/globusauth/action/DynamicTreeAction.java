@@ -9,12 +9,12 @@ import org.globusonline.transfer.BaseTransferAPIClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.ngbw.web.actions.NgbwSupport;
-import org.apache.struts2.util.ServletContextAware;
+// import org.apache.struts2.util.ServletContextAware;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import javax.servlet.ServletContext;
+// import javax.servlet.ServletContext;
 
 import java.util.LinkedList;
 import edu.sdsc.globusauth.model.TreeNode;
@@ -23,13 +23,14 @@ import edu.sdsc.globusauth.model.FileMetadata;
 /**
  * Created by cyoun on 11/09/17.
  */
-public class DynamicTreeAction extends NgbwSupport implements ServletContextAware {
+// public class DynamicTreeAction extends NgbwSupport implements ServletContextAware {
+public class DynamicTreeAction extends BaseAction {
 
     private static final Logger logger = Logger.getLogger(DynamicTreeAction.class.getName());
     private static final long serialVersionUID = -2886756982077980790L;
     private List<TreeNode> nodes = new ArrayList<TreeNode>();
     private String id = "";
-    private ServletContext servletContext;
+    // private ServletContext servletContext;
     private JSONTransferAPIClient client;
 
     public DynamicTreeAction() {
@@ -72,7 +73,7 @@ public class DynamicTreeAction extends NgbwSupport implements ServletContextAwar
                 String f_name = fileObject.getString("name");
                 String f_type = fileObject.getString("type");
 
-                logger.info("  " + f_name);
+                //logger.info("  " + f_name);
                 files.add(new FileMetadata(f_name, f_type, fileObject.getInt("size")));
             }
         } catch (Exception e) {
@@ -110,9 +111,22 @@ public class DynamicTreeAction extends NgbwSupport implements ServletContextAwar
                 node.setIcon("file");
                 node.setType("file");
             }
-            node.setText(fm.getName()+"      "+fm.getSize().toString());
+            StringBuilder sb = new StringBuilder();
+            sb.append(fm.getName());
+            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(");
+            sb.append(humanReadableByteCount(fm.getSize(),true));
+            sb.append(")");
+            node.setText(sb.toString());
             nodes.add(node);
         }
+    }
+
+    private String humanReadableByteCount(int bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        return String.format("%.2f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     public String getJSON() throws Exception {
@@ -124,8 +138,8 @@ public class DynamicTreeAction extends NgbwSupport implements ServletContextAwar
     public void setId(String id) {
         this.id = id;
     }
-    public void setServletContext(ServletContext servletContext) {
-        this.servletContext = servletContext;
-    }
+    // public void setServletContext(ServletContext servletContext) {
+    //    this.servletContext = servletContext;
+    //}
 
 }

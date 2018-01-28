@@ -6,7 +6,8 @@ package edu.sdsc.globusauth.action;
 
 import com.google.api.client.auth.oauth2.Credential;
 import edu.sdsc.globusauth.controller.ProfileManager;
-import edu.sdsc.globusauth.model.TransferRecord;
+//import edu.sdsc.globusauth.model.TransferRecord;
+import org.ngbw.sdk.database.TransferRecord;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
 import org.apache.log4j.Logger;
@@ -19,6 +20,7 @@ import org.ngbw.sdk.database.Folder;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
+import java.sql.SQLException;
 import java.util.*;
 
 public class TransferAction extends NgbwSupport {
@@ -460,10 +462,18 @@ public class TransferAction extends NgbwSupport {
     private String updateRecord(String taskId) throws Exception {
         TransferRecord tr = updateTask(taskId, null);
         ProfileManager profileManager = new ProfileManager();
-        profileManager.updateRecord(tr);
+        profileManager.updateTransferRecord(tr.getTaskId(),
+                tr.getStatus(),
+                tr.getCompletionTime(),
+                tr.getFilesTransferred(),
+                tr.getFaults(),
+                tr.getDirectories(),
+                tr.getFiles(),
+                tr.getFilesSkipped(),
+                tr.getByteTransferred());
         return tr.getStatus();
     }
-	*/
+    */
 
     @SuppressWarnings("unchecked")
     private List<String> getFileList(String id){
@@ -889,7 +899,7 @@ public class TransferAction extends NgbwSupport {
     }
 
     public void saveTask(String taskId,String fileNames, String dirNames)
-            throws IOException, JSONException, GeneralSecurityException, APIError {
+            throws IOException, JSONException, GeneralSecurityException, APIError, SQLException {
         TransferRecord tr = new TransferRecord();
         String resource = "/task/" +  taskId;
         Map<String, String> params = new HashMap<String, String>();

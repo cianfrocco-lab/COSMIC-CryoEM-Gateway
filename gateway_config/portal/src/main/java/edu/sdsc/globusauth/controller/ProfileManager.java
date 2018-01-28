@@ -4,6 +4,10 @@ package edu.sdsc.globusauth.controller;
  * Created by cyoun on 10/12/16.
  */
 
+import java.util.ArrayList;
+import java.io.IOException;
+import java.sql.SQLException;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -15,125 +19,72 @@ import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
 
 import edu.sdsc.globusauth.controller.Transfer2DataManager;
-import edu.sdsc.globusauth.model.OauthProfile;
-import edu.sdsc.globusauth.model.TransferRecord;
-import edu.sdsc.globusauth.model.User;
-import edu.sdsc.globusauth.util.HibernateUtil;
-import edu.sdsc.globusauth.util.StringUtils;
-import edu.sdsc.globusauth.util.UserRole;
-
-import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.ngbw.sdk.database.OauthProfile;
+import org.ngbw.sdk.database.TransferRecord;
 
 
-public class ProfileManager extends HibernateUtil {
+//public class ProfileManager extends HibernateUtil {
+public class ProfileManager {
 
     private static final Log log = LogFactory.getLog ( ProfileManager.class );
 
-    public OauthProfile add(OauthProfile oathProfile) {
-        User user = new User();
-        String password = "Globus" + oathProfile.getUsername() + Calendar.getInstance().getTimeInMillis();
-        user.setFirstName(oathProfile.getFirstName());
-        user.setLastName(oathProfile.getLastName());
-        user.setEmail(oathProfile.getEmail());
-        user.setUsername(oathProfile.getUsername());
-        user.setPassword(StringUtils.getMD5HexString(password));
-        user.setRole(UserRole.STANDARD.toString());
-        user.setActive(true);
-        user.setCanSubmit(true);
-        user.setUmbrellaAppname("");
-        user.setVersion(1);
-        //user.setDateCreated(new Date());
-
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-        session.save(user);
-        oathProfile.setUserId(user.getId());
-        session.save(oathProfile);
-        session.getTransaction().commit();
-        return oathProfile;
+    public void addProfile(OauthProfile profile) throws IOException, SQLException
+    {
+        log.debug("Adding linkage for globus user " + profile.getUsername());
+        profile.save();
     }
 
-    public OauthProfile addUser(OauthProfile oathProfile) {
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-        session.save(oathProfile);
-        session.getTransaction().commit();
-        return oathProfile;
+    public void updateLinkUsername(String identityId, String linkUsername) throws IOException, SQLException
+    {
+        OauthProfile profile = load(identityId);
+        profile.setLinkUsername(linkUsername);
+        profile.save();
     }
 
-    public int updateLinkUsername(OauthProfile oathProfile) {
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-
-        String sql = "update OauthProfile set linkUsername = :linkusername"
-                + " where identityId = :identityId";
-        Query query = session.createQuery(sql);
-        query.setParameter("linkusername", oathProfile.getLinkUsername());
-        query.setParameter("identityId", oathProfile.getIdentityId());
-        int result = query.executeUpdate();
-
-        session.getTransaction().commit();
-        return result;
+    public void update(String identityId, String firstname,
+                       String lastname, String email, String institution)
+            throws IOException, SQLException
+    {
+        OauthProfile profile = load(identityId);
+        profile.setFirstname(firstname);
+        profile.setLastname(lastname);
+        profile.setEmail(email);
+        profile.setInstitution(institution);
+        profile.save();
     }
 
-    public int update(OauthProfile oathProfile) {
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-
-        String sql = "update OauthProfile set email = :email, firstName = :fname, "
-                + "lastName = :lname, institution = :ins"
-                + " where identityId = :identityId";
-        Query query = session.createQuery(sql);
-        query.setParameter("email", oathProfile.getEmail());
-        query.setParameter("fname", oathProfile.getFirstName());
-        query.setParameter("lname", oathProfile.getLastName());
-        query.setParameter("ins", oathProfile.getInstitution());
-        query.setParameter("identityId", oathProfile.getIdentityId());
-        int result = query.executeUpdate();
-
-        session.getTransaction().commit();
-        return result;
+    public OauthProfile load(String identityId) throws IOException, SQLException
+    {
+        return OauthProfile.findOauthprofileByIdentityId(identityId);
     }
 
-    public int updateUser(OauthProfile oauthProfile) {
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-
-        //User update
-        String u_sql = "update User set email = :email, firstName = :fname, "
-                + "lastName = :lname, institution = :ins"
-                + " where username = :userName";
-        Query u_query = session.createQuery(u_sql);
-        u_query.setParameter("email", oauthProfile.getEmail());
-        u_query.setParameter("fname", oauthProfile.getFirstName());
-        u_query.setParameter("lname", oauthProfile.getLastName());
-        u_query.setParameter("ins", oauthProfile.getInstitution());
-        u_query.setParameter("userName", oauthProfile.getUsername());
-        int result = u_query.executeUpdate();
-
-        session.getTransaction().commit();
-        return result;
+    public void addRecord(TransferRecord tr) throws IOException, SQLException {
+        log.debug("Adding transfer recordr " + tr.getTaskId());
+        tr.save();
     }
 
-    public OauthProfile load(String identityId) {
-        OauthProfile profile = null;
-        Session session = HibernateUtil.getSessionFactory().openSession(); //getCurrentSession();
-        session.beginTransaction();
-        Query query = session.createQuery("FROM OauthProfile WHERE identityId = :identity");
-        query.setParameter("identity",identityId);
-        List<OauthProfile> profiles = query.list();
-        if (profiles != null && profiles.size() > 0)
-            profile = (OauthProfile)profiles.get(0);
-        session.getTransaction().commit();
-        return profile;
-    }
+    public void updateTransferRecord(String taskId,
+                                     String status,
+                                     String completionTime,
+                                     int filesTransferred,
+                                     int faults,
+                                     int directories,
+                                     int files,
+                                     int filesSkipped,
+                                     long byteTransferred) throws IOException, SQLException {
 
-    public void addRecord(TransferRecord tr) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-        session.save(tr);
-        session.getTransaction().commit();
+        log.info("updatetransferrecord: start");
+        TransferRecord tr = TransferRecord.findTransferRecordByTaskId(taskId);
+        log.info("endpoint: "+tr.getSrcEndpointname());
+        tr.setStatus(status);
+        tr.setCompletionTime(completionTime);
+        tr.setFilesTransferred(filesTransferred);
+        tr.setFaults(faults);
+        tr.setDirectories(directories);
+        tr.setFiles(files);
+        tr.setFilesSkipped(filesSkipped);
+        tr.setByteTransferred(byteTransferred);
+        tr.save();
     }
 
     /**
@@ -141,7 +92,7 @@ public class ProfileManager extends HibernateUtil {
      *      current status value in the database is ACTIVE or INACTIVE.
      *      If this NOT the case, DO NOT use this function!
      **/
-    public int updateRecord ( TransferRecord tr, String destination_path )
+    public int updateRecord ( TransferRecord tr, String destination_path ) throws IOException, SQLException
     {
         //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
         //log.debug ( "MONA: tr = " + tr );
@@ -151,12 +102,12 @@ public class ProfileManager extends HibernateUtil {
 
         // Check incoming parameters
         if ( tr == null || destination_path == null ||
-            destination_path.trim().equals ( "" ) )
+                destination_path.trim().equals ( "" ) )
             return ( 0 );
 
         String globusRoot =
-            Workbench.getInstance().getProperties().getProperty
-            ( "database.globusRoot" );
+                Workbench.getInstance().getProperties().getProperty
+                        ( "database.globusRoot" );
         //log.debug ( "MONA: globusRoot = " + globusRoot );
         String status = tr.getStatus();
         //log.debug ( "MONA: status = " + status );
@@ -164,81 +115,58 @@ public class ProfileManager extends HibernateUtil {
         // If the transfer is to the COSMIC2 gateway, then we will create
         // the appropriate user data dir item; otherwise, the transfer is
         // from the COSMIC2 gateway so no need to create a user data dir item
-        if ( destination_path.startsWith ( globusRoot ) )
-        {
-            int saved = 0;
+        if (globusRoot != null) {
+            if (destination_path.startsWith(globusRoot)) {
+                int saved = 0;
 
-            // First, if the new record has SUCCEEDED status, then we will get
-            // its info from the transfer_record table and create a new
-            // document needed by the CIPRES workflow
-            if ( status.equals ( "SUCCEEDED" ) )
-            {
-                //log.debug ( "MONA: tr.getTaskId() = " + tr.getTaskId() );
-                List <TransferRecord> trs =
-                    loadRecordByTaskId ( tr.getTaskId() );
-                //log.debug ( "MONA: trs = " + trs );
+                // First, if the new record has SUCCEEDED status, then we will get
+                // its info from the transfer_record table and create a new
+                // document needed by the CIPRES workflow
+                if (status.equals("SUCCEEDED")) {
+                    //log.debug("MONA: tr.getTaskId() = " + tr.getTaskId());
+                    TransferRecord old_tr = loadRecordByTaskId(tr.getTaskId());
+                    //log.debug("MONA: trs = " + old_tr.getTaskId());
 
-                if ( ! trs.isEmpty() )
-                {
-                    TransferRecord old_tr = trs.get ( 0 );
-                    //log.debug ( "MONA: old_tr = " + old_tr );
-                    //log.debug ( "MONA: old_tr.getSrcEndpointname = " + old_tr.getSrcEndpointname() );
-                    //log.debug ( "MONA: old_tr.getDestEndpointname = " + old_tr.getDestEndpointname() );
+                    if (old_tr != null && old_tr.getTaskId() != null) {
+                        //log.debug ( "MONA: old_tr = " + old_tr );
+                        //log.debug ( "MONA: old_tr.getSrcEndpointname = " + old_tr.getSrcEndpointname() );
+                        //log.debug ( "MONA: old_tr.getDestEndpointname = " + old_tr.getDestEndpointname() );
 
-                    //if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
-                    if ( ! status.equals ( old_tr.getStatus() ) )
-                    {
-                        Transfer2DataManager dataManager = new
-                            Transfer2DataManager();
-                        saved = dataManager.setupDataItems ( old_tr,
-                            destination_path );
+                        //if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
+                        if (!status.equals(old_tr.getStatus())) {
+                            Transfer2DataManager dataManager = new Transfer2DataManager();
+                            saved = dataManager.setupDataItems(old_tr,
+                                    destination_path);
+                        }
                     }
                 }
-            }
 
-            if ( saved == 0 )
-                return ( 0 );
+                if (saved == 0)
+                    return (0);
+            }
         }
 
         // Now update the transfer record
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-
-        //Record update
-        String u_sql =
-            "update TransferRecord set status = :status, completionTime = :ctime, "
-                + "filesTransferred = :ft, faults = :faults, directories = :dir, files = :file, "
-                + "filesSkipped = :fs, byteTransferred = :bt"
-                + " where taskId = :taskId";
-
-        Query u_query = session.createQuery(u_sql);
-        u_query.setParameter("status", status );
-        u_query.setParameter("ctime", tr.getCompletionTime());
-        u_query.setParameter("ft", tr.getFilesTransferred());
-        u_query.setParameter("faults", tr.getFaults());
-        u_query.setParameter("dir", tr.getDirectories());
-        u_query.setParameter("file", tr.getFiles());
-        u_query.setParameter("fs", tr.getFilesSkipped());
-        u_query.setParameter("bt", tr.getByteTransferred());
-        u_query.setParameter("taskId", tr.getTaskId());
-        int result = u_query.executeUpdate();
-
-        session.getTransaction().commit();
-        return result;
+        // log.info("Update record (taskid): "+tr.getTaskId());
+        updateTransferRecord(tr.getTaskId(),
+                tr.getStatus(),
+                tr.getCompletionTime(),
+                tr.getFilesTransferred(),
+                tr.getFaults(),
+                tr.getDirectories(),
+                tr.getFiles(),
+                tr.getFilesSkipped(),
+                tr.getByteTransferred());
+        return (1);
     }
 
-    public List<String> loadRecord(Long userId) {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-
-        Query query = session.createQuery("SELECT taskId FROM TransferRecord WHERE userId = :userid AND (status = :status1 OR status = :status2)");
-        query.setParameter("userid",userId);
-        query.setParameter("status1","ACTIVE");
-        query.setParameter("status2","INACTIVE");
-        List<String> trs = query.list();
-
-        session.getTransaction().commit();
-        return trs;
+    public List<String> loadRecord(long userId) throws IOException, SQLException {
+        List<TransferRecord> trs = TransferRecord.findAllTaskIDByUserId(userId);
+        List<String> taskids = new ArrayList<String>();
+        for (TransferRecord tr: trs) {
+            taskids.add(tr.getTaskId());
+        }
+        return taskids;
     }
 
     /**
@@ -246,17 +174,8 @@ public class ProfileManager extends HibernateUtil {
      * table by taskId
      * @param taskId - Globus transfer task ID
      **/
-    public List <TransferRecord> loadRecordByTaskId ( String taskId )
+    public TransferRecord loadRecordByTaskId ( String taskId ) throws IOException, SQLException
     {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        session.beginTransaction();
-
-        Query query = session.createQuery
-            ( "FROM TransferRecord WHERE taskId = :taskId" );
-        query.setParameter ( "taskId", taskId );
-        List<TransferRecord> trs = query.list();
-
-        session.getTransaction().commit();
-        return trs;
+        return TransferRecord.findTransferRecordByTaskId(taskId);
     }
 }

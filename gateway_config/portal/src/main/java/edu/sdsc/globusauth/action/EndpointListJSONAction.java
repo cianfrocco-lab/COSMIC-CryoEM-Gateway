@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * Created by cyoun on 06/19/17.
  */
-public class EndpointListJSONAction extends NgbwSupport {
+public class EndpointListJSONAction extends BaseAction {
 
     private static final Logger logger = Logger.getLogger(EndpointListJSONAction.class.getName());
     private JSONTransferAPIClient client;

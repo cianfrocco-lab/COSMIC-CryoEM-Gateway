@@ -1,7 +1,8 @@
 package edu.sdsc.globusauth.action;
 
 import edu.sdsc.globusauth.controller.ProfileManager;
-import edu.sdsc.globusauth.model.OauthProfile;
+//import edu.sdsc.globusauth.model.OauthProfile;
+import org.ngbw.sdk.database.OauthProfile;
 import edu.sdsc.globusauth.util.OauthConstants;
 import org.apache.log4j.Logger;
 import org.ngbw.sdk.common.util.ValidationResult;
@@ -36,11 +37,11 @@ public class ProfileAction extends SessionManager {
             logger.info("Profile: "+identity_id);
             OauthProfile db_profile = profileManager.load(identity_id);
             if (db_profile == null) {
-                profileManager.add(profile);
+                profileManager.addProfile(profile);
             } else {
                 getSession().put(OauthConstants.EMAIL, db_profile.getEmail());
-                getSession().put(OauthConstants.FIRST_NAME, db_profile.getFirstName());
-                getSession().put(OauthConstants.LAST_NAME, db_profile.getLastName());
+                getSession().put(OauthConstants.FIRST_NAME, db_profile.getFirstname());
+                getSession().put(OauthConstants.LAST_NAME, db_profile.getLastname());
                 getSession().put(OauthConstants.INSTITUTION,db_profile.getInstitution());
             }
             return SUCCESS;
@@ -48,15 +49,19 @@ public class ProfileAction extends SessionManager {
             if (validateProfile()) {
                 OauthProfile form_profile = getProfile();
                 getSession().put(OauthConstants.EMAIL, form_profile.getEmail());
-                getSession().put(OauthConstants.FIRST_NAME, form_profile.getFirstName());
-                getSession().put(OauthConstants.LAST_NAME, form_profile.getLastName());
+                getSession().put(OauthConstants.FIRST_NAME, form_profile.getFirstname());
+                getSession().put(OauthConstants.LAST_NAME, form_profile.getLastname());
                 getSession().put(OauthConstants.INSTITUTION, form_profile.getInstitution());
 
                 form_profile.setIdentityId((String) getSession().get(OauthConstants.PRIMARY_IDENTITY));
                 //form_profile.setUserName((String) getSession().get(OauthConstants.PRIMARY_USERNAME));
                 logger.info(form_profile);
                 try {
-                    profileManager.update(form_profile);
+                    profileManager.update(form_profile.getIdentityId(),
+                            form_profile.getFirstname(),
+                            form_profile.getLastname(),
+                            form_profile.getEmail(),
+                            form_profile.getInstitution());
                     //profileManager.updateUser(form_profile);
                     if (updateUserInfo(form_profile)) {
                         reportUserMessage((String) getSession().get(OauthConstants.PRIMARY_USERNAME) + " was updated.");
@@ -76,7 +81,7 @@ public class ProfileAction extends SessionManager {
 
     public boolean updateUserInfo(OauthProfile oauthProfile) {
             ValidationResult result = getController().editUser(oauthProfile.getEmail(),
-                    oauthProfile.getFirstName(), oauthProfile.getLastName(),
+                    oauthProfile.getFirstname(), oauthProfile.getLastname(),
                     oauthProfile.getInstitution(), null,null); //getCountry(), getAccount());
 
             if (!result.isValid()) {
@@ -126,11 +131,11 @@ public class ProfileAction extends SessionManager {
     */
 
     private boolean validateProfile() {
-        String fname = getProfile().getFirstName();
+        String fname = getProfile().getFirstname();
         if (fname == null || fname.trim().equals("")) {
             addFieldError("First Name", "First Name is required.");
         }
-        String lname = getProfile().getLastName();
+        String lname = getProfile().getLastname();
         if (fname == null || fname.trim().equals("")) {
             addFieldError("Last Name", "Last Name is required.");
         }

@@ -19,7 +19,7 @@ import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.UserDataItem;
 import org.ngbw.web.actions.NgbwSupport;
 
-import edu.sdsc.globusauth.model.TransferRecord;
+import org.ngbw.sdk.database.TransferRecord;
 
 
 public class Transfer2DataManager extends NgbwSupport
@@ -50,13 +50,13 @@ public class Transfer2DataManager extends NgbwSupport
         try
         {
             folder = new Folder
-                ( transfer_record.getEnclosingFolderId().longValue() );
+                ( transfer_record.getEnclosingFolderId() );
             //log.debug ( "MONA : folder label = " + folder.getLabel() );
         }
         catch ( Exception e )
         {
             log.error ( "System Error: cannot get folder with ID = " +
-                transfer_record.getEnclosingFolderId().longValue() );
+                transfer_record.getEnclosingFolderId() );
             return ( 0 );
         }
 
@@ -76,7 +76,7 @@ public class Transfer2DataManager extends NgbwSupport
     {
         log.debug ( "MONA : Transfer2DataManager.saveDirectories()" );
         log.debug ( "MONA : transfer_record = " + transfer_record );
-        log.debug ( "MONA : transfer_record ID = " + transfer_record.getId() );
+        log.debug ( "MONA : transfer_record ID = " + transfer_record.getTrId() );
         log.debug ( "MONA : destination_path = " + destination_path );
 
         int saved = 0;
@@ -85,7 +85,7 @@ public class Transfer2DataManager extends NgbwSupport
             destination_path.trim().equals ( "" ) || folder == null )
             return ( saved );
 
-        Long tr_id = transfer_record.getId();
+        Long tr_id = transfer_record.getTrId();
 
         // Check and handle directories...
         String dirString = transfer_record.getDirectoryNames();
