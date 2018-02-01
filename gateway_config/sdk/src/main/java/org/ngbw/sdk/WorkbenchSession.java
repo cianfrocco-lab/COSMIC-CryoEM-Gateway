@@ -494,6 +494,26 @@ public class WorkbenchSession {
 		}
 	}
 
+    /**
+     * Method gets a List of persistent UserDataDirItem instances for the
+     * given user and label
+     * @author Mona Wong
+     * @return List of UserDataDirItem or null
+     **/
+	public List<UserDataDirItem> findUserDataDirItems ( String label )
+        throws IOException, SQLException
+    {
+		try
+        {
+			//return new UserDataDirItem ( id );
+			return UserDataDirItem.findDataDirItems ( userId, label );
+		}
+		catch ( WorkbenchException wbErr )
+        {
+			return null;
+		}
+	}
+
 	/**
 	 * Method saves the submitted UserDataItem into the submitted Folder and
 	 * returns the persisted UserDataItem instance.
