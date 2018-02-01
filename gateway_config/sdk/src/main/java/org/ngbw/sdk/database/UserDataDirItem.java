@@ -104,9 +104,10 @@ public class UserDataDirItem extends FolderItem
 		@Override
 		protected void addMapRemoveOp(String key)
 		{
-            //log.debug ( "MONA : entered addMapRemoveOp()" );
+            //log.debug ( "MONA : entered UserDataDirItem.addMapRemoveOp()" );
             //log.debug ( "MONA : key = " + key );
 			Column<String> prefName = new StringColumn("PREFERENCE", false, 100, key);
+            //log.debug ( "MONA : prefName = " + prefName );
 			CompositeKey prefKey = new CompositeKey(m_key, prefName);
 
 			m_opQueue.add(new DeleteOp("folder_preferences", prefKey));
@@ -115,7 +116,7 @@ public class UserDataDirItem extends FolderItem
 		@Override
 		protected void addMapClearOp()
 		{
-            //log.debug ( "MONA : entered addMapClearOp()" );
+            //log.debug ( "MONA : entered UserDataDirItem.addMapClearOp()" );
 			m_opQueue.add(new DeleteOp("folder_preferences", getKey()));
 		}
 	}
@@ -443,6 +444,7 @@ public class UserDataDirItem extends FolderItem
 		return m_preferences;
 	}
 
+    /*
 	public UserDataDirItem findDataDirItem(String label) throws IOException, SQLException
 	{
         //log.debug ( "MONA : entered findDataDirItem()" );
@@ -465,6 +467,29 @@ public class UserDataDirItem extends FolderItem
 			return null;
 
 		return UserDataDirItem.findDataDirItems(new LongCriterion("ENCLOSING_FOLDER_ID", m_key.getValue()));
+	}
+    */
+
+
+    /**
+     * Find all entries matching the given userId and label
+     * @author Mona Wong
+     * @return null if the current item is new; otherwise return a List
+     **/
+	public static List<UserDataDirItem> findDataDirItems
+        ( Long userId, String label ) throws IOException, SQLException
+	{
+        //log.debug ( "MONA : entered findDataDirItems(userId, label)" );
+        //log.debug ( "MONA: userId = " + userId );
+        //log.debug ( "MONA: label = " + label );
+
+        /*
+		if ( isNew() )
+			return null;
+        */
+
+		return findDataDirItems ( new LongCriterion
+            ( "USER_ID", userId ), new StringCriterion ( "LABEL", label ) );
 	}
 
 
@@ -607,49 +632,54 @@ public class UserDataDirItem extends FolderItem
 	@Override
 	void delete ( Connection dbConn ) throws IOException, SQLException
 	{
-        //log.debug ( "MONA : entered delete()" );
+        //log.debug ( "MONA : entered UserDataDirItem.delete(1)" );
 		if ( isNew() )
 			throw new WorkbenchException ( "Not persisted" );
 
-		delete(dbConn, m_key.getValue());
+		//delete(dbConn, m_key.getValue());
         //delete ( dbConn, getKey(), m_sourceDocumentId.getValue() );
 
+        long id = m_key.getValue();
+        //log.debug ( "MONA : id = " + id );
+        Criterion key = new LongCriterion ( KEY_NAME, m_key.getValue() );
+        delete ( dbConn, key );
 		m_key.reset();
+
+        long tr_id = getTransferRecordId();
+        //log.debug ( "MONA : tr_id = " + tr_id );
 	}
 
-	static void delete(Connection dbConn, long folderId) throws
-        IOException, SQLException
+	static void delete ( Connection dbConn, long userDataId )
+        throws IOException, SQLException
 	{
-        //log.debug ( "MONA : entered delete()" );
-        //log.debug ( "MONA : folderId = " + folderId );
-		Criterion folderKey = new LongCriterion(KEY_NAME, folderId);
-
-		(new DeleteOp("folder_preferences", folderKey)).execute(dbConn);
-
-        /*
-		deleteData(dbConn, folderId);
-		deleteTasks(dbConn, folderId);
-		deleteSubFolders(dbConn, folderId);
-        */
-
-		(new DeleteOp(TABLE_NAME, folderKey)).execute(dbConn);
+        //log.debug ( "MONA : entered UserDataDirItem.delete(2)" );
+        //log.debug ( "MONA : userDataId = " + userDataId );
+        
+        Criterion key = new LongCriterion ( KEY_NAME, userDataId );
+        delete ( dbConn, key );
 	}
 
 
 	// private methods
 
+    /*
     private static void delete ( Connection dbConn, Criterion userDataKey,
         long sourceDocumentId ) throws IOException, SQLException
+    */
+    private static void delete ( Connection dbConn, Criterion userDataKey )
+        throws IOException, SQLException
     {
-        ( new DeleteOp ( "item_metadata", userDataKey ) ).execute ( dbConn );
+        //log.debug ( "MONA : entered UserDataDirItem.delete(3)" );
+        //( new DeleteOp ( "item_metadata", userDataKey ) ).execute ( dbConn );
                            
         //deleteDataRecords ( dbConn, userDataKey );
                                     
         ( new DeleteOp ( TABLE_NAME, userDataKey ) ).execute ( dbConn );
                                              
-        SourceDocumentRow.delete ( dbConn, sourceDocumentId );
-    }
+        //SourceDocumentRow.delete ( dbConn, sourceDocumentId );
 
+        //deleteDirectory();
+    }
 
     /**
      * Get the size and name (parent directory + filename) of the first
