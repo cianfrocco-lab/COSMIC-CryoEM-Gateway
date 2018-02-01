@@ -10,7 +10,7 @@
     <b>Upload Relion directories, particle stacks, and 3D volumes using
     the Globus data transfer service.<br>
     Upload 3D volume and other small files (&lt; 200 MB) using your
-    browser.</b><br>
+    browser.</b><br><br>
     <s:url var="transferUrl" action="transfer"/>
     <s:a href="%{transferUrl}" cssClass="btn btn-primary">
         Globus upload / download</s:a>
@@ -191,7 +191,7 @@
       </div>
     </div>
     <div class="form-group">
-      <s:submit cssClass="btn btn-primary" value="Delete Selected" method="cancel" onclick="return confirm_form()"/>
+      <s:submit cssClass="btn btn-primary" value="Delete Selected" method="cancel" onclick="return confirm_form_data()"/>
     </div>
   </s:form>
 </s:if>
