@@ -1,18 +1,22 @@
 package org.ngbw.web.actions;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+//import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.ArrayList;
-import org.apache.log4j.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.log4j.Logger;
 import org.apache.struts2.interceptor.validation.SkipValidation;
+
 import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.sdk.api.core.GenericDataRecordCollection;
@@ -35,6 +39,8 @@ import org.ngbw.web.model.TabbedPanel;
 import org.ngbw.web.model.impl.ConceptComparator;
 import org.ngbw.web.model.impl.ListPage;
 import org.ngbw.web.model.impl.RecordFieldTypeComparator;
+
+import edu.sdsc.globusauth.util.OauthConstants;
 
 
 /**
@@ -190,13 +196,16 @@ public class DataManager extends FolderManager
 
 	@SkipValidation
 	public String delete() {
+        //logger.debug ( "MONA: entered DataManager.delete()" );
 		// delete the current data item
 		try {
 			UserDataItem currentData = getCurrentData();
+            //logger.debug ( "MONA: currentData = " + currentData );
 			if (currentData == null) {
 				reportUserError("You must select a data item to delete it.");
 			} else {
 				String dataLabel = currentData.getLabel();
+                //logger.debug ( "MONA: dataLabel = " + dataLabel );
 				if (deleteData(currentData)) {
 					setCurrentData(null);
 					reportUserMessage("Data item \"" + dataLabel + "\" successfully deleted.");
@@ -454,21 +463,22 @@ public class DataManager extends FolderManager
         // added this or else new Globus transfer files won't show up in UI
         // without logout/login
 		refreshFolderDataTabs();
+
 		try
 		{
 			TabbedPanel<? extends FolderItem> folderData = getFolderDataTabs();
-            logger.debug ( "folderData = " + folderData );
+            //logger.debug ( "folderData = " + folderData );
 
-			if (folderData == null)
+			if ( folderData == null )
 				return null;
 			else {
-                logger.debug ( "content = " + folderData.getCurrentTabContents() );
+                //logger.debug ( "content = " + folderData.getCurrentTabContents() );
                 return folderData.getCurrentTabContents();
             }
 		}
-		catch(Exception e)
+		catch ( Exception e )
 		{
-			logger.error("", e);
+			logger.error ( "", e );
 			return null;
 		}
 	}
@@ -1466,6 +1476,7 @@ public class DataManager extends FolderManager
 	}
 
 	protected boolean deleteData(UserDataItem dataItem) {
+        //logger.debug ( "MONA: entered DataManager.deleteData(UserDataItem)" );
 		try {
 			WorkbenchSession session = getWorkbenchSession();
 			if (session == null)
@@ -1486,31 +1497,84 @@ public class DataManager extends FolderManager
 		}
 	}
 
-	protected boolean deleteData ( UserDataDirItem dataItem )
+    /**
+     * Delete the dataItem and the directory which contains the dataItem.
+     * @author Mona Wong
+     * @param dataItem - the UserDataDirItem object to delete
+     * @return the number of items deleted
+     **/
+	protected int deleteData ( UserDataDirItem dataItem )
     {
+        //logger.debug ( "MONA: entered DataManager.deleteData(UserDataDirItem)" );
+        int deleted = 0;
+
+		if ( dataItem == null )
+	        return ( deleted );
+
 		try
         {
+            String globusRoot =
+                Workbench.getInstance().getProperties().getProperty
+                ( "database.globusRoot" );
+            //logger.debug ( "MONA: globusRoot = " + globusRoot );
+            String link_username = ( String ) getSession().get
+                ( OauthConstants.LINK_USERNAME );
+            //logger.debug ( "MONA: link_username = " + link_username );
 			WorkbenchSession session = getWorkbenchSession();
+            //logger.debug ( "MONA: session = " + session );
 			if ( session == null )
 				throw new NullPointerException ( "No session is present." );
-			else if ( dataItem == null )
-				throw new NullPointerException ( "Data item was not found." );
+
+            else if ( globusRoot == null || link_username == null )
+				throw new NullPointerException
+                    ( "Cannot determine file location." );
+
 			else
             {
-				Long id = dataItem.getUserDataId();
-				session.deleteUserDataDirItem ( dataItem );
-				dataItem = session.findUserDataDirItem ( id );
+                // First, delete the directory
+                Long userId = session.getUser().getUserId();
+                //logger.debug ( "MONA: userId = " + userId );
+                String label = dataItem.getLabel();
+                File file = new File ( globusRoot + "/" + link_username +
+                    "/" + label );
+                //logger.debug ( "MONA: file = " + file );
+                if ( file.isDirectory() )
+                {
+                    //logger.debug ( "MONA: deleted " + file );
+                    FileUtils.deleteDirectory ( file );
+                }
+                else
+                {
+                    File path = new File ( file.getParent() );
+                    //logger.debug ( "MONA: deleted " + path );
+                    FileUtils.deleteDirectory ( path );
+                }
 
-				if ( dataItem == null )
-					return true;
-				else
-                    return false;
+                List<UserDataDirItem> list = session.findUserDataDirItems
+                    ( label ); 
+                //logger.debug ( "MONA: list = " + list );
+				//Long id = dataItem.getUserDataId();
+                //logger.debug ( "MONA: id = " + id );
+
+                for ( UserDataDirItem item : list )
+                {
+                    /*
+                    logger.debug ( "MONA: item = " + item );
+                    logger.debug ( "MONA: item.getLabel = " +
+                        item.getLabel() );
+                    */
+				    session.deleteUserDataDirItem ( item );
+                    deleted++;
+                }
+
+                return ( deleted );
 			}
 		}
+
         catch ( Throwable error )
         {
 			reportError ( error, "Error deleting data item" );
-			return false;
+			return ( deleted );
 		}
 	}
 
@@ -1671,11 +1735,21 @@ public class DataManager extends FolderManager
 					        id + ": item not found." );
 			        else try
                     {
+                        /*
 					    if ( deleteData ( dataItem ) )
 					    {
 						    user = dataItem.getUser();
 						    deleted++;
 					    }
+                        */
+
+                        int count = deleteData ( dataItem );
+
+                        if ( count > 0 )
+                        {
+                            deleted += count;
+						    user = dataItem.getUser();
+                        }
 			        }
                     catch ( Throwable error )
                     {
@@ -1691,6 +1765,7 @@ public class DataManager extends FolderManager
 				refreshUserDataSize ( user );
 			}
 		}
+
 		return deleted;
 	}
 
