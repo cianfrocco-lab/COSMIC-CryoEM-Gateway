@@ -27,6 +27,7 @@ public final class OauthConstants {
     public static final String PRIMARY_USERNAME = "primary_username";
     public static final String PRIMARY_IDENTITY = "primary_identity";
     public static final String PREFERRED_USERNAME = "preferred_username";
+    public static final String LINK_USERNAME = "link_username";
     public static final String SUB = "sub";
     public static final String EMAIL = "email";
     public static final String NAME = "name";
