@@ -505,7 +505,6 @@ public class WorkbenchSession {
     {
 		try
         {
-			//return new UserDataDirItem ( id );
 			return UserDataDirItem.findDataDirItems ( userId, label );
 		}
 		catch ( WorkbenchException wbErr )
