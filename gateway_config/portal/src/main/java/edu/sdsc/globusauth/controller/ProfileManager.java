@@ -92,7 +92,8 @@ public class ProfileManager {
      *      current status value in the database is ACTIVE or INACTIVE.
      *      If this NOT the case, DO NOT use this function!
      **/
-    public int updateRecord ( TransferRecord tr, String destination_path ) throws IOException, SQLException
+    public int updateRecord ( TransferRecord tr, String destination_path )
+        throws IOException, SQLException
     {
         //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
         //log.debug ( "MONA: tr = " + tr );
@@ -106,8 +107,8 @@ public class ProfileManager {
             return ( 0 );
 
         String globusRoot =
-                Workbench.getInstance().getProperties().getProperty
-                        ( "database.globusRoot" );
+            Workbench.getInstance().getProperties().getProperty
+            ( "database.globusRoot" );
         //log.debug ( "MONA: globusRoot = " + globusRoot );
         String status = tr.getStatus();
         //log.debug ( "MONA: status = " + status );
@@ -119,13 +120,14 @@ public class ProfileManager {
             if (destination_path.startsWith(globusRoot)) {
                 int saved = 0;
 
-                // First, if the new record has SUCCEEDED status, then we will get
-                // its info from the transfer_record table and create a new
-                // document needed by the CIPRES workflow
+                // First, if the new record has SUCCEEDED status, then we
+                // will get its info from the transfer_record table and
+                // create a new document needed by the CIPRES workflow
                 if (status.equals("SUCCEEDED")) {
                     //log.debug("MONA: tr.getTaskId() = " + tr.getTaskId());
                     TransferRecord old_tr = loadRecordByTaskId(tr.getTaskId());
-                    //log.debug("MONA: trs = " + old_tr.getTaskId());
+                    //log.debug("MONA: old_tr = " + old_tr );
+                    //log.debug("MONA: old_tr.getStatus() = " + old_tr.getStatus() );
 
                     if (old_tr != null && old_tr.getTaskId() != null) {
                         //log.debug ( "MONA: old_tr = " + old_tr );
@@ -134,7 +136,8 @@ public class ProfileManager {
 
                         //if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
                         if (!status.equals(old_tr.getStatus())) {
-                            Transfer2DataManager dataManager = new Transfer2DataManager();
+                            Transfer2DataManager dataManager =
+                                new Transfer2DataManager();
                             saved = dataManager.setupDataItems(old_tr,
                                     destination_path);
                         }
