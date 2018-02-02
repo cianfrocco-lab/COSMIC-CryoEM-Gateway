@@ -74,10 +74,11 @@ public class Transfer2DataManager extends NgbwSupport
     private int saveDirectories ( TransferRecord transfer_record,
         String destination_path, Folder folder )
     {
-        log.debug ( "MONA : Transfer2DataManager.saveDirectories()" );
-        log.debug ( "MONA : transfer_record = " + transfer_record );
-        log.debug ( "MONA : transfer_record ID = " + transfer_record.getTrId() );
-        log.debug ( "MONA : destination_path = " + destination_path );
+        //log.debug ( "MONA : Transfer2DataManager.saveDirectories()" );
+        //log.debug ( "MONA : transfer_record = " + transfer_record );
+        //log.debug ( "MONA : transfer_record ID = " + transfer_record.getTrId() );
+        //log.debug ( "MONA : transfer_record status = " + transfer_record.getStatus() );
+        //log.debug ( "MONA : destination_path = " + destination_path );
 
         int saved = 0;
 
@@ -89,13 +90,13 @@ public class Transfer2DataManager extends NgbwSupport
 
         // Check and handle directories...
         String dirString = transfer_record.getDirectoryNames();
-        log.debug ( "MONA : dirString = " + dirString );
+        //log.debug ( "MONA : dirString = " + dirString );
         if ( dirString == null || dirString.trim().equals ( "" ) )
             return ( saved );
 
         String transferred_dirs[] = dirString.split ( "\\|" );
-        log.debug ( "MONA : transferred_dirs = " + transferred_dirs );
-        log.debug ( "MONA : transferred_dirs length = " + transferred_dirs.length );
+        //log.debug ( "MONA : transferred_dirs = " + transferred_dirs );
+        //log.debug ( "MONA : transferred_dirs length = " + transferred_dirs.length );
 
         if ( transferred_dirs == null || transferred_dirs.length <= 0 )
             return ( saved );
@@ -110,29 +111,33 @@ public class Transfer2DataManager extends NgbwSupport
         {
             // First, look for star file in the top-level transferred
             // directories...
-            log.debug ( "MONA : transferred_dir = " + transferred_dir );
+            //log.debug ( "MONA : transferred_dir = " + transferred_dir );
             String full_path = destination_path + transferred_dir + "/";
-            log.debug ( "MONA : full_path = " + full_path );
+            //log.debug ( "MONA : full_path = " + full_path );
             File dir = new File ( full_path );
+            //log.debug ( "MONA : dir getTotalSpace = " + dir.getTotalSpace() );
+            //log.debug ( "MONA : dir sizeOf = " + FileUtils.sizeOf ( dir ) );
+            //log.debug ( "MONA : dir sizeOfDirectory = " + FileUtils.sizeOfDirectory ( dir ) );
             Collection < File > files = FileUtils.listFiles ( dir,
                 starfile_ext, false );
-            log.debug ( "MONA : files = " + files );
+            //log.debug ( "MONA : files = " + files );
 
             // If found, just use the first one...
             if ( files != null && ! files.isEmpty() )
             {
-                log.debug ( "MONA : files.size() = " + files.size() );
+                //log.debug ( "MONA : files.size() = " + files.size() );
                 //File file = ( File ) files.iterator().next();
                 for ( File file : files )
                 {
-                    log.debug ( "MONA : file = " + file );
-                    log.debug ( "MONA : file name = " + file.getName() );
-                    log.debug ( "MONA : file.length() = " + file.length() );
-                    log.debug ( "MONA : FileUtils.sizeOf = " + FileUtils.sizeOf ( file ) );
-                    log.debug ( "MONA : FileUtils.sizeOfDirectory = " + FileUtils.sizeOfDirectory ( file ) );
+                    //log.debug ( "MONA : file = " + file );
+                    //log.debug ( "MONA : file name = " + file.getName() );
+                    //log.debug ( "MONA : file.length() = " + file.length() );
+                    //long size = FileUtils.sizeOf ( file );
+                    //log.debug ( "MONA : FileUtils.sizeOf = " + FileUtils.sizeOf ( file ) );
+                    //log.debug ( "MONA : FileUtils.sizeOfDirectory = " + FileUtils.sizeOfDirectory ( file ) );
                     String label = file.toString().substring
                         ( label_start_index );
-                    log.debug ( "MONA : label = " + label );
+                    //log.debug ( "MONA : label = " + label );
                     try
                     {
                         /*
@@ -141,7 +146,7 @@ public class Transfer2DataManager extends NgbwSupport
                             file.length() );
                         */
                         data_item = new UserDataDirItem ( folder, tr_id, label,
-                            file.length() );
+                            FileUtils.sizeOf ( dir ) );
                         //log.debug ( "MONA : data_item = " + data_item );
                         if ( data_item != null )
                         {
