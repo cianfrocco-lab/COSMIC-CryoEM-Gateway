@@ -231,6 +231,8 @@ public class AuthCallbackAction extends FolderManager {
                         //logger.info("profile identity id:"+db_profile.getIdentityId());
                         profile.setEmail(db_profile.getEmail());
                         profile.setIdentityId(db_profile.getIdentityId());
+                        profile.setLinkUsername(db_profile.getLinkUsername());
+                        profile.setUserId(db_profile.getUserId());
                         if (!activateLogin(null,db_profile.getLinkUsername())) return "failure";
                         //logger.info("profile user id:"+db_profile.getUserId());
                         getSession().put("user_id",db_profile.getUserId());
@@ -239,17 +241,6 @@ public class AuthCallbackAction extends FolderManager {
                         getSession().put(OauthConstants.LAST_NAME, db_profile.getLastname());
                         getSession().put(OauthConstants.INSTITUTION, db_profile.getInstitution());
 
-                        //update transfer record
-                        List<String> trlist = profileManager.loadRecord(db_profile.getUserId());
-                        if (trlist != null && trlist.size() > 0) {
-                            String dest_path = dataset_endpoint_base +
-                                    db_profile.getLinkUsername() + "/";
-                            TransferAction txaction = new TransferAction(accesstoken,username);
-                            for (String taskid: trlist) {
-                                TransferRecord tr = txaction.updateTask(taskid, null);
-                                profileManager.updateRecord(tr, dest_path);
-                            }
-                        }
                         //return "transfer";
                     }
 
@@ -258,7 +249,7 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().put(OauthConstants.ID_TOKEN, id_token);
                     getSession().put(OauthConstants.IS_AUTHENTICATED, true);
                     getSession().put(OauthConstants.PRIMARY_USERNAME, username);
-                    //getSession().put("link_username", linkusername);
+                    getSession().put("link_username", linkusername);
                     getSession().put(OauthConstants.PRIMARY_IDENTITY, identity);
                     getSession().put(OauthConstants.ENDPOINT_ACTIVATION_URI, endpoint_activation_uri);
 
@@ -371,11 +362,22 @@ public class AuthCallbackAction extends FolderManager {
                         //return "dataendpoints";
                         return "transfer";
                     }
-                }
-                if (redirect_flag) {
-                    return "profileredirect";
-                } else {
-                    return SUCCESS;
+                    if (redirect_flag) {
+                        return "profileredirect";
+                    } else {
+                        //update transfer record
+                        List<String> trlist = profileManager.loadRecord(profile.getUserId());
+                        if (trlist != null && trlist.size() > 0) {
+                            String dest_path = dataset_endpoint_base +
+                                    profile.getLinkUsername() + "/";
+                            TransferAction txaction = new TransferAction(accesstoken,username);
+                            for (String taskid: trlist) {
+                                TransferRecord tr = txaction.updateTask(taskid, null);
+                                profileManager.updateRecord(tr, dest_path);
+                            }
+                        }
+                        //return SUCCESS;
+                    }
                 }
             } else {
                 OAuthSystemException oauth_ex = new OAuthSystemException("Mismatching Oauth States");
@@ -385,6 +387,7 @@ public class AuthCallbackAction extends FolderManager {
                 //throw new OAuthSystemException("Mismatching Oauth States");
             }
         }
+        return SUCCESS;
     }
 
     public long registerUser() {
