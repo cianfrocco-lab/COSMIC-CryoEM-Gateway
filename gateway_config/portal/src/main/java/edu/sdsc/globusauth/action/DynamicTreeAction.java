@@ -24,7 +24,7 @@ import edu.sdsc.globusauth.model.FileMetadata;
  * Created by cyoun on 11/09/17.
  */
 // public class DynamicTreeAction extends NgbwSupport implements ServletContextAware {
-public class DynamicTreeAction extends BaseAction {
+public class DynamicTreeAction extends NgbwSupport {
 
     private static final Logger logger = Logger.getLogger(DynamicTreeAction.class.getName());
     private static final long serialVersionUID = -2886756982077980790L;

@@ -113,6 +113,14 @@
             var sub_value = submitButton.value;
 
             if (sub_name == "actionType" && sub_value == "List") {
+
+                var epid = obj['endpointId'].value;
+                if (epid === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                    var epname = obj['endpointName'].value;
+                    alert(epname+" is already used for managing the project repository. You can't list files.");
+                    return false;
+                };
+
                 var ep = obj['endpointPath'].value;//$("#endpointPath").val();
                 if (ep.startsWith("/")) {
                     return true;
@@ -189,6 +197,13 @@
                 if (s_text.length === 0) {
                     alert("Please search the endpoint to add.");
                     return false;
+                } else {
+                    var s_value = $( "#searchValue" ).val();
+                    //XSEDE Comet endpoint is blocked to add
+                    if ( s_value === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                        alert(s_text+" is already used for managing the project repository. You can't add it.");
+                        return false;
+                    };
                 };
                 $( "#myendpointName" ).val("");
                 return true;

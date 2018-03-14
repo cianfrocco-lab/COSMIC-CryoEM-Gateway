@@ -265,113 +265,26 @@ public class TransferAction extends NgbwSupport {
         //setBookmarklist(iplistaction.getBookmarklist());
         setBookmarklist(iplistaction.my_bookmark_list());
 
+		getSourceInfo();
         logger.info("SRC Bookmark ID: "+s_epbmid);
         logger.info("SRC Endpoint ID: "+s_epid);
         logger.info("SRC Path: "+s_eppath);
         logger.info("SRC Name: "+s_epname);
         logger.info("SRC Display Name: "+s_dispname);
 
-        //XSEDE endpoint
-        String xsede_id = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);
-        String xsede_path = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_BASE);
-        Map<String,Boolean> ep_status = endpointStatus(xsede_id);
-
-        if (!ep_status.get("activated")) {
-            if (!delegateProxyActivation(xsede_id)) {
-                logger.error("Unable to activate destination endpoint using delegate proxy, exiting");
-                reportUserError("XSEDE endpoint, "+xsede_id+" is unable to activate destination endpoint using delegate proxy.");
-                return SUCCESS;
-            }
-            ep_status = endpointStatus(xsede_id);
-        }
-
-        if(ep_status.get("is_connected")) {
-            createUserDir(xsede_id, xsede_path);
-        } else {
-            logger.error("XSEDE endpoint, "+xsede_id+" is not connected.");
-            reportUserMessage("XSEDE endpoint, "+xsede_id+" is not connected.");
-            return SUCCESS;
-        }
-
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
-
-            logger.info("Source Endpoint activation....");
-            if (s_epname.contains("::")) {
-                logger.info("Source Endpoint status......");
-                ep_status = endpointStatus(s_epid);
-                if (!ep_status.get("activated")) {
-                    //My GCP endpoint
-                    if (!autoActivate(s_epid)) {
-                        logger.error("Unable to auto activate source endpoint, exiting");
-                        reportUserMessage("Unable to auto activate source endpoint, \""+s_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
-                        //reportUserMessage("<a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
-                        return SUCCESS;
-                    }
-                    ep_status = endpointStatus(s_epid);
-                }
-                /*
-                else {
-                    //XSEDE endpoint
-                    if (!delegateProxyActivation(s_epid)) {
-                        logger.error("Unable to activate destination endpoint using delegate proxy, exiting");
-                        return "failure";
-                    }
-                }
-                */
-            }
-
-            if(ep_status.get("is_connected")) {
+			logger.info("Source Endpoint activation....");
+            String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname,true);
+            if (result.equals(SUCCESS)) {
                 getCount(s_epid, s_eppath);
-            } else {
-                reportUserError ("Source endpoint, "+ s_epname.split("::")[0] + ", is not connected.");
             }
-
-            getDestinationInfo();
-            logger.info("Destination Endpoint activation....");
-            if (d_epname.contains("::")) {
-                logger.info("Destination Endpoint status......");
-                ep_status = endpointStatus(d_epid);
-                if (!ep_status.get("activated")) {
-                    //My GCP endpoint
-                    if (!autoActivate(d_epid)) {
-                        logger.error("Unable to auto activate destination endpoint, exiting");
-                        reportUserMessage("Unable to auto activate destination endpoint, \""+d_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
-                        return SUCCESS;
-                    }
-                    ep_status = endpointStatus(d_epid);
-                }
-
-                //check the file path
-                if(ep_status.get("is_connected")) {
-                    checkLs(d_epid, d_eppath);
-                } else {
-                    reportUserMessage("Destination endpoint, "+d_dispname+" is not connected.");
-                }
-            }
-
             return SUCCESS;
         } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
-
+			//
             getDestinationInfo();
             logger.info("Destination Endpoint activation....");
-            if (d_epname.contains("::")) {
-                logger.info("Destination Endpoint status......");
-                ep_status = endpointStatus(d_epid);
-                if (!ep_status.get("activated")) {
-                    //My GCP endpoint
-                    if (!autoActivate(d_epid)) {
-                        logger.error("Unable to auto activate destination endpoint, exiting");
-                        reportUserMessage("Unable to auto activate destination endpoint, \""+d_dispname+ "\". Please activate your endpoint, <a href=\""+ep_act_uri+"\" target=\"_blank_\"> Activate </a>");
-                        return SUCCESS;
-                    }
-                    ep_status = endpointStatus(d_epid);
-                }
-
-                if(!ep_status.get("is_connected")) {
-                    reportUserMessage("Destination endpoint, "+d_epid+" is not connected.");
-                    return SUCCESS;
-                }
-            }
+            String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname,true);
+            if (d_result.equals("failure")) return SUCCESS;
 
             List<String> filter_filenames = new ArrayList<>();
             List<String> filter_dirnames = new ArrayList<>();
@@ -455,6 +368,34 @@ public class TransferAction extends NgbwSupport {
             return "failure";
         }
 
+    }
+
+	public String activationProcess(String epbmid,
+                                    String epid,
+                                    String eppath,
+                                    String dispname,
+                                    boolean create) throws Exception {
+		Map<String, Boolean> ep_status = endpointStatus(epid);
+        if (epbmid.equals("XSERVER")) {
+            if (!ep_status.get("activated")) {
+                if (!delegateProxyActivation(epid)) {
+                    logger.error("XSEDE endpoint, " + epid + " can't be activated using delegate proxy.");
+                    reportUserError("XSEDE endpoint, " + epid + " can't be activated using delegate proxy.");
+                    return "failure";
+                }
+                if (create) createUserDir(epid, eppath);
+            }
+        } else {
+            if (!ep_status.get("activated")) {
+				//My GCP endpoint
+                if (!autoActivate(epid)) {
+                    logger.error("My endpoint, " + epid + " can't be activated.");
+                    reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
+                    return "failure";
+                }
+            }
+        }
+        return SUCCESS;
     }
 
     /* Not used since we are not using the above thread code to update the
@@ -815,9 +756,9 @@ public class TransferAction extends NgbwSupport {
         }
     }
 
-    public boolean getCount(String endpointId, String path) {
-        //throws IOException, JSONException, GeneralSecurityException, APIError {
-        Map<String, String> params = new HashMap<String, String>();
+	public int getCount(String endpointId, String path) {
+		//throws IOException, JSONException, GeneralSecurityException, APIError {
+		Map<String, String> params = new HashMap<String, String>();
         if (path != null) {
             params.put("path", path);
             params.put("show_hidden","0");
@@ -832,13 +773,12 @@ public class TransferAction extends NgbwSupport {
             JSONArray fileArray = r.document.getJSONArray("DATA");
             filecount = fileArray.length();
             logger.info("File count:"+filecount);
-
-            return true;
+            return filecount;
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
-            //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
-            reportUserError("Error, unable to get file count on the source endpoint ID, \""+endpointId+"\".");
-            return false;
+			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+			reportUserError("Error, unable to get file count on the source endpoint ID, \""+endpointId+"\".");
+            return filecount;
         }
     }
 
