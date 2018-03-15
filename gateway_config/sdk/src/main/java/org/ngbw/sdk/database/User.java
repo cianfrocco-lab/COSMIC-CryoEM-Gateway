@@ -342,6 +342,7 @@ public class User extends VersionedRow implements Comparable<User> {
         //log.debug ( "MONA: entered User.queryDataSize()" );
 		long userid = getUserId();
         //log.debug ( "MONA: userid = " + userid );
+
         /* Before adding userdata_dir table...
 		String query = "SELECT data_usage.NUM_DOCUMENTS + input_usage.NUM_DOCUMENTS + output_usage.NUM_DOCUMENTS AS TOTAL_DOCUMENTS, " +
 				"data_usage.TOTAL_LENGTH + input_usage.TOTAL_LENGTH + output_usage.TOTAL_LENGTH AS TOTAL_LENGTH " +
@@ -374,36 +375,40 @@ public class User extends VersionedRow implements Comparable<User> {
 				"WHERE users.USER_ID = ?";
         */
 
-        String query =
-            "SELECT data_usage.NUM_DOCUMENTS + input_usage.NUM_DOCUMENTS + output_usage.NUM_DOCUMENTS + data_dir_usage.NUM_DOCUMENTS AS TOTAL_DOCUMENTS, " +
-            "data_usage.TOTAL_LENGTH + input_usage.TOTAL_LENGTH + output_usage.TOTAL_LENGTH + data_dir_usage.TOTAL_LENGTH AS TOTAL_LENGTH " +
-            "FROM users " + "INNER JOIN ( SELECT users.USER_ID, " +
+        String query = "SELECT " +
+            "data_usage.NUM_DOCUMENTS + input_usage.NUM_DOCUMENTS + output_usage.NUM_DOCUMENTS + data_dir_usage.NUM_DOCUMENTS AS TOTAL_DOCUMENTS, " +
+            "data_usage.TOTAL_LENGTH + input_usage.TOTAL_LENGTH + output_usage.TOTAL_LENGTH + data_dir_usage.TOTAL_LENGTH AS TOTAL_LENGTH FROM users " +
+            "INNER JOIN ( SELECT users.USER_ID, " +
             "COUNT(source_documents.SOURCE_DOCUMENT_ID) AS NUM_DOCUMENTS, " +
-            "SUM(source_documents.LENGTH) AS TOTAL_LENGTH FROM users " +
-            "INNER JOIN userdata ON users.USER_ID = userdata.USER_ID " +
-            "INNER JOIN source_documents ON userdata.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
+            "COALESCE(SUM(source_documents.LENGTH), 0) AS TOTAL_LENGTH " +
+            "FROM users " +
+            "LEFT JOIN userdata ON users.USER_ID = userdata.USER_ID " +
+            "LEFT JOIN source_documents ON userdata.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
             "WHERE users.USER_ID = ? GROUP BY users.USER_ID ) " +
             "AS data_usage ON users.USER_ID = data_usage.USER_ID " +
             "INNER JOIN ( SELECT users.USER_ID, " +
             "COUNT(source_documents.SOURCE_DOCUMENT_ID) AS NUM_DOCUMENTS, " +
-            "SUM(source_documents.LENGTH) AS TOTAL_LENGTH FROM users " +
-            "INNER JOIN tasks ON users.USER_ID = tasks.USER_ID " +
-            "INNER JOIN task_input_parameters ON tasks.TASK_ID = task_input_parameters.TASK_ID " +
-            "INNER JOIN task_input_source_documents ON task_input_parameters.INPUT_ID = task_input_source_documents.INPUT_ID " +
-            "INNER JOIN source_documents ON task_input_source_documents.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
+            "COALESCE(SUM(source_documents.LENGTH), 0) AS TOTAL_LENGTH FROM users " +
+            "LEFT JOIN tasks ON users.USER_ID = tasks.USER_ID " +
+            "LEFT JOIN task_input_parameters ON tasks.TASK_ID = task_input_parameters.TASK_ID " +
+            "LEFT JOIN task_input_source_documents ON task_input_parameters.INPUT_ID = task_input_source_documents.INPUT_ID " +
+            "LEFT JOIN source_documents ON task_input_source_documents.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
             "WHERE users.USER_ID = ? GROUP BY users.USER_ID ) " +
             "AS input_usage ON users.USER_ID = input_usage.USER_ID " +
             "INNER JOIN ( SELECT users.USER_ID, " +
             "COUNT(source_documents.SOURCE_DOCUMENT_ID) AS NUM_DOCUMENTS, " +
-            "SUM(source_documents.LENGTH) AS TOTAL_LENGTH FROM users " +
-            "INNER JOIN tasks ON users.USER_ID = tasks.USER_ID " +
-            "INNER JOIN task_output_parameters ON tasks.TASK_ID = task_output_parameters.TASK_ID " +
-            "INNER JOIN task_output_source_documents ON task_output_parameters.OUTPUT_ID = task_output_source_documents.OUTPUT_ID " +
-            "INNER JOIN source_documents ON task_output_source_documents.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
+            "COALESCE(SUM(source_documents.LENGTH), 0) AS TOTAL_LENGTH FROM users " +
+            "LEFT JOIN tasks ON users.USER_ID = tasks.USER_ID " +
+            "LEFT JOIN task_output_parameters ON tasks.TASK_ID = task_output_parameters.TASK_ID " +
+            "LEFT JOIN task_output_source_documents ON task_output_parameters.OUTPUT_ID = task_output_source_documents.OUTPUT_ID " +
+            "LEFT JOIN source_documents ON task_output_source_documents.SOURCE_DOCUMENT_ID = source_documents.SOURCE_DOCUMENT_ID " +
             "WHERE users.USER_ID = ? GROUP BY users.USER_ID ) " +
             "AS output_usage ON users.USER_ID = output_usage.USER_ID " +
-            "INNER JOIN (SELECT USER_ID, COUNT(USERDATA_ID) AS NUM_DOCUMENTS, SUM(SIZE) AS TOTAL_LENGTH " +
-            "FROM userdata_dir " + "WHERE USER_ID = ? GROUP BY USER_ID) " +
+            "INNER JOIN (SELECT users.USER_ID, " +
+            "COUNT(userdata_dir.USERDATA_ID) AS NUM_DOCUMENTS, " +
+            "COALESCE(SUM(userdata_dir.SIZE), 0) AS TOTAL_LENGTH " +
+            "FROM users LEFT JOIN userdata_dir ON users.USER_ID = userdata_dir.USER_ID " +
+            "WHERE users.USER_ID = ? GROUP BY users.USER_ID) " +
             "AS data_dir_usage ON users.USER_ID = data_dir_usage.USER_ID " +
             "WHERE users.USER_ID = ?";
 
