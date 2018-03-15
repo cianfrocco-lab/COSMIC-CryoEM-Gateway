@@ -490,7 +490,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <!-- set the run time -->		
+    <!-- DISABLED : set the run time 		
     <parameter type="Float" issimple="1" ismandatory="1">
 	    <name>runtime</name>
 	    <attributes>
@@ -518,6 +518,7 @@ Mike -->
 		    </format>
 	    </attributes>
     </parameter>
+    -->
 
     <!-- Advanced parameters -->
     
