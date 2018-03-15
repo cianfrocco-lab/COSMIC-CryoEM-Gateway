@@ -652,7 +652,7 @@ public class WorkbenchSession {
 	{
 		if (!workbench.getActiveToolIds().contains(task.getToolId()))
 		{
-			throw new WorkbenchException("The tool, " + task.getToolId() + " is no longer available on CIPRES.");
+			throw new WorkbenchException("The tool, " + task.getToolId() + " is no longer available on COSMIC2.");
 		}
 		return new Task(task);
 	}

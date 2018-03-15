@@ -156,7 +156,7 @@ function getSubmitElements(form) {
  */
 function gotoUpdateProfile()
 {
-	alert ( "Dear User, CIPRES must now collect information about the institution and the country of all users. This is only for NSF accounting purposes.\n\nWe will now take you to your profile page so you can provide this information." );
+	alert ( "Dear User, COSMIC2 must now collect information about the institution and the country of all users. This is only for NSF accounting purposes.\n\nWe will now take you to your profile page so you can provide this information." );
 	window.location = "./updateProfile!input.action";
 }
 

@@ -215,7 +215,7 @@ public class TaskInitiate
 			if (tool.getToolResource().workingDirectoryExists(rt.getJobhandle()))
 			{
 				// For now though, just do this to make sure we don't accidentally start job more than once in the same directory.
-				throw new Exception("Job working directory already exists.  This means there was a network or similar error, or a CIPRES process " +
+				throw new Exception("Job working directory already exists.  This means there was a network or similar error, or a COSMIC2 process " +
 					" was restarted while the job was being submitted.  There are no automatic retries in this situation." );
 			}
 
