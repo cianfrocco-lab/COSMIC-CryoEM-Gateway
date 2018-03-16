@@ -97,14 +97,14 @@ Mike -->
 	  </attributes>	  
 	</parameter>
 	
-<!-- output all results files -->
+<!-- Files to transfer back -->
 	<parameter type="Results">
-	  <name>all_outputfiles</name>
+	  <name>stderr.txt</name>
 	  <attributes>
-	    <filenames>*</filenames>
+	    <filenames>stderr</filenames>
 	  </attributes>
 	</parameter>
-	  	
+
 <!-- visible input parameters -->	
 
     <parameter type="Integer" issimple="1" ismandatory="1">
