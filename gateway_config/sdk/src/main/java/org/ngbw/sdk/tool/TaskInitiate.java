@@ -291,7 +291,6 @@ public class TaskInitiate
 		{
 			TaskUpdater.logProgress(task, stage, "Staging input files to " + rt.getResource());
 			String workingDir = stageInputData();
-            //log.debug ( "MONA: workingDir = " + workingDir );
 
 			StatisticsEvent se = new StatisticsEvent(rt.getJobhandle());
 			se.setEventName("DATA_STAGED");
@@ -299,8 +298,9 @@ public class TaskInitiate
 			se.save();
             //log.debug ( "MONA: se = " + se );
 
-			String msg = "Input files staged successfully to " + workingDir;
-			log.debug(msg);
+			//String msg = "Input files staged successfully to " + workingDir;
+			String msg = "Input files staged successfully";
+			log.debug ( msg + " to " + workingDir );
 			TaskUpdater.logProgress(task, stage, msg);
 
 			stage = TaskRunStage.SUBMITTING;
