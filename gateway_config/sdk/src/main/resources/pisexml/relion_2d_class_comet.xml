@@ -284,6 +284,9 @@ Mike -->
     </parameter>
     -->
 
+    <!-- DISABLE output directory parameter; due to XML syntax, had to add
+         a blank between "- -" so if you are going to re-enable this
+         parameter, be sure to remove the blank!
     <parameter type="String" ismandatory="1">
 	    <name>o</name>
 	    <attributes>
@@ -291,10 +294,10 @@ Mike -->
 		    <prompt>Output directory name</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>"--o $value"</code>
+			    <code>"- -o $value"</code>
 		    </format>
 		    <comment>
-			    <value>Name of output directory (--o).</value>
+			    <value>Name of output directory (- -o).</value>
 		    </comment>
             <vdef>
 			    <value>output</value>
@@ -308,6 +311,7 @@ Mike -->
 		    </ctrls>
 	    </attributes>
     </parameter>
+    -->
 
     <parameter type="Switch">
 	    <name>ctf</name>
