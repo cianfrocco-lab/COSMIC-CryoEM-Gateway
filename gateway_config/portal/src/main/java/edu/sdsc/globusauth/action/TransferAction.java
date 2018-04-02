@@ -274,16 +274,16 @@ public class TransferAction extends NgbwSupport {
 
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
 			logger.info("Source Endpoint activation....");
-            String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname,true);
+            String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname);
             if (result.equals(SUCCESS)) {
-                getCount(s_epid, s_eppath);
+                getCount(s_epid, s_eppath, s_dispname);
             }
             return SUCCESS;
         } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
 			//
             getDestinationInfo();
             logger.info("Destination Endpoint activation....");
-            String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname,true);
+            String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname);
             if (d_result.equals("failure")) return SUCCESS;
 
             List<String> filter_filenames = new ArrayList<>();
@@ -373,27 +373,34 @@ public class TransferAction extends NgbwSupport {
 	public String activationProcess(String epbmid,
                                     String epid,
                                     String eppath,
-                                    String dispname,
-                                    boolean create) throws Exception {
+                                    String dispname) throws Exception {
 		Map<String, Boolean> ep_status = endpointStatus(epid);
         if (epbmid.equals("XSERVER")) {
             if (!ep_status.get("activated")) {
                 if (!delegateProxyActivation(epid)) {
-                    logger.error("XSEDE endpoint, " + epid + " can't be activated using delegate proxy.");
-                    reportUserError("XSEDE endpoint, " + epid + " can't be activated using delegate proxy.");
+                    logger.error("XSEDE endpoint, " + dispname + " can't be activated using delegate proxy.");
+                    reportUserError("XSEDE endpoint, " + dispname + " can't be activated using delegate proxy.");
                     return "failure";
                 }
-                if (create) createUserDir(epid, eppath);
             }
+           	createUserDir(epid, eppath);
         } else {
             if (!ep_status.get("activated")) {
 				//My GCP endpoint
                 if (!autoActivate(epid)) {
-                    logger.error("My endpoint, " + epid + " can't be activated.");
+                    logger.error("My endpoint, " + dispname + " can't be activated.");
                     reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
                     return "failure";
                 }
-            }
+            } else {
+				if(ep_status.get("is_globus_connect")) {
+					if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
+                    	logger.error("The endpoint, "+ dispname + ", is not connected or is paused.");
+                    	reportUserError ("The endpoint, "+ dispname + ", is not connected or paused.");
+						return "failure";
+                	}
+				}
+			}
         }
         return SUCCESS;
     }
@@ -527,10 +534,19 @@ public class TransferAction extends NgbwSupport {
         JSONTransferAPIClient.Result r = client.getResult(resource);
         Map<String,Boolean> ep_status = new HashMap<>();
         boolean activated = r.document.getBoolean("activated");
-        boolean is_connected = true;
-        boolean is_paused = true;
+        boolean is_connected = false;
+        boolean is_paused = false;
+        boolean is_globus_connect = r.document.getBoolean("is_globus_connect");
+		if (is_globus_connect) {
+        	is_connected = r.document.getBoolean("gcp_connected");;
+        	is_paused = r.document.getBoolean("gcp_paused");
+		}
 
         logger.info("activated: "+activated);
+        logger.info("is_globus_connect: "+is_globus_connect);
+        logger.info("is_connected: "+is_connected);
+        logger.info("is_paused: "+is_paused);
+		/*
         JSONArray data = r.document.getJSONArray("DATA");
         for (int i=0; i< data.length(); i++) {
             is_connected = data.getJSONObject(i).getBoolean("is_connected");
@@ -539,7 +555,9 @@ public class TransferAction extends NgbwSupport {
             logger.info(i+" is_connected: "+is_connected);
             logger.info(i+" is_paused: "+is_paused);
         }
+		*/
         ep_status.put("activated",activated);
+        ep_status.put("is_globus_connect",is_globus_connect);
         ep_status.put("is_connected",is_connected);
         ep_status.put("is_paused",is_paused);
 
@@ -756,7 +774,7 @@ public class TransferAction extends NgbwSupport {
         }
     }
 
-	public int getCount(String endpointId, String path) {
+	public int getCount(String endpointId, String path, String disp_name) {
 		//throws IOException, JSONException, GeneralSecurityException, APIError {
 		Map<String, String> params = new HashMap<String, String>();
         if (path != null) {
@@ -777,7 +795,7 @@ public class TransferAction extends NgbwSupport {
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
 			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
-			reportUserError("Error, unable to get file count on the source endpoint ID, \""+endpointId+"\".");
+			reportUserError("Error, unable to get file count on the source endpoint ID, \""+disp_name+"\".");
             return filecount;
         }
     }

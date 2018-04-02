@@ -49,7 +49,7 @@ public class DynamicTreeAction extends NgbwSupport {
         return SUCCESS;
     }
 
-    private List<FileMetadata> get_filelist(String endpointId, String path) throws Exception {
+    private List<FileMetadata> get_filelist(String endpointId, String path, String disp_name) throws Exception {
         List<FileMetadata> files = new ArrayList<FileMetadata>();
         Map<String, String> params = new HashMap<String, String>();
         if (path != null) {
@@ -78,7 +78,7 @@ public class DynamicTreeAction extends NgbwSupport {
             }
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
-            reportUserError("Error, unable to list files on the source endpoint ID, \""+endpointId+"\".");
+            reportUserError("Error, unable to list files on the source endpoint ID, \""+disp_name+"\".");
             return null;
         }
         return files;
@@ -87,6 +87,7 @@ public class DynamicTreeAction extends NgbwSupport {
     private void generateTree(String nodeId) throws Exception {
         String s_epid = (String) getSession().get(OauthConstants.SRC_ENDPOINT_ID);
         String s_eppath = (String) getSession().get(OauthConstants.SRC_ENDPOINT_PATH);
+	String s_dispname = (String) getSession().get(OauthConstants.SRC_DISP_NAME);
         if (nodeId.equals("#")) {
             nodeId = "";
         } else {
@@ -96,7 +97,7 @@ public class DynamicTreeAction extends NgbwSupport {
 
         logger.info("SRC Endpoint ID: "+s_epid);
         logger.info("SRC Path: "+s_eppath);
-        List<FileMetadata> files = get_filelist(s_epid,s_eppath);
+        List<FileMetadata> files = get_filelist(s_epid,s_eppath,s_dispname);
 
         for(FileMetadata fm:files) {
             TreeNode node = new TreeNode();
