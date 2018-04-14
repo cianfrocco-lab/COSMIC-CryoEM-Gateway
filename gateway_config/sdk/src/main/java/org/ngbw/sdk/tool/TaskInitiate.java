@@ -223,8 +223,9 @@ public class TaskInitiate
 			command = validateAndRender();
             //log.debug ( "MONA: command = " + command );
 			String msg = "Command rendered successfully: " + StringUtils.join(command.getCommand(), ' ');
-			log.debug(msg);
-			TaskUpdater.logProgress(task, stage, msg);
+            //log.debug ( "MONA: msg = " + msg );
+			//log.debug(msg);
+			//TaskUpdater.logProgress(task, stage, msg);
 			WorkQueue.updateWork(rt, tool, command); // add info to WorkQueue and statistics records.
 
 			// 1. This is the only place where we could do retries, anything else would be a fatal error.
@@ -457,7 +458,7 @@ public class TaskInitiate
 				is not numeric (for instance it may be "infile").  I'm not sure how those
 				records were created.  When we select a user data item for a task, we set
 				the TaskInputSourceDocument.name = UserDataItem.getUserDataId(), which is the key,
-				USERDATA_ID, for the UserDataItem.
+				USERDATA_ID, for the UserDataItem and UserDataDirItem.
 			*/
 			String docId = document.getName();
 			log.debug("Task Input Source Document name is " + docId);
