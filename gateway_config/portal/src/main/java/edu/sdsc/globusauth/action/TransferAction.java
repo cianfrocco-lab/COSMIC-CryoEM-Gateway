@@ -156,6 +156,19 @@ public class TransferAction extends NgbwSupport {
         String s_eptype = request.getParameter("bookmarkId");
         logger.info("Transfer Bookmark ID: "+s_eptype);
         logger.info("Transfer Action Type: "+actionType);
+	
+        if (s_eptype != null) {
+  	 if (!s_eptype.equals("XSERVER")) {
+	   String src_epid = request.getParameter("endpointId");
+           String xsede_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);	
+	   if (src_epid.equals(xsede_epid)) {
+	      String src_name = request.getParameter("endpointName");
+	      logger.info(src_name+" is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be used as your endpoint.");
+              reportUserError(src_name+" is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be used as your endpoint.");
+              s_eptype = null;
+	   }
+         }
+    	}
 
         if (s_eptype != null) {
             if (actionType != null) {
@@ -265,7 +278,7 @@ public class TransferAction extends NgbwSupport {
         //setBookmarklist(iplistaction.getBookmarklist());
         setBookmarklist(iplistaction.my_bookmark_list());
 
-		getSourceInfo();
+	getSourceInfo();
         logger.info("SRC Bookmark ID: "+s_epbmid);
         logger.info("SRC Endpoint ID: "+s_epid);
         logger.info("SRC Path: "+s_eppath);
@@ -273,14 +286,14 @@ public class TransferAction extends NgbwSupport {
         logger.info("SRC Display Name: "+s_dispname);
 
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
-			logger.info("Source Endpoint activation....");
+	    logger.info("Source Endpoint activation....");
             String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname);
             if (result.equals(SUCCESS)) {
                 getCount(s_epid, s_eppath, s_dispname);
             }
             return SUCCESS;
         } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
-			//
+	    //
             getDestinationInfo();
             logger.info("Destination Endpoint activation....");
             String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname);

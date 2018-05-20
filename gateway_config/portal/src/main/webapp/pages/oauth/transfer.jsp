@@ -117,7 +117,7 @@
                 var epid = obj['endpointId'].value;
                 if (epid === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
                     var epname = obj['endpointName'].value;
-                    alert(epname+" is already used for managing the project repository. You can't list files.");
+                    alert("XSEDE Comet is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be used as your endpoint.");
                     return false;
                 };
 
@@ -201,7 +201,7 @@
                     var s_value = $( "#searchValue" ).val();
                     //XSEDE Comet endpoint is blocked to add
                     if ( s_value === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
-                        alert(s_text+" is already used for managing the project repository. You can't add it.");
+                        alert("XSEDE Comet is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be added as your endpoint.");
                         return false;
                     };
                 };
