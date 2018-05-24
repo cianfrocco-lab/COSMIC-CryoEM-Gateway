@@ -39,10 +39,9 @@
 			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
 			<Parameters>
                 <Parameter key="cancel" value="${comet.cancel}"  />
-                <!-- Doesn't seem to work for us but works for NSG
-                <Parameter key="chargeNumber" value="${comet.project}"/>
-                <Parameter key="chargeCode" value="${comet.project}"/>
-                -->
+                <Parameter key="accountGroup" value="teragrid"  />
+                <Parameter key="chargeNumber" value="${cipres.charge.number}"/>
+                <Parameter key="chargeCode" value="${cipres.charge.number}"/>
                 <Parameter key="check" value="${comet.check}"  />
                 <Parameter key="coresPerNode" value="1"  />
 				<Parameter key="fileHost" value="${comet.fileHost}" />
