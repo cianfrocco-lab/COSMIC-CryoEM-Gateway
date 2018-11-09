@@ -411,6 +411,28 @@ Mike -->
 	    </attributes>
     </parameter>
 
+    <parameter type="Integer" issimple="1" ismandatory="1">
+        <name>iter</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Number of iterations (iter)</prompt>
+            <format>
+<language>perl</language>
+<code>"--iter $value"</code>
+            </format>
+            <vdef>
+<value>25</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                <message>Please enter an integer > 0 for the number of iterations</message>
+                <language>perl</language>
+                <code>$iter &lt; 1</code>
+            </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
     <parameter type="Excl" issimple="1" ismandatory="1">
 	    <name>healpix_order</name>
 	    <attributes>
