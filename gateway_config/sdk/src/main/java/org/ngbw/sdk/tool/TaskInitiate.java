@@ -253,7 +253,10 @@ public class TaskInitiate
 				SendError.send("Job submission error: " +  e.toString());
 			}
 			WorkQueue.fail(rt, stage, e.toString());
-			TaskMonitor.notifyJobComplete(task, "Error submitting job: " +  e.getMessage());
+            // "Error submitting job:" shows up as redundant since the e
+            // message says that also
+			//TaskMonitor.notifyJobComplete(task, "Error submitting job: " +  e.getMessage());
+			TaskMonitor.notifyJobComplete(task, e.getMessage());
 			throw e;
 		}
 	}

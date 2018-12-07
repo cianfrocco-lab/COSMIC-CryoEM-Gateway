@@ -276,7 +276,18 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 		{
 			throw new Exception("Too many tasks are waiting to run.  You can clone your task and try running it again later."); 
 		}
-		throw new Exception("Error submitting job: " + runner.getStdOut() + ". " + runner.getStdErr());
+
+        // Original line below displays directory path to the user; something
+        // we want to avoid.  Instead, we'll log the original error and then
+        // redact the output message to remove sensitive information...
+		//throw new Exception("Error submitting job: " + runner.getStdOut() + ". " + runner.getStdErr());
+		m_log.warn ( "Error submitting job: " + runner.getStdOut() + ". " + runner.getStdErr() );
+        String tmp = runner.getStdErr();
+        String[] tmp2 = tmp.split ( "IOError" );
+        if ( tmp2.length == 1 )
+		    throw new Exception("Error submitting job: " + runner.getStdErr());
+        else
+		    throw new Exception ( "Error submitting job " + tmp2[1] );
 	}
 
 	public void cancelJob() throws Exception
