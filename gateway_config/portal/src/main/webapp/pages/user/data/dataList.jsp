@@ -124,8 +124,8 @@
           --> 
           <!-- Row in the "All Data" tab -->
           <s:if test="%{isCurrentTabPhysical()}">
-              <!-- <td><s:property value="%{#action.getLabel(#dataItem)}"/></td> -->
             <td><s:property value="%{#action.getLabel(#dataItem)}"/></td>
+              <!--<td style="word-wrap: break-word"><s:property value="%{#action.getLabel(#dataItem)}"/></td>-->
             <td><s:property value="%{#action.getDataLength(#dataItem)}"/></td>
             <td><s:property value="%{#action.getDataFormat(#dataItem)}"/></td>
             <td><s:property value="%{#action.getCreationDate(#dataItem)}"/></td>

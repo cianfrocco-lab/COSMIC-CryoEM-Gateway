@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-//import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -150,13 +149,16 @@ public class DataManager extends FolderManager
 
 	@SkipValidation
 	public String paginate() {
+        logger.debug ( "MONA : DataManager.paginate()" );
 		setPageNumber(0);
 		return LIST;
 	}
 
 	@SkipValidation
 	public String setPage() {
+        logger.debug ( "MONA : DataManager.setPage()" );
 		String page = getRequestParameter(PAGE);
+        logger.debug ( "MONA : page = " + page );
 		if (page != null)
 			setPageNumber(Integer.parseInt(page));
 		else addActionError("You must select a page number to change pages.");
@@ -433,8 +435,11 @@ public class DataManager extends FolderManager
 	{
         //logger.debug ( "MONA: entered getCurrentDataTab()" );
         // added this or else new Globus transfer files won't show up in UI
-        // without logout/login
-		refreshFolderDataTabs();
+        // without logout/login...
+        // However, during debugging of multipage listing problem (github
+        // issue #87), it appears this call is not needed and has makes no
+        // difference on issue #87...
+		//refreshFolderDataTabs();
 		try
 		{
 			TabbedPanel<?> folderData = getFolderDataTabs();
@@ -707,7 +712,11 @@ public class DataManager extends FolderManager
 		if ( dataItem == null )
 			return null;
 		else
-            return truncateText ( dataItem.getLabel() );
+        {
+            // COSMIC2 does not want to truncate the label...
+            //return truncateText ( dataItem.getLabel() );
+            return dataItem.getLabel();
+        }
 	}
 
     public String getClassName ( UserDataItem item )
@@ -850,17 +859,22 @@ public class DataManager extends FolderManager
 	 * Data display page property accessor methods
 	 *================================================================*/
 	public UserDataItem getCurrentData() {
+        logger.debug ( "MONA : entered DataManager.getCurrentData()" );
+        logger.debug ( "MONA : currentData 1 = " + currentData );
 		// first try the data item stored in the action
 		if (currentData != null)
 			return currentData;
 		// if not found, retrieve it from the session
 		else {
 			currentData = (UserDataItem)getSessionAttribute(CURRENT_DATA);
+            logger.debug ( "MONA : currentData 2 = " + currentData );
 			return currentData;
 		}
 	}
 
 	public void setCurrentData(UserDataItem dataItem) {
+        logger.debug ( "MONA : entered DataManager.setCurrentData()" );
+        logger.debug ( "MONA : dataItem = " + dataItem );
 		if (dataItem == null)
 			clearCurrentData();
 		else {
@@ -870,6 +884,7 @@ public class DataManager extends FolderManager
 	}
 
 	public void clearCurrentData() {
+        logger.debug ( "MONA : entered DataManager.clearCurrentData()" );
 		clearSessionAttribute(CURRENT_DATA);
 		currentData = null;
 	}
@@ -1179,6 +1194,43 @@ public class DataManager extends FolderManager
 	 * Page methods
 	 *================================================================*/
 	public Page<?> getCurrentPage() {
+        logger.debug ( "MONA : entered DataManager.getCurrentPage()" );
+        TabbedPanel tp = getFolderDataTabs();
+        logger.debug ( "MONA: tp = " + tp );
+        logger.debug ( "MONA: tp getTabLabels = " + tp.getTabLabels() );
+        logger.debug ( "MONA: size = " + tp.getCurrentTabSize() );
+        logger.debug ( "MONA: labels = " + tp.getTabLabels() );
+        logger.debug ( "MONA: first label = " + tp.getFirstTabLabel() );
+
+        Page tpt = tp.getTabs();
+        logger.debug ( "MONA: tpt = " + tpt );
+        logger.debug ( "MONA: tpt page number = " + tpt.getPageNumber() );
+        logger.debug ( "MONA: tpt page number label = " + tpt.getPageNumberLabel() );
+        logger.debug ( "MONA: tpt last page number = " + tpt.getLastPageNumber() );
+        logger.debug ( "MONA: tpt last page number label = " + tpt.getLastPageNumberLabel() );
+        logger.debug ( "MONA: tpt next page number = " + tpt.getNextPageNumber() );
+        logger.debug ( "MONA: tpt next page number label = " + tpt.getNextPageNumberLabel() );
+        logger.debug ( "MONA: tpt previous page number = " + tpt.getPreviousPageNumber() );
+        logger.debug ( "MONA: tpt previous page number label = " + tpt.getPreviousPageNumberLabel() );
+        logger.debug ( "MONA: tpt page size = " + tpt.getPageSize() );
+        logger.debug ( "MONA: tpt this page number elements = " + tpt.getThisPageNumberOfElements() );
+        logger.debug ( "MONA: tpt total number elements = " + tpt.getTotalNumberOfElements() );
+        logger.debug ( "MONA: tpt page first element number = " + tpt.getThisPageFirstElementNumber() );
+        logger.debug ( "MONA: tpt page last element number = " + tpt.getThisPageLastElementNumber() );
+        List tptpe = tpt.getThisPageElements();
+        logger.debug ( "MONA: tptpe = " + tptpe );
+        List tptpepnl = tpt.getPageNumberLabels();
+        logger.debug ( "MONA: tptpepnl = " + tptpepnl );
+
+        List tpctc = tp.getCurrentTabContents();
+        logger.debug ( "MONA: tpctc = " + tpctc );
+        Tab tpct = tp.getCurrentTab();
+        logger.debug ( "MONA: tpct = " + tpct );
+        logger.debug ( "MONA: tpct getLabel = " + tpct.getLabel() );
+        Page<?> tptc = tpct.getContents();
+        logger.debug ( "MONA: tptc = " + tptc );
+
+        logger.debug ( "MONA: return = " + getFolderDataTabs().getCurrentTab().getContents() );
 		return getFolderDataTabs().getCurrentTab().getContents();
 	}
 
@@ -1192,6 +1244,8 @@ public class DataManager extends FolderManager
 
 	@SuppressWarnings("unchecked")
 	public void setPageSize(Integer pageSize) {
+        logger.debug ( "MONA : DataManager.setPageSize()" );
+        logger.debug ( "MONA : pageSize = " + pageSize );
 		try {
 			getController().setUserPreference(DATA_PAGE_SIZE, pageSize.toString());
 			TabbedPanel<?> dataPanel = getFolderDataTabs();
@@ -1209,15 +1263,21 @@ public class DataManager extends FolderManager
 	}
 
 	public Integer getPageNumber() {
+        logger.debug ( "MONA : DataManager.getPageNumber()" );
+        logger.debug ( "MONA : return = " + getCurrentPage().getPageNumber() );
 		return getCurrentPage().getPageNumber();
 	}
 
 	@SuppressWarnings("unchecked")
 	public void setPageNumber(Integer pageNumber) {
+        logger.debug ( "MONA : DataManager.setPageNumber()" );
+        logger.debug ( "MONA : pageNumber = " + pageNumber );
 		getCurrentPage().setPageNumber(pageNumber);
 	}
 
 	public boolean isFirstPage() {
+        logger.debug ( "MONA : DataManager.isFirstPage()" );
+        logger.debug ( "MONA : return = " + getCurrentPage().isFirstPage() );
 		return getCurrentPage().isFirstPage();
 	}
 
@@ -1234,14 +1294,20 @@ public class DataManager extends FolderManager
 	}
 
 	public boolean hasNextPage() {
+        logger.debug ( "MONA : DataManager.hasNextPage()" );
+        logger.debug ( "MONA : return = " + getCurrentPage().hasNextPage() );
 		return getCurrentPage().hasNextPage();
 	}
 
 	public int getNextPageNumber() {
+        logger.debug ( "MONA : DataManager.getNextPageNumber()" );
+        logger.debug ( "MONA : return = " + getCurrentPage().getNextPageNumber() );
 		return getCurrentPage().getNextPageNumber();
 	}
 
 	public int getLastPageNumber() {
+        logger.debug ( "MONA : DataManager.getLastPageNumber()" );
+        logger.debug ( "MONA : return = " + getCurrentPage().getLastPageNumber() );
 		return getCurrentPage().getLastPageNumber();
 	}
 
@@ -1383,13 +1449,14 @@ public class DataManager extends FolderManager
 	//protected TabbedPanel<T> refreshFolderDataTabs() 
 	protected TabbedPanel<? extends FolderItem> refreshFolderDataTabs() 
 	{
-        //logger.debug ( "MONA : entered DataManager.refreshFolderDataTabs()" );
+        logger.debug ( "MONA : entered DataManager.refreshFolderDataTabs()" );
 		try 
 		{
 			Workbench workbench = getWorkbench();
 			WorkbenchSession session = getWorkbenchSession();
 			Folder folder = getCurrentFolder();
 			TabbedPanel<UserDataItem> folderData = null;
+			//TabbedPanel<? extends FolderItem> folderData = null;
 
 			if (workbench == null)
 			{
@@ -1407,7 +1474,7 @@ public class DataManager extends FolderManager
 			// retrieve user's preferred data tab sort type
             // Looks like this isn't settable by the user and defaults to "recordType" (Mona)
 			String dataTabSortType = getDataTabSortType();
-            //logger.debug ( "MONA : entered dataTabSortType = " + dataTabSortType );
+            logger.debug ( "MONA : entered dataTabSortType = " + dataTabSortType );
 			if (dataTabSortType == null)
 			{
 				dataTabSortType = RECORD_TYPE;
@@ -1423,7 +1490,7 @@ public class DataManager extends FolderManager
 			{
 				dataMap = workbench.sortDataItemsByRecordType(folder);
 			}
-            //logger.debug ( "MONA : dataMap = " + dataMap );
+            logger.debug ( "MONA : dataMap = " + dataMap );
 
             // Now add to the dataMap Globus folder data items
 			List allDataList = folder.findDataAllItems();
@@ -1433,11 +1500,13 @@ public class DataManager extends FolderManager
 			if ( allDataList != null &&  allDataList.size() > 0 )
 			{
 				folderData = new TabbedPanel<UserDataItem>(folder);
+				//folderData = new TabbedPanel<? extends FolderItem>(folder);
 				String pageSize = getController().getUserPreference(DATA_PAGE_SIZE);
-                //logger.debug ( "MONA : pageSize = " + pageSize );
+                logger.debug ( "MONA : pageSize = " + pageSize );
 
 				// physical view tab = All Data Tab
 				Page<UserDataItem> allDataPage = null;
+				//Page<? extends FolderItem> allDataPage = null;
 
 				if (pageSize != null) 
 				{
@@ -1451,16 +1520,22 @@ public class DataManager extends FolderManager
 				}
                 else 
 					allDataPage = new ListPage<UserDataItem>(allDataList);
-                //
+                
                 //logger.debug ( "MONA : allDataPage = " + allDataPage );
                 //logger.debug ( "MONA : allDataPage.getPageSize = " + allDataPage.getPageSize() );
 				Tab<UserDataItem> allDataTab = new Tab<UserDataItem>(allDataPage, ALL_DATA_TAB);
+				//Tab<? extends FolderItem> allDataTab = new Tab<? extends FolderItem>(allDataPage, ALL_DATA_TAB);
                 //logger.debug ( "MONA : allDataTab = " + allDataTab );
 				List<Tab<UserDataItem>> dataTabs =
                     new Vector<Tab<UserDataItem>> ( allDataList.size() );
+                /*
+				List<Tab<? extends FolderItem>> dataTabs =
+                    new Vector<Tab<? extends FolderItem>> ( allDataList.size() );
+                */
 				dataTabs.add(allDataTab);
                 //logger.debug ( "MONA : allDataTab = " + allDataTab );
 				folderData.setTabs(new ListPage<Tab<UserDataItem>>(dataTabs));
+				//folderData.setTabs(new ListPage<Tab<FolderItem>>(dataTabs));
                 //logger.debug ( "MONA : folderData = " + folderData );
 				folderData.sortTabs();
 			}
