@@ -99,15 +99,19 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
         //log.debug ( "MONA : document = " + document );
         //log.debug ( "MONA : document class name = " + document.getClass().getName() );
         //log.debug ( "MONA : document.getName() = " + document.getName() );
-        //log.debug ( "MONA : document.getSourceDocumentId() = " + document.getSourceDocumentId() );
+        long sourceDocumentId = document.getSourceDocumentId();
+        //log.debug ( "MONA : sourceDocumentId = " + sourceDocumentId );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
         //log.debug ( "MONA : m_columns.size 1 = " + m_columns.size() );
 
-        if ( document instanceof UserDataItem && m_sourceDocumentId == null )
+        //if ( document instanceof UserDataItem &&m_sourceDocumentId == null )
+        if ( sourceDocumentId != 0 && document instanceof UserDataItem &&
+            m_sourceDocumentId == null )
         {
             //log.debug ( "MONA: adding!" );
 	        m_sourceDocumentId = new LongColumn ( "SOURCE_DOCUMENT_ID", false );
-            m_sourceDocumentId.setValue ( document.getSourceDocumentId() );
+            //m_sourceDocumentId.setValue ( document.getSourceDocumentId() );
+            m_sourceDocumentId.setValue ( sourceDocumentId );
             m_columns.add ( m_sourceDocumentId );
         }
         //log.debug ( "MONA : m_columns.size 2 = " + m_columns.size() );
@@ -118,7 +122,8 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 		setName(document.getName());
 		setValidated(document.isValidated());
 
-		m_sourceDocument = new SourceDocumentRow(document);
+        if ( sourceDocumentId != 0 )
+		    m_sourceDocument = new SourceDocumentRow(document);
 	}
 
 	public TaskInputSourceDocument(String name, byte[] data)
