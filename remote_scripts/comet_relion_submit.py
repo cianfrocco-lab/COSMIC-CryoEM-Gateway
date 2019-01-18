@@ -11,43 +11,89 @@ import math
 import zipfile 
 
 def prepareRelionRun(inputline):
+	#Start temp log file
 	tmplog=open('_tmplog','w')
 	tmplog.write(inputline)
 	
+	#Get input file
 	inputZipFile=inputline.split()[returnEntryNumber(inputline,'--i')]
 	#outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
 	
+	#Get current working directory on comet
 	pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+
+	#Get username
 	usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
 	ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
 
+	#Get userdirectory data and write to log file
 	tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
 	userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
 	tmplog.write('\n'+userdir)
 
-	cmd='ln -s %s/%s %s/' %(userdir,inputZipFile.split('/')[0],pwd)
-	tmplog.write('\n'+cmd)
-	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).wait()
+	#Get full path to starfile on cosmic
+        starfilename=userdir+'/'+'%s' %(inputZipFile)
+	tmplog.write('\n'+'starfilename:   '+starfilename)
 
+	#Get relative path from starfile 
+	##Read star file header to get particle name
+        rlno1=open(starfilename,'r')
+	colnum=-1
+        for rln_line in rlno1:
+                if '_rlnImageName' in rln_line:
+                        colnum=int(rln_line.split()[-1].split('#')[-1])-1
+        rlno1.close()
+
+	if colnum<0:
+		print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
+		sys.exit()
+
+	rlno1=open(starfilename,'r')
+        for rln_line in rlno1:
+                if len(rln_line) >= 40:
+                        starfiledirname=rln_line.split()[colnum].split('@')[-1].split('/')
+                        del starfiledirname[-1]
+                        del starfiledirname[-1]
+			starfiledirname='/'.join(starfiledirname)
+        rlno1.close()
+
+	newstarname='%s'%(starfiledirname)+'/'+'%s'%(inputZipFile.split('/')[-1])
+	tmplog.write('\nnewstarname='+newstarname+'\n')
+
+	workingStarDirName=starfilename
+	fullStarDir=starfilename.split('/')
+	del fullStarDir[-1]
+	fullStarDir='/'.join(fullStarDir)
+	counter=1
+	while counter<=len(starfiledirname.split('/')):
+        	checkDir=starfiledirname.split('/')[-counter]
+        	if fullStarDir.split('/')[-1] == checkDir:
+                	fullStarDir=fullStarDir.split('/')
+                	del fullStarDir[-1]
+                	fullStarDir='/'.join(fullStarDir)
+        	counter=counter+1
+
+	#Symlink directory: 
+	DirToSymLink=fullStarDir
+	tmplog.write('\n'+'symlink'+DirToSymLink)
+	cmd='ln -s %s/* .' %(DirToSymLink)
+	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
+	
 	pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
         o1=open('_tmp2.txt','w')
         o1.write('%s\n'%(pwd))
         o1.close()
 
-	tmplog.write(inputZipFile)
-
-	if not os.path.exists('%s' %(inputZipFile)):
+	if not os.path.exists('%s' %(newstarname)):
 	#Print error since could not find input star file
 		pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
 		o1=open('_tmp1.txt','w')
 		o1.write('%s\n'%(pwd))
+		o1.write('could not find %s' %(newstarname))
 		o1.close()	
-		print 'Error=4' 
+		print 'Could not find input star file' 
 		sys.exit()
 	
-	#Get starfile name
-	starfilename='%s' %(inputZipFile)
-
 	#Create output dirs
 	if '--ref' in inputline:
                 if '--auto_refine' not in inputline:
@@ -63,9 +109,15 @@ def prepareRelionRun(inputline):
 			numiters=inputline.split()[iter_position+1]
 
 	if '--ref' not in inputline:
-                os.makedirs('Class2D_cosmic')
-                os.makedirs('Class2D_cosmic/job001')
-                outdir='Class2D_cosmic/job001'
+		if not os.path.exists('Class2D_cosmic'):
+	                os.makedirs('Class2D_cosmic')
+        	counter=1
+		while counter<=500: 
+			if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
+			        os.makedirs('Class2D_cosmic/job%03i' %(counter))
+		                outdir='Class2D_cosmic/job%03i' %(counter)
+				counter=10000
+			counter=counter+1
 		#Get num iters: 
                 varcounter=0
                 for variable in inputline.split():
@@ -118,14 +170,18 @@ def prepareRelionRun(inputline):
 
 	#Replace zipfile name in relion command 
 	inputline_list=inputline.split()
-	inputline_list[returnEntryNumber(inputline,'--i')]=starfilename
-	inputline_list[returnEntryNumber(inputline,'--o')]='%s/run' %(outdir)
+	#tmplog.write('1:'+inputline_list+'\n')
+	tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--i')]))
+	inputline_list[returnEntryNumber(inputline,'--i')]=newstarname
+	inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
+	tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
 	if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map': 
 		inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'
 
 	#Join list into single string
         relion_command=' '.join(inputline_list)	
-	return relion_command,outdir,runtime,nodes,numiters #print 'cmd="%s"' %(relion_command)
+	tmplog.write(relion_command)	
+	return relion_command,outdir,runtime,nodes,numiters,inputZipFile.split('/')[0] #print 'cmd="%s"' %(relion_command)
 
 def returnEntryNumber(inputlist,queryString):
 	'''Returns entry number in list for a given string in a list'''
@@ -172,7 +228,7 @@ def createEpilog(self):
 
 # Function to run the gateway_submit_attribute script
 def runGSA ( gateway_user, jobid ):
-        cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % ("%s@cosmic2.sdsc.edu" % gateway_user, jobid)
+        cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -resource comet-gpu.sdsc.xsede -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % ("%s@cosmic2.sdsc.edu" % gateway_user, jobid)
         log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         output =  p.communicate()[0]
@@ -255,7 +311,7 @@ properties_dict = getProperties('./scheduler.conf')
 ntaskspernode = int(properties_dict['ntasks-per-node'])
 #fname = properties_dict['fname']
 jobdir = os.getcwd()
-relion_command,outdir,runhours,nodes,numiters=prepareRelionRun(args['commandline'])
+relion_command,outdir,runhours,nodes,numiters,worksubdir=prepareRelionRun(args['commandline'])
 runminutes = math.ceil(60 * runhours)
 hours, minutes = divmod(runminutes, 60)
 runtime = "%02d:%02d:00" % (hours, minutes)
@@ -293,22 +349,28 @@ text = """#!/bin/sh
 #SBATCH -A %s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-##SBATCH --gres=gpu:p100:4    #only p100 nodes
-
+#SBATCH --cpus-per-task=6
+#SBATCH --no-requeue
+#SBATCH --gres=gpu:k80:4
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-module load python
-module load gsl
-module load %s
-source $HOME/.bashrc
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module purge
+module load gnutools
+module load intel/2015.6.233
+module load intelmpi/2015.6.233
+module load relion/3.0_beta_gpu
+date 
+export OMP_NUM_THREADS=6
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
-/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s
-ibrun -np 5 --tpr 4 %s --j 4 1>>stdout.txt 2>>stderr.txt
+/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
+pwd > stdout.txt 2>stderr.txt
+mpirun -np 4 %s --j 6 --gpu 0,1,2,3 >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
+/bin/tar -cvzf output.tar.gz %s/
 """ \
 % \
-('compute',jobname, runtime, mailuser, args['account'], 1,24,'relion/2.0.3',jobdir,outdir.split('_cosmic')[0],outdir,numiters,relion_command,username,outdir)
-
+('gpu',jobname, runtime, mailuser, args['account'], 1,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,relion_command,username,outdir,outdir)
 #P100: relion/2.1.b1_p100
 #K80: relion/2.1.b1
 runfile = "./batch_command.run"
