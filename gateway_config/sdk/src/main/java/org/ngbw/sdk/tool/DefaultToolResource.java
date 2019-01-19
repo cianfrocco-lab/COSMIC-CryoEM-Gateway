@@ -347,11 +347,13 @@ public class DefaultToolResource implements ToolResource {
 					}
 					TaskInputSourceDocument document = new TaskInputSourceDocument(documentID);
                     //log.debug ( "MONA: document = " + document );
+                    //log.debug ( "MONA: datatype = " + document.getDataType() );
 
                     if ( document.getDataType() != DataType.DIRECTORY )
                     {
 					    InputStream is = document.getDataAsStream();
                         //log.debug ( "MONA: document = " + document );
+                        //log.debug ( "MONA: is = " + is );
 					    try
 					    {
 						    log.debug("Staging from db: " + fileName);
@@ -360,7 +362,8 @@ public class DefaultToolResource implements ToolResource {
 					    }
 					    finally
 					    {
-						    is.close();
+                            if ( is != null )
+						        is.close();
 					    }
                     }
 				} else

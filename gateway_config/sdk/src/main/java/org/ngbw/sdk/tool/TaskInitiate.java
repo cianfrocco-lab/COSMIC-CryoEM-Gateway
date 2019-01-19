@@ -404,7 +404,7 @@ public class TaskInitiate
                     String tmpFilename = tmp.getName();
                     //log.debug ( "MONA: tmpFilename = " + tmpFilename );
 
-				    if ( ! BaseValidator.isSimpleFilename ( tmpFilename ) )
+				    if ( ! BaseValidator.isSimplePathFilename ( tmpFilename ) )
 				    {
 					    log.warn ( "Label '" + fileName +
                             "' is not an acceptable filename.  Filenames are restricted due to security concerns." );
@@ -412,13 +412,13 @@ public class TaskInitiate
 					    throw new Exception (
                             "User data item for parameter " + parameter +
                             " has a label that contains " +
-							"characters other than ascii letters, numbers, period and underscore" );
+							"characters other than ascii letters, numbers, period, underscore and backslash" );
                     }
 				}
 
                 else
                 {
-				    if (!BaseValidator.isSimpleFilename(fileName))
+				    if (!BaseValidator.isSimplePathFilename(fileName))
 				    {
 					    log.warn ( "Label '" + fileName +
                             "' is not an acceptable filename.  Filenames are restricted due to security concerns." );
@@ -426,7 +426,7 @@ public class TaskInitiate
 					    throw new Exception (
                             "User data item for parameter " + parameter +
                             " has a label that contains " +
-							"characters other than ascii letters, numbers, period and underscore" );
+							"characters other than ascii letters, numbers, period, underscore and backslash" );
                     }
 				}
 
