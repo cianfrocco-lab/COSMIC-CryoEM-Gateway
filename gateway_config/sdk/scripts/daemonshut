@@ -1,0 +1,14 @@
+#!/bin/sh
+#export PATH=/users/u4/nsgdevuser/kennethtest/java/jdk1.8.0_111/bin:/projects/ps-nsg/home/nsguser/kennethtest/extest.sharing/nsg_data/scripts:$PATH
+#export SDK_VERSIONS=/projects/ps-nsg/home/nsguser/kennethtest/extest.sharing/nsg_data/scripts
+#export ANT_HOME=/users/u4/nsgdevuser/apache-ant-1.8.3
+#export JAVA_HOME=/users/u4/nsgdevuser/kennethtest/java/jdk1.8.0_111
+#export SDK_VERSIONS=/users/u4/nsgproduser/nsg_data/sdk_versions
+export SDK_VERSIONS=/projects/cosmic2/gateway/scripts
+
+cd $SDK_VERSIONS
+./checkJobsD $1
+./loadResultsD $1
+./submitJobD $1
+./recoverResultsD $1
+
