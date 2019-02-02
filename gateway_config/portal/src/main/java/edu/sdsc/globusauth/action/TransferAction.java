@@ -2,11 +2,11 @@ package edu.sdsc.globusauth.action;
 
 /**
  * Created by cyoun on 06/25/17.
+ * Updated by Mona Wong
  */
 
 import com.google.api.client.auth.oauth2.Credential;
 import edu.sdsc.globusauth.controller.ProfileManager;
-//import edu.sdsc.globusauth.model.TransferRecord;
 import org.ngbw.sdk.database.TransferRecord;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
@@ -15,6 +15,8 @@ import org.globusonline.transfer.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.ngbw.sdk.Workbench;
 import org.ngbw.web.actions.NgbwSupport;
 import org.ngbw.sdk.database.Folder;
 
@@ -82,9 +84,12 @@ public class TransferAction extends NgbwSupport {
     }
 
     public String transfer() throws Exception {
+        //logger.info ( "MONA: entered TransferAction.transfer()" );
 
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
+        //logger.info ( "MONA: accesstoken = " + accesstoken );
         String username = (String) getSession().get(OauthConstants.PRIMARY_USERNAME);
+        //logger.info ( "MONA: username = " + username );
         Authenticator authenticator = new GoauthAuthenticator(accesstoken);
         config = OauthUtils.getConfig(OauthConstants.OAUTH_PORPS);
 
@@ -158,9 +163,9 @@ public class TransferAction extends NgbwSupport {
         logger.info("Transfer Action Type: "+actionType);
 	
         if (s_eptype != null) {
-  	 if (!s_eptype.equals("XSERVER")) {
-	   String src_epid = request.getParameter("endpointId");
-           String xsede_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);	
+  	        if (!s_eptype.equals("XSERVER")) {
+	            String src_epid = request.getParameter("endpointId");
+                String xsede_epid = (String) getSession().get(OauthConstants.DATASET_ENDPOINT_ID);	
 	   if (src_epid.equals(xsede_epid)) {
 	      String src_name = request.getParameter("endpointName");
 	      logger.info(src_name+" is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be used as your endpoint.");
@@ -168,7 +173,7 @@ public class TransferAction extends NgbwSupport {
               s_eptype = null;
 	   }
          }
-    	}
+    	} // if (s_eptype != null)
 
         if (s_eptype != null) {
             if (actionType != null) {
@@ -292,11 +297,31 @@ public class TransferAction extends NgbwSupport {
                 getCount(s_epid, s_eppath, s_dispname);
             }
             return SUCCESS;
-        } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
-	    //
+        }
+        // HTTP_POST is a transfer request...
+        else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
+            //logger.info ( "MONA: HTTP_POST" );
+
+            Folder current_folder = getCurrentFolder();
+            //logger.info ( "MONA: folder id = " + current_folder.getFolderId() );
+            //logger.info ( "MONA: label = " + current_folder.getLabel() );
+
             getDestinationInfo();
             logger.info("Destination Endpoint activation....");
+ 
+            String globusRoot =
+                Workbench.getInstance().getProperties().getProperty
+                ( "database.globusRoot" );
+            //logger.info ( "MONA: globusRoot = " + globusRoot );
+
+            // If we are transferring TO the gateway storage, add the
+            // user folder label so that the data is organized in the same
+            // way as on the gateway's UI...
+            if ( d_eppath.startsWith ( globusRoot ) )
+                d_eppath += current_folder.getLabel() + "/";
+
             String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname);
+            //logger.info ( "MONA: d_result = " + d_result );
             if (d_result.equals("failure")) return SUCCESS;
 
             List<String> filter_filenames = new ArrayList<>();
@@ -313,7 +338,9 @@ public class TransferAction extends NgbwSupport {
             }
 
             JSONTransferAPIClient.Result r = client.getResult("/submission_id");
+            //logger.info ( "MONA: r = " + r );
             String submissionId = r.document.getString("value");
+            //logger.info ( "MONA: submissionId = " + submissionId );
             int sync_level = Integer.parseInt(config.getProperty("sync_level"));
             boolean encrypt_data = Boolean.parseBoolean(config.getProperty("encrypt_data"));
 
@@ -387,6 +414,8 @@ public class TransferAction extends NgbwSupport {
                                     String epid,
                                     String eppath,
                                     String dispname) throws Exception {
+        //logger.info ( "MONA: entered activationProcess" );
+        //logger.info ( "MONA: eppath = " + eppath );
 		Map<String, Boolean> ep_status = endpointStatus(epid);
         if (epbmid.equals("XSERVER")) {
             if (!ep_status.get("activated")) {
@@ -843,6 +872,9 @@ public class TransferAction extends NgbwSupport {
 
     public boolean createUserDir(String endpointId, String path) {
         //throws IOException, JSONException, GeneralSecurityException, APIError {
+        //logger.info ( "MONA: entered createUserDir" );
+        //logger.info ( "MONA: endpointId = " + endpointId );
+        //logger.info ( "MONA: path = " + path );
         try {
             String resource = BaseTransferAPIClient.endpointPath(endpointId) + "/mkdir";
             JSONObject dir_param = new JSONObject();
