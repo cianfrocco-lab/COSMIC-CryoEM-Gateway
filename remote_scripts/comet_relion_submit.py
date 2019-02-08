@@ -14,7 +14,11 @@ def prepareRelionRun(inputline):
 	#Start temp log file
 	tmplog=open('_tmplog','w')
 	tmplog.write(inputline)
-	
+	partition='gpu'
+	nodes=1
+	gpuextra1='#SBATCH --gres=gpu:k80:4\n'
+	gpuextra2='--gpu 0,1,2,3'
+	gpuextra3='relion/3.0_beta_gpu'
 	#Get input file
 	inputZipFile=inputline.split()[returnEntryNumber(inputline,'--i')]
 	#outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
@@ -96,8 +100,16 @@ def prepareRelionRun(inputline):
 	
 	#Create output dirs
 	if '--ref' in inputline:
-                if '--auto_refine' not in inputline:
-                        os.makedirs('Class3D_cosmic')
+                partition='compute'
+		gpuextra1=''
+		gpuextra2=''
+		gpuextra3='relion/3.0_beta_cpu'
+		if '--auto_refine' not in inputline:
+                	partition='gpu'
+			gpuextra1='#SBATCH --gres=gpu:k80:4\n'
+        		gpuextra2='--gpu 0,1,2,3'
+        		gpuextra3='relion/3.0_beta_gpu'        
+			os.makedirs('Class3D_cosmic')
                         os.makedirs('Class3D_cosmic/job001/')
                         outdir='Class3D_cosmic/job001'
 			#Get num iters: 
@@ -109,23 +121,34 @@ def prepareRelionRun(inputline):
 			numiters=inputline.split()[iter_position+1]
 
 	if '--ref' not in inputline:
-		if not os.path.exists('Class2D_cosmic'):
-	                os.makedirs('Class2D_cosmic')
-        	counter=1
-		while counter<=500: 
-			if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
-			        os.makedirs('Class2D_cosmic/job%03i' %(counter))
-		                outdir='Class2D_cosmic/job%03i' %(counter)
-				counter=10000
-			counter=counter+1
-		#Get num iters: 
-                varcounter=0
-                for variable in inputline.split():
-	                if variable == '--iter':
-         	               iter_position=varcounter
-                        varcounter=varcounter+1
-                numiters=inputline.split()[iter_position+1]
-
+		if '--denovo_3dref' not in inputline: 
+			if not os.path.exists('Class2D_cosmic'):
+	                	os.makedirs('Class2D_cosmic')
+        		counter=1
+			while counter<=500: 
+				if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
+			        	os.makedirs('Class2D_cosmic/job%03i' %(counter))
+		                	outdir='Class2D_cosmic/job%03i' %(counter)
+					counter=10000
+				counter=counter+1
+			#Get num iters: 
+                	varcounter=0
+                	for variable in inputline.split():
+	                	if variable == '--iter':
+         	               		iter_position=varcounter
+                        	varcounter=varcounter+1
+                	numiters=inputline.split()[iter_position+1]
+		if '--denovo_3dref' in inputline: 
+			if not os.path.exists('InitialModel_cosmic'):
+                                os.makedirs('InitialModel_cosmic')
+                        counter=1
+                        while counter<=500:
+                                if not os.path.exists('InitialModel_cosmic/job%03i' %(counter)):
+                                        os.makedirs('InitialModel_cosmic/job%03i' %(counter))
+                                        outdir='InitialModel_cosmic/job%03i' %(counter)
+                                        counter=10000
+                                counter=counter+1
+			numiters=-1
         if '--auto_refine' in inputline:
                 os.makedirs('Refine3D_cosmic')
                 os.makedirs('Refine3D_cosmic/job001')
@@ -136,34 +159,52 @@ def prepareRelionRun(inputline):
 	nodes=1
 	runtime=8
 	if numLines > 10000:
-		nodes=2		
 		runtime=12
 	if numLines > 20000:
-                nodes=3
 		runtime=12
 	if numLines > 30000:
-        	nodes=4   
 		runtime=12    
 	if numLines > 40000:
-                nodes=5	
 		runtime=18
 	if numLines > 50000:
-                nodes=6
 		runtime=18
 	if numLines > 60000:
-                nodes=7
 		runtime=24
 	if numLines > 80000:
-                nodes=8
 		runtime=24
 	if numLines > 100000:
-                nodes=10
 		runtime=24
+	mpi_to_use=4 
+	if '--auto_refine' in inputline:
+		if numLines > 10000:
+                	nodes=2
+	                runtime=12
+        	if numLines > 20000:
+                	nodes=3
+	                runtime=12
+        	if numLines > 30000:
+                	nodes=4
+	                runtime=12
+        	if numLines > 40000:
+                	nodes=5
+	                runtime=18
+        	if numLines > 50000:
+                	nodes=6
+	                runtime=18
+        	if numLines > 60000:
+                	nodes=7
+	                runtime=24
+        	if numLines > 80000:
+                	nodes=8
+	                runtime=24
+        	if numLines > 100000:
+                	nodes=10
+	                runtime=24
+		mpi_to_use=nodes*4
 	#>> Write number to scheduler.conf
 	if not os.path.exists('scheduler.conf'):
 		print 'Error=1'
 		sys.exit()
-	nodes=1
 	outwrite=open('scheduler.conf','a')
 	outwrite.write('nodes=%i\n' %(nodes))
 	outwrite.close()
@@ -181,7 +222,7 @@ def prepareRelionRun(inputline):
 	#Join list into single string
         relion_command=' '.join(inputline_list)	
 	tmplog.write(relion_command)	
-	return relion_command,outdir,runtime,nodes,numiters,inputZipFile.split('/')[0] #print 'cmd="%s"' %(relion_command)
+	return relion_command,outdir,runtime,nodes,numiters,inputZipFile.split('/')[0],partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use #print 'cmd="%s"' %(relion_command)
 
 def returnEntryNumber(inputlist,queryString):
 	'''Returns entry number in list for a given string in a list'''
@@ -311,7 +352,8 @@ properties_dict = getProperties('./scheduler.conf')
 ntaskspernode = int(properties_dict['ntasks-per-node'])
 #fname = properties_dict['fname']
 jobdir = os.getcwd()
-relion_command,outdir,runhours,nodes,numiters,worksubdir=prepareRelionRun(args['commandline'])
+
+relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=prepareRelionRun(args['commandline'])
 runminutes = math.ceil(60 * runhours)
 hours, minutes = divmod(runminutes, 60)
 runtime = "%02d:%02d:00" % (hours, minutes)
@@ -351,26 +393,26 @@ text = """#!/bin/sh
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
 #SBATCH --no-requeue
-#SBATCH --gres=gpu:k80:4
+%s
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 module purge
 module load gnutools
 module load intel/2015.6.233
 module load intelmpi/2015.6.233
-module load relion/3.0_beta_gpu
+module load %s
 date 
 export OMP_NUM_THREADS=6
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np 4 %s --j 6 --gpu 0,1,2,3 >>stdout.txt 2>>stderr.txt
+mpirun -np %i %s --j 6 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
 /bin/tar -cvzf output.tar.gz %s/
 """ \
 % \
-('gpu',jobname, runtime, mailuser, args['account'], 1,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,relion_command,username,outdir,outdir)
+(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,outdir,outdir)
 #P100: relion/2.1.b1_p100
 #K80: relion/2.1.b1
 runfile = "./batch_command.run"
