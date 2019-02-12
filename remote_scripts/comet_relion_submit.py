@@ -9,6 +9,110 @@ import string
 import shutil
 import math
 import zipfile 
+import linecache 
+
+def preparePreprocessingRun(inputline):
+
+	#Get information from commandline:
+	#Example: --bfactor 100 --ctf_res_lim 6  --cs 2.7 --do_motion --out_box 0 --tile_frames 5 --apix 1 --diameter 200 --movie_binning 1  --out_apix 0 --kev 300 --i mic_upload_test/micrographs.star 
+
+	#Input files
+	input_starfile=inputline.split()[returnEntryNumber(inputline,'--i')]
+
+	#Align movies
+	movie_align=False
+	if '--do_motion' in inputline: 
+		movie_align=True
+	if movie_align is True:
+		movie_dose_weighting=False 
+		if '--dose' in inputline: 
+			movie_dose_weighting=True
+		if movie_dose_weighting is True:
+			movie_dose_per_frame=float(inputline.split()[returnEntryNumber(inputline,'--dose')])
+		if movie_dose_weighting is False:
+			movie_dose_per_frames=1
+		movie_binning=int(inputline.split()[returnEntryNumber(inputline,'--movie_binning')])
+		movie_bfactor=int(inputline.split()[returnEntryNumber(inputline,'--bfactor')])
+		movie_tiles=int(inputline.split()[returnEntryNumber(inputline,'--tile_frames')])
+		if '--gain_ref' in inputline: 
+			movie_gain_reference=inputline.split()[returnEntryNumber(inputline,'--gain_ref')]
+
+	#Get CTF info: 
+	ctf_kev=int(inputline.split()[returnEntryNumber(inputline,'--kev')])
+	ctf_cs=float(inputline.split()[returnEntryNumber(inputline,'--cs')])
+	ctf_reslim=int(inputline.split()[returnEntryNumber(inputline,'--ctf_res_lim')])
+	angpix=float(inputline.split()[returnEntryNumber(inputline,'--apix')])
+
+	#Particle stack values	
+	particle_diameter_angstroms=int(inputline.split()[returnEntryNumber(inputline,'--diameter')]) #Angstroms
+	particle_output_angpix=float(inputline.split()[returnEntryNumber(inputline,'--out_apix')]) #angpix
+	if particle_output_angpix == 0: 
+		particle_output_angpix=angpix
+	particle_output_boxsize=int(inputline.split()[returnEntryNumber(inputline,'--out_box')]) #pixels, unbinned
+	if particle_output_boxsize==0: 
+		particle_output_boxsize=round(2*particle_diameter_angstroms/angpix)
+		#Check if even dimensions
+		if particle_output_boxsize%2==1: 
+			particle_output_boxsize=particle_output_boxsize+1
+	
+	#DEBUGGING parameter parsing
+	o1=open('_preprocess.txt','w')
+	o1.write('preprocessing info\n')
+	o1.write('movie align=%s\n' %(movie_align))
+	if movie_align is True:
+		if movie_dose_weighting is True: 
+			o1.write('movie_dose_per_frame=%f\n' %(movie_dose_per_frame))
+		o1.write('movie_binning=%i\n' %(movie_binning))
+		o1.write('movie_bfactor=%i\n' %(movie_bfactor))
+		o1.write('movie_tiles=%i\n' %(movie_tiles))
+		if '--gain_ref' in inputline:
+			o1.write('gain_ref=%s\n' %(movie_gain_reference))
+	o1.write('ctf_kev=%i\n' %(ctf_kev))
+	o1.write('ctf_cs=%f\n' %(ctf_cs))
+	o1.write('ctf_reslim=%i\n' %(ctf_reslim))
+	o1.write('angpix=%f\n' %(angpix))
+	o1.write('particle_diameter_angstroms=%i\n' %(particle_diameter_angstroms))
+	o1.write('particle_output_angpix=%f\n' %(particle_output_angpix))
+	o1.write('particle_output_boxsize=%i\n' %(particle_output_boxsize))
+	o1.write('\n\nFinished\n')
+
+	#Movie align command generation
+	movie_align_cmd=''
+	if movie_align is True: 
+		#Define output directory
+		if not os.path.exists('MotionCorr_cosmic2'): 
+			os.makedirs('MotionCorr_cosmic2')
+		counter=1
+		while counter<1000:
+			if not os.path.exists('MotionCorr_cosmic2/job%03i' %(counter)): 
+				movie_outdir='MotionCorr_cosmic2/job%03i' %(counter)
+				os.makedirs('MotionCorr_cosmic2/job%03i' %(counter))
+				counter=10001
+			counter=counter+1
+		movie_align_cmd='relion_run_motioncorr_mpi --i %s --o %s --first_frame_sum 1 --last_frame_sum -1 --use_own  --j 1 --bin_factor %i --bfactor %i --angpix %i --voltage %i --dose_per_frame %i --preexposure 0 --patch_x %i --patch_y %i --gain_rot 0 --gain_flip 0' %(input_starfile,movie_outdir,movie_binning,movie_bfactor,angpix,ctf_kev,movie_dose_per_frame,movie_tiles,movie_tiles)
+
+		#Add other options here: gain reference, dose weighting
+		if '--gain_ref' in inputline:
+			movie_align_cmd=movie_align_cmd+' --gainref %s' %(movie_gain_reference)
+		if movie_dose_weighting is True: 
+			movie_align_cmd=movie_align_cmd+' --dose_weighting  --save_noDW'
+		
+		o1.write('movie_align_cmd:\n')
+		o1.write('%s\n' %(movie_align_cmd))
+
+	#Generate CTF command
+	if movie_align is True:
+		input_mic_file='%s/corrected_micrographs.star' %(movie_outdir)
+	if movie_align is False: 
+		input_mic_file=input_starfile
+
+	picking_cmd=''
+	extraction_cmd=''
+
+	o1.close()
+
+	return movie_align_cmd,ctf_cmd,picking_cmd,extraction_cmd
+
 
 def prepareRelionRun(inputline):
 	#Start temp log file
@@ -331,7 +435,9 @@ def submitJob(job_properties={}, runfile='batch_command.run', statusfile='batch_
         log(statusfile, "can't get jobid, submit_job is returning 1\n")
         return 1
 
-
+###################################
+## Submission parser starts here###
+###################################
 parser = argparse.ArgumentParser()
 parser.add_argument('--account')
 parser.add_argument('--url')
@@ -339,103 +445,101 @@ parser.add_argument('--', dest='doubledash')
 parser.add_argument('commandline')
 args = vars(parser.parse_args())
 args['account'] = 'csd547'
-
 pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
 o1=open('_tmp2.txt','w')
 o1.write('%s\n'%(pwd))
-o1.close()
 os.system('pwd')
 properties_dict = getProperties('./scheduler.conf')
-#runhours = float(properties_dict['runhours'])
-#nodes = int(properties_dict['nodes']) ###>> Nodes are calculated in this script  - see prepareRelionRun
-#ntaskspernode = int(properties_dict['cores_per_node'])
 ntaskspernode = int(properties_dict['ntasks-per-node'])
-#fname = properties_dict['fname']
 jobdir = os.getcwd()
 
-relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=prepareRelionRun(args['commandline'])
-runminutes = math.ceil(60 * runhours)
-hours, minutes = divmod(runminutes, 60)
-runtime = "%02d:%02d:00" % (hours, minutes)
-#nodes = int(properties_dict['nodes'])
-ntaskspernode = int(properties_dict['ntasks-per-node'])
-o1=open('_JOBINFO.TXT','a')
-o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
-o1.close()
-shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
-jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
-print jobproperties_dict
-print "jobfinfo JobHandle (%s)" % jobproperties_dict['JobHandle']
-mailuser = jobproperties_dict['email']
-jobname = jobproperties_dict['JobHandle']
-for line in open('_JOBINFO.TXT','r'):
-	if 'User\ Name=' in line: 
-		username=line.split('=')[-1].strip()
+######################################################################
+######Split job into two types here: preprocessing vs RELION jobs#####
+######################################################################
 
-#Prepare relion command, unzip file, calculate number of nodes
-#relion_command=prepareRelionRun(args['commandline'])
-#nodes = int(properties_dict['nodes'])
-ntaskspernode = int(properties_dict['ntasks-per-node'])
-text = """#!/bin/sh
-#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
-#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
-#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
-#SBATCH -J %s        # Job name
-#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
-#SBATCH --mail-user=%s
-#SBATCH --mail-type=begin
-#SBATCH --mail-type=end
-##SBATCH --qos=nsg
-#The next line is required if the user has more than one project
-# #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
-#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
-#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-#SBATCH --cpus-per-task=6
-#SBATCH --no-requeue
-%s
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
-module purge
-module load gnutools
-module load intel/2015.6.233
-module load intelmpi/2015.6.233
-module load %s
-date 
-export OMP_NUM_THREADS=6
-cd '%s/'
-date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
-/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
-pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 6 %s >>stdout.txt 2>>stderr.txt
-/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
-/bin/tar -cvzf output.tar.gz %s/
-""" \
-% \
-(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,outdir,outdir)
-#P100: relion/2.1.b1_p100
-#K80: relion/2.1.b1
-runfile = "./batch_command.run"
-statusfile = "./batch_command.status"
-cmdfile = "./batch_command.cmdline"
-debugfile = "./nsgdebug"
-FO = open(runfile, mode='w')
-FO.write(text)
-FO.flush()
-os.fsync(FO.fileno())
-FO.close()
-rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+if 'pipeline' in args['commandline']: 
+	jobtype='pipeline'
 
-# Following output to done.txt is needed by the gateway framework
-#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
-#echo "retval=$rc">> done.txt
-donefile = "done.txt"
-#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
-d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-FO = open(donefile, mode='a')
-FO.write(d+"\n")
-FO.write("retval=" + str(rc) + "\n")
-FO.flush()
-os.fsync(FO.fileno())
-FO.close()
+if 'relion_refine_mpi' in args['commandline']: 
+	jobtype='relion'
 
+if jobtype == 'relion': 
+	relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=prepareRelionRun(args['commandline'])
+	runminutes = math.ceil(60 * runhours)
+	hours, minutes = divmod(runminutes, 60)
+	runtime = "%02d:%02d:00" % (hours, minutes)
+	ntaskspernode = int(properties_dict['ntasks-per-node'])
+	o1=open('_JOBINFO.TXT','a')
+	o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+	o1.close()
+	shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+	jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+	mailuser = jobproperties_dict['email']
+	jobname = jobproperties_dict['JobHandle']
+	for line in open('_JOBINFO.TXT','r'):
+		if 'User\ Name=' in line: 
+			username=line.split('=')[-1].strip()
+	ntaskspernode = int(properties_dict['ntasks-per-node'])
+	text = """#!/bin/sh
+	#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+	#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+	#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+	#SBATCH -J %s        # Job name
+	#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+	#SBATCH --mail-user=%s
+	#SBATCH --mail-type=begin
+	#SBATCH --mail-type=end
+	##SBATCH --qos=nsg
+	#The next line is required if the user has more than one project
+	# #SBATCH -A A-yourproject  # Allocation name to charge job against
+	#SBATCH -A %s  # Allocation name to charge job against
+	#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+	#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+	#SBATCH --cpus-per-task=6
+	#SBATCH --no-requeue
+	%s
+	export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+	export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+	module purge
+	module load gnutools
+	module load intel/2015.6.233
+	module load intelmpi/2015.6.233
+	module load %s
+	date 
+	export OMP_NUM_THREADS=6
+	cd '%s/'
+	date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+	/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
+	pwd > stdout.txt 2>stderr.txt
+	mpirun -np %i %s --j 6 %s >>stdout.txt 2>>stderr.txt
+	/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s %s
+	/bin/tar -cvzf output.tar.gz %s/
+	""" \
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,outdir,outdir)
+	runfile = "./batch_command.run"
+	statusfile = "./batch_command.status"
+	cmdfile = "./batch_command.cmdline"
+	debugfile = "./nsgdebug"
+	FO = open(runfile, mode='w')
+	FO.write(text)
+	FO.flush()
+	os.fsync(FO.fileno())
+	FO.close()
+	rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+	# Following output to done.txt is needed by the gateway framework
+	#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
+	#echo "retval=$rc">> done.txt
+	donefile = "done.txt"
+	#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
+	d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	FO = open(donefile, mode='a')
+	FO.write(d+"\n")
+	FO.write("retval=" + str(rc) + "\n")
+	FO.flush()
+	os.fsync(FO.fileno())
+	FO.close()
+
+if jobtype == 'pipeline':
+        #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
+	movie_align_cmd,ctf_cmd,picking_cmd,extraction_cmd=preparePreprocessingRun(args['commandline'])
