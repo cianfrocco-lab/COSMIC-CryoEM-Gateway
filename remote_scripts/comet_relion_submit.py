@@ -105,6 +105,24 @@ def preparePreprocessingRun(inputline):
 		input_mic_file='%s/corrected_micrographs.star' %(movie_outdir)
 	if movie_align is False: 
 		input_mic_file=input_starfile
+	if not os.path.exists('CtfFind_cosmic2'):
+	        os.makedirs('CtfFind_cosmic2')
+        counter=1
+        while counter<1000:
+        	if not os.path.exists('CtfFind_cosmic2/job%03i' %(counter)):
+                	ctf_outdir='CtfFind_cosmic2/job%03i' %(counter)
+                        os.makedirs('CtfFind_cosmic2/job%03i' %(counter))
+                        counter=10001
+                counter=counter+1
+	ctf_cmd='relion_run_ctffind_mpi --i %s --o %s --CS %f --HT %i --AmpCnst 0.1 --XMAG 10000 --DStep %f --Box 512 --Resmin 30 --ResMax 5 --dFMin 5000 --dFMax 50000 --FStep 500 --dAst 100 --ctffind_exe /home/cosmic2/software_dependencies/ctffind-4.1.13/ctffind --ctfWin -1 --is_ctffind4 --fast_search' %(input_mic_file,ctf_outdir,ctf_cs,ctf_kev,angpix)
+
+	if movie_dose_weighting is True: 	
+		ctf_cmd=ctf_cmd+'   --use_noDW '
+
+	o1.write('\n\nctf_cmd:\n')
+	o1.write('%s\n' %(ctf_cmd))
+
+	#Generate crYOLO picking command
 
 	picking_cmd=''
 	extraction_cmd=''
