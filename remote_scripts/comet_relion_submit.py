@@ -122,9 +122,38 @@ def preparePreprocessingRun(inputline):
 	o1.write('\n\nctf_cmd:\n')
 	o1.write('%s\n' %(ctf_cmd))
 
-	#Generate crYOLO picking command
+	#Generate crYOLO picking command	
+	#cryolo_predict.py -c config.json -w gmodel_phosnet_20181221_loss0037.h5 -i /Users/yilai/cryolo/test -o /Users/yilai/cryolo/boxfiles/ -t 0.2
+	ctf_out_starfile='%s/micrographs_ctf.star' %(ctf_outdir)
+	
+	if not os.path.exists('crYOLO_cosmic2'):
+                os.makedirs('crYOLO_cosmic2')
+        counter=1
+        while counter<1000:
+                if not os.path.exists('crYOLO_cosmic2/job%03i' %(counter)):
+                        picking_outdir='crYOLO_cosmic2/job%03i' %(counter)
+                        os.makedirs('crYOLO_cosmic2/job%03i' %(counter))
+                        counter=10001
+                counter=counter+1
 
-	picking_cmd=''
+	if movie_align is True: 
+		mics_for_picking='GLOBIGNORE="*noDW.mrc" && ln -s %s/*/*.mrc %s/ && unset GLOBIGNORE &&' %(movie_outdir,picking_outdir)
+
+	if movie_align is False: 
+		#Get mic name from starfile
+		for line in open(input_starfile,'r'): 
+			if len(line)<40: 
+				continue
+			l=line.split()
+			del l[-1]
+			mic_dir='\t'.join(l)
+		mics_for_picking='ln -s %s/*.mrc %s/ &&' %(mic_dir,picking_outdir)
+
+	picking_cmd='%s cryolo_predict.py -c config.json -w /home/cosmic2/software_dependencies/crYOLO/gmodel_phosnet_20181221_loss0037.h5 -i %s/ -o %s/boxfiles/ -t 0.2' %(mics_for_picking,picking_outdir,picking_outdir)
+
+	o1.write('crYOLO:\n')
+	o1.write('%s\n' %(picking_cmd))
+ 
 	extraction_cmd=''
 
 	o1.close()
