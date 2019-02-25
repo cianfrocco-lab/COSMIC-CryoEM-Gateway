@@ -14,19 +14,16 @@ OSVersion: xenial
 
     SINGULARITY_IMAGE_SIZE 2048
 
-    ORIGINAL AUTHOR_NAME Marty Kandes
-    ORIGINAL AUTHOR_EMAIL mkandes@sdsc.edu
+    AUTHOR_NAME Marty Kandes
+    AUTHOR_EMAIL mkandes@sdsc.edu
 
-    LAST_UPDATED 20190222
-
-    CRYOLO AUTHOR NAME  Michael Cianfrocco
-    CRYOLO AUTHOR EMAIL mcianfro@umich.edu    
+    LAST_UPDATED 20181003
 
 %setup
 
 %environment
-
-    # Set system locale
+    . /opt/miniconda3/bin/activate cryolo 
+   # Set system locale
     export LC_ALL=C
 
 %post -c /bin/bash
