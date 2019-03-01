@@ -31,6 +31,5 @@
     <p>Click on a folder in the left panel to manage its contents.</p>
   </div>
 </s:elseif>
-<s:include value="/pages/common/footer.jsp"/>
 </body>
 </html>
