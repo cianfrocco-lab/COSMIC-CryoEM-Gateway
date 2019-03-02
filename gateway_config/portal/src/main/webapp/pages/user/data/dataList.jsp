@@ -60,7 +60,7 @@
 
   <%@ include file="/pages/common/pagination.jsp" %>
   <s:form action="paginateData" theme="simple">
-    <s:select name="pageSize" list="#{ 20:'20', 40:'40', 100:'100', 200:'200' }"
+    <s:select name="pageSize" list="#{ 2000:'2000' }"
       onchange="reload(this.form)" value="pageSizeString"/>
     records on each page
   </s:form>
@@ -179,10 +179,11 @@
         </tr>
       </s:iterator>
     </table>
+    <!--
     <div class="form-group">
       <div class="action-group">
         <div class="action-des pull-left">
-          <s:select name="dataAction" list="#{'Move':'Move', 'Copy':'Copy'}"/>
+          <s:select name="dataAction" list="#{'Copy':'Copy'}"/>
           &nbsp;selected to&nbsp;
           <s:select name="targetFolder" list="allFolders" listKey="folderId"
             listValue="label"/>&nbsp;
@@ -190,9 +191,12 @@
         <s:submit cssClass="btn btn-primary" value="GO" method="cancel"/>
       </div>
     </div>
+    -->
+    <!--
     <div class="form-group">
       <s:submit cssClass="btn btn-primary" value="Delete Selected" method="cancel" onclick="return confirm_form_data()"/>
     </div>
+    -->
   </s:form>
 </s:if>
 <s:else>

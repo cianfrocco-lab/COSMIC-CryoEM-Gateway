@@ -9,6 +9,8 @@ package edu.sdsc.globusauth.controller;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
@@ -30,7 +32,8 @@ public class Transfer2DataManager extends NgbwSupport
 
     /**
      * Setup CIPRES data items for the new Globus transferred files and
-     * directories.
+     * directories. IMPORTANT: the transferred is in the same folder as
+     * the user's data folder.
      * @return - number of data items created; null if invalid incoming
      *      parameters or newTransferRecord.getStatus() != "SUCCEEDED"
      **/
@@ -39,6 +42,7 @@ public class Transfer2DataManager extends NgbwSupport
     {
         //log.debug ( "MONA : Transfer2DataManager.setupDataItems()" );
         //log.debug ( "MONA : transfer_record = " + transfer_record );
+        //log.debug ( "MONA : transfer_record id = " + transfer_record.getTrId() );
         //log.debug ( "MONA : destination_path = " + destination_path );
 
         if ( transfer_record == null || destination_path == null ||
@@ -50,9 +54,10 @@ public class Transfer2DataManager extends NgbwSupport
         Folder folder;
         try
         {
-            folder = new Folder
-                ( transfer_record.getEnclosingFolderId() );
+            folder = new Folder ( transfer_record.getEnclosingFolderId() );
             //log.debug ( "MONA : folder label = " + folder.getLabel() );
+            //log.debug ( "MONA : folder userid = " + folder.getUserId() );
+            //log.debug ( "MONA : folder creation date = " + folder.getCreationDate() );
         }
         catch ( Exception e )
         {
@@ -63,6 +68,7 @@ public class Transfer2DataManager extends NgbwSupport
 
         int saved = saveFiles ( transfer_record, destination_path, folder );
         saved += saveDirectories ( transfer_record, destination_path, folder );
+        reportUserError ( saved + " files/directories were saved" );
 
         return ( saved );
     }
@@ -88,6 +94,10 @@ public class Transfer2DataManager extends NgbwSupport
             return ( saved );
 
         Long tr_id = transfer_record.getTrId();
+        String user_data_folder = folder.getLabel();
+        //log.debug ( "MONA : user_data_folder = " + user_data_folder );
+        destination_path += user_data_folder + "/";
+        //log.debug ( "MONA : new destination_path = " + destination_path );
 
         // Check and handle directories...
         String dirString = transfer_record.getDirectoryNames();
@@ -117,6 +127,17 @@ public class Transfer2DataManager extends NgbwSupport
             //log.debug ( "MONA : full_path = " + full_path );
             File dir = new File ( full_path );
             //log.debug ( "MONA : dir = " + dir );
+
+            // If the directory is not readable, skip it...
+            Path tmp = dir.toPath();
+            if ( ! Files.isReadable ( tmp ) )
+            {
+                reportUserError ( "Error: cannot read " + full_path );
+                addActionError ( "Error: cannot read " + full_path );
+                continue;
+            }
+
+            //log.debug ( "MONA : starfile_ext = " + starfile_ext );
             Collection < File > files = FileUtils.listFiles ( dir,
                 starfile_ext, false );
             //log.debug ( "MONA : files = " + files );
