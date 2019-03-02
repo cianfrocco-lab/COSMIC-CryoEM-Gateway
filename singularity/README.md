@@ -6,7 +6,7 @@ Within COSMIC2 we are using singularity containers for a new of different steps 
 * pyem.def - Container to run pyem
 
 ## Availabile containers shared on Sylabs cloud
-* [Image for sdsc-comet-ubuntu-cryolo-cpu.def] (https://cloud.sylabs.io/library/mcianfro/default/cryolo)
+* Image for sdsc-comet-ubuntu-cryolo-cpu.def: (https://cloud.sylabs.io/library/mcianfro/default/cryolo)
 
 ## Terms and conditions
 By using these Singularity recipe files, you acknowledge the software licenses for the software packages installed in these recipe files
