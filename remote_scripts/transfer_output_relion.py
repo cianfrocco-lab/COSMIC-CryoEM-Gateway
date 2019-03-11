@@ -46,3 +46,8 @@ subprocess.Popen(cmd,shell=True).wait()
 
 shutil.copyfile(sys.argv[4],'%s/%s/%s/run.out' %(destdir,reliontype,jobnum))
 shutil.copyfile(sys.argv[5],'%s/%s/%s/run.err' %(destdir,reliontype,jobnum))
+
+#Write submit script: 
+o1=open('%s/%s/%s/run_submit.script' %(destdir,reliontype,jobnum),'w')
+o1.write('Command run on COSMIC2 server:\n\n%s\n' %(sys.argv[6]))
+o1.close()
