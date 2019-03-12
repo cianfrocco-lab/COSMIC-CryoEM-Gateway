@@ -826,8 +826,9 @@ if jobtype == 'pipeline':
 
 	#Create command
 	runcmd=''
+	transfercmd=''
 	if len(movie_align_cmd)>0:
-		runcmd=runcmd+'mpirun -np %s >> stdout_motion.txt 2>> stderr_motion.txt\n' %(totcores,movie_align_cmd)
+		runcmd=runcmd+'mpirun -np %i %s >> stdout_motion.txt 2>> stderr_motion.txt\n' %(totcores,movie_align_cmd)
 	
 		for entry in movie_align_cmd.split():
                         if 'MotionCorr_cosmic' in entry:
@@ -860,7 +861,7 @@ if jobtype == 'pipeline':
                 	if 'Extract_cosmic' in entry:
                         	job=entry.split('/')[1]
         	extractdirname='Extract_cosmic/%s' %(job)
-	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout_extract.txt stderr_extract.txt '%s'\n" %(username,DirToSymLink,extractdirname,extract_cmd)
+	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout_extract.txt stderr_extract.txt '%s'\n" %(username,DirToSymLink,extractdirname,extraction_cmd)
 	
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
