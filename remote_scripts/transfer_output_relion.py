@@ -51,3 +51,7 @@ shutil.copyfile(sys.argv[5],'%s/%s/%s/run.err' %(destdir,reliontype,jobnum))
 o1=open('%s/%s/%s/run_submit.script' %(destdir,reliontype,jobnum),'w')
 o1.write('Command run on COSMIC2 server:\n\n%s\n' %(sys.argv[6]))
 o1.close()
+
+o1=open('%s/cosmic2_job_info.txt' %(destdir),'a')
+o1.write('%s/%s/%s/run_submit.script\n' %(destdir,reliontype,jobnum))
+o1.close() 
