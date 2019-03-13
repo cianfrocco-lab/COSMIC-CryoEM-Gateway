@@ -826,7 +826,7 @@ if jobtype == 'pipeline':
 
 	jobstatus=open('job_status.txt','w')
 	jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
-	jobstatus.write('Job currently in queue...\n\n')
+	jobstatus.write('Job currently in queue\n\n')
 	jobstatus.close()
 
 	#Create command
@@ -895,11 +895,11 @@ module load singularity
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
-echo 'Job started running %%s %%a %%b %%e %%R:%%S %%Z %%Y' >> job_status.txt
+echo 'Job started running && date' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 %s
 %s
-echo 'Job finished %%s %%a %%b %%e %%R:%%S %%Z %%Y' >> job_status.txt
+echo 'Job finished && date' >> job_status.txt
 """%(partition,jobname, runtime, mailuser, args['account'],jobdir,runcmd,transfercmd)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
