@@ -49,6 +49,7 @@ def preparePreprocessingRun(inputline,jobdir):
 
         #Get full path to starfile on cosmic
         starfilename=userdir+'/'+'%s' %(input_starfile)
+	foldername='%s' %(input_starfile.split('/')[0])
 
 	o1.write('starfilename=%s\n' %(starfilename))
 	o1.write('userdir=%s\n' %(userdir))
@@ -56,14 +57,20 @@ def preparePreprocessingRun(inputline,jobdir):
 	movie_align=False
 	ctf_run=False
 	cryolo_run=False
+	negstain=False
 	if '--do_motion' in inputline: 
 		movie_align=True
 	if '--do_ctf' in inputline: 
 		ctf_run=True
 	if '--do_cryolo' in inputline: 
 		cryolo_run=True
+	if '--negative_stain' in inputline: 
+		negstain=True
+	movie_dose_weighting=False
 	if movie_align is True:
-		movie_dose_weighting=False 
+		if negstain is True:
+			print 'Error: Both motion correction and negative options were chosen. Please fix and resubmit.'
+			sys.exit()
 		if '--dose' in inputline: 
 			movie_dose_weighting=True
 		if movie_dose_weighting is True:
@@ -94,36 +101,53 @@ def preparePreprocessingRun(inputline,jobdir):
         	if colnum<0:
 			print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
 		        return 1
-        	rlno1=open(starfilename,'r')
-	        for rln_line in rlno1:
-        	        if len(rln_line) >= 40:
-                	        starfiledirname=rln_line.split()[colnum]
-                        	starfiledirname=starfiledirname.split('/')
-				del starfiledirname[-1]
-        	                starfiledirname='/'.join(starfiledirname)
-	        rlno1.close()
+        
+	if movie_align is False:
+		rlno1=open(starfilename,'r')
+                colnum=-1
+                for rln_line in rlno1:
+                        if '_rlnMicrographName' in rln_line:
+                                if len(rln_line.split()) == 2:
+                                        colnum=int(rln_line.split()[-1].split('#')[-1])-1
+                                if len(rln_line.split()) == 1:
+                                        colnum=0
+                rlno1.close()
+                o1.write('reading rln col=%i' %(colnum))
 
-        	newstarname='%s'%(starfiledirname)+'/'+'%s'%(input_starfile.split('/')[-1])
-	        o1.write('\nnewstarname='+newstarname+'\n')
+                if colnum<0:
+                        print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
+                        return 1
 
-        	workingStarDirName=starfilename
-		fullStarDir=starfilename.split('/')
-	        del fullStarDir[-1]
-        	fullStarDir='/'.join(fullStarDir)
-	        counter=1
-        	while counter<=len(starfiledirname.split('/')):
-                	checkDir=starfiledirname.split('/')[-counter]
-	                if fullStarDir.split('/')[-1] == checkDir:
-        	                fullStarDir=fullStarDir.split('/')
-                	        del fullStarDir[-1]
-                        	fullStarDir='/'.join(fullStarDir)
-	                counter=counter+1
+	rlno1=open(starfilename,'r')
+	for rln_line in rlno1:
+        	if len(rln_line) >= 40:
+                	starfiledirname=rln_line.split()[colnum]
+                        starfiledirname=starfiledirname.split('/')
+			del starfiledirname[-1]
+        	        starfiledirname='/'.join(starfiledirname)
+	rlno1.close()
 
-	        #Symlink directory: 
-        	DirToSymLink=fullStarDir
-	        o1.write('\n'+'symlink'+DirToSymLink)
-        	cmd="ln -s '%s/'* ." %(DirToSymLink)
-	        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
+        newstarname='%s'%(starfiledirname)+'/'+'%s'%(input_starfile.split('/')[-1])
+	o1.write('\nnewstarname='+newstarname+'\n')
+
+        workingStarDirName=starfilename
+	fullStarDir=starfilename.split('/')
+	del fullStarDir[-1]
+        fullStarDir='/'.join(fullStarDir)
+	counter=1
+        while counter<=len(starfiledirname.split('/')):
+        	checkDir=starfiledirname.split('/')[-counter]
+	        if fullStarDir.split('/')[-1] == checkDir:
+        		fullStarDir=fullStarDir.split('/')
+                	del fullStarDir[-1]
+                        fullStarDir='/'.join(fullStarDir)
+	        counter=counter+1
+
+	#Symlink directory: 
+        DirToSymLink=fullStarDir
+	o1.write('\n'+'symlink'+DirToSymLink)
+        cmd="ln -s '%s/'* ." %(DirToSymLink)
+	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
 
 	if ctf_run is True:
 		#Get CTF info: 
@@ -131,7 +155,10 @@ def preparePreprocessingRun(inputline,jobdir):
 		ctf_cs=float(inputline.split()[returnEntryNumber(inputline,'--cs')])
 		ctf_reslim=int(inputline.split()[returnEntryNumber(inputline,'--ctf_res_lim')])
 		angpix=float(inputline.split()[returnEntryNumber(inputline,'--apix')])
-
+		ampcontrast=0.1
+		if negstain is True:
+			ampcontrast=0.25	
+	o1.write('here2\n')
 	if cryolo_run is True: 
 		#Particle stack values	
 		particle_diameter_angstroms=int(inputline.split()[returnEntryNumber(inputline,'--diameter')]) #Angstroms
@@ -202,7 +229,12 @@ def preparePreprocessingRun(inputline,jobdir):
 	if movie_align is True:
 		input_mic_file='%s/corrected_micrographs.star' %(movie_outdir)
 	if movie_align is False: 
-		input_mic_file=input_starfile
+		input_mic_file=input_starfile.split('/')
+		del input_mic_file[0]
+		input_mic_file='/'.join(input_mic_file)
+		o1.write('%s\n' %(input_mic_file))
+		input_starfile=input_mic_file
+	o1.write('here3')
 	ctf_cmd=''
 	ctf_sel_cmd=''
 	if ctf_run is True:
@@ -215,7 +247,7 @@ def preparePreprocessingRun(inputline,jobdir):
         	                os.makedirs('CtfFind_cosmic/job%03i' %(counter))
                 	        counter=10001
 	                counter=counter+1
-		ctf_cmd='relion_run_ctffind_mpi --i %s --o %s --CS %f --HT %i --AmpCnst 0.1 --XMAG 10000 --DStep %f --Box 512 --ResMin 30 --ResMax 5 --dFMin 5000 --dFMax 50000 --FStep 500 --dAst 100 --ctffind_exe /home/cosmic2/software_dependencies/ctffind-4.1.13/ctffind --ctfWin -1 --is_ctffind4 --fast_search' %(input_mic_file,ctf_outdir,ctf_cs,ctf_kev,angpix)
+		ctf_cmd='relion_run_ctffind_mpi --i %s --o %s --CS %f --HT %i --AmpCnst %f --XMAG 10000 --DStep %f --Box 512 --ResMin 30 --ResMax 5 --dFMin 5000 --dFMax 50000 --FStep 500 --dAst 100 --ctffind_exe /home/cosmic2/software_dependencies/ctffind-4.1.13/ctffind --ctfWin -1 --is_ctffind4 --fast_search' %(input_mic_file,ctf_outdir,ctf_cs,ctf_kev,ampcontrast,angpix)
 
 		if movie_dose_weighting is True: 	
 			ctf_cmd=ctf_cmd+'   --use_noDW '
@@ -232,6 +264,7 @@ def preparePreprocessingRun(inputline,jobdir):
 	extraction_cmd=''
 	mics_for_picking_symlink=''
 	cryolo_cp_cmd=''
+	o1.write('here5\n')
 	if cryolo_run is True:
 		if ctf_run is False: 
 			ctf_out_starfile=input_starfile
@@ -250,24 +283,31 @@ def preparePreprocessingRun(inputline,jobdir):
 
 		if movie_align is False: 
 			#Get mic name from starfile
-			for line in open(input_starfile,'r'): 
+			o1.write('here8\n')
+			for line in open(starfilename,'r'): 
 				if len(line)<40: 
 					continue
-				l=line.split()
+				o1.write('%s\n' %(line))
+				l=line.split('/')
 				del l[-1]
 				mic_dir='\t'.join(l)
-			mics_for_picking_symlink='ln -s %s/*.mrc %s/ &&' %(mic_dir,picking_outdir)
-
+			mics_for_picking_symlink='ln -s %s/%s/%s/*.mrc %s/' %(userdir,foldername,mic_dir,picking_outdir)
 		#Write out config.json file: 
 		config_open=open('/home/cosmic2/software_dependencies/crYOLO/config.json','r')
         	new_config=open('config.json','w')
 	        for line in config_open:
         		if 'anchors' in line:
                 		line=line.replace('xx','%.f' %(particle_diameter_angstroms/angpix))
-	                new_config.write(line)
+	                if negstain is True:
+				if '1,' in line:
+                        		line=line.replace('1,','1')
+			if 'filter' in line: 
+				if negstain is True:
+					continue
+			new_config.write(line)
         	new_config.close()
 	        config_open.close()
-		
+		o1.write('here7\n')		
 		picking_cmd='/opt/miniconda3/envs/cryolo/bin/cryolo_predict.py -c config.json -w /home/cosmic2/software_dependencies/crYOLO/gmodel_phosnet_20190218_loss0042.h5 -i %s/ -o %s/ -t 0.2' %(picking_outdir,picking_outdir)
 
 		o1.write('crYOLO:\n')
@@ -867,7 +907,7 @@ if jobtype == 'pipeline':
                         	job=entry.split('/')[1]
         	extractdirname='Extract_cosmic/%s' %(job)
 	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s'\n" %(username,DirToSymLink,extractdirname,extraction_cmd)
-	
+
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
 #SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
