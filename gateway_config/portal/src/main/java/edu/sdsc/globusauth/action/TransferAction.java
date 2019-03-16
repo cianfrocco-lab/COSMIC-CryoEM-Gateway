@@ -809,7 +809,7 @@ public class TransferAction extends NgbwSupport {
 
             return true;
         } catch (Exception e) {
-            //logger.error("Display file list: "+e.toString());
+            logger.error("Display file list: "+e.toString());
             //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
             reportUserError("Error, unable to list files on the source endpoint ID, \""+endpointId+"\".");
             return false;
@@ -835,7 +835,7 @@ public class TransferAction extends NgbwSupport {
             //logger.info("File count:"+filecount);
             return filecount;
         } catch (Exception e) {
-            //logger.error("Display file list: "+e.toString());
+            logger.error("Display file list: "+e.toString());
 			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
 			reportUserError("Error, unable to get file count on the source endpoint ID, \""+disp_name+"\".");
             return filecount;
@@ -864,7 +864,7 @@ public class TransferAction extends NgbwSupport {
             }
             return true;
         } catch (Exception e) {
-            //logger.error("Check file list: "+e.toString());
+            logger.error("Check file list: "+e.toString());
             reportUserError("Error, unable to find the current path of the endpoint ID, \""+endpointId+"\".");
             return false;
         }
@@ -885,14 +885,14 @@ public class TransferAction extends NgbwSupport {
             String code = r.document.getString("code");
             if (code.startsWith("DirectoryCreated")) {
                 //reportUserMessage("User directory, "+path+" was created.");
-                //logger.debug("User directory, " + path + " was created.");
+                logger.info("User directory, " + path + " was created.");
                 return true;
             }
             return false;
         } catch (Exception e) {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
-                //logger.error("Create directory: " + error_msg);
+                logger.error("Create directory: " + error_msg);
                 //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
                 reportUserError("Error, unable to access XSEDE Comet storage.");
                 return false;

@@ -165,10 +165,10 @@ public class CreateTask extends ManageTasks
 
         //logger.debug ( "MONA: getParameters = " + getParameters() );
 		String[] button = (String[])getParameters().get("method:execute");
-        //logger.debug ( "MONA: button = " + button );
 
 		if (button != null && button.length > 0) 
 		{
+            //logger.debug ( "MONA: button = " + button[0] );
 			if (button[0].equals(SET_DESCRIPTION)) 
 			{
 				String label = getLabel();

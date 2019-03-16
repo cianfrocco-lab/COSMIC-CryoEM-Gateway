@@ -20,6 +20,7 @@ import org.ngbw.sdk.common.util.StringUtils;
 import org.ngbw.sdk.core.configuration.ServiceFactory;
 import org.ngbw.sdk.core.shared.TaskRunStage;
 import org.ngbw.sdk.core.types.DataType;
+import org.ngbw.sdk.database.Folder;
 import org.ngbw.sdk.database.FolderItem;
 import org.ngbw.sdk.database.RunningTask;
 import org.ngbw.sdk.database.StatisticsEvent;
@@ -346,10 +347,10 @@ public class TaskInitiate
 	private String stageInputData() throws IOException, SQLException, Exception
 	{
 		// This is a map of  parameter name to filename (to be created in the working directory)
-        //log.debug ( "MONA: entered TaskInitiate.stageInputData()" );
+        log.debug ( "MONA: entered TaskInitiate.stageInputData()" );
 
 		Map<String, List<String>> paramNameToFileName = command.getInputFileMap();
-        //log.debug ( "MONA: paramNameToFileName = " + paramNameToFileName );
+        log.debug ( "MONA: paramNameToFileName = " + paramNameToFileName );
 
 		// This will be a map of filename to the file's contents (usually it's a taskInputSourceDocument ID)
 		Map<String, String> fileNameToContents= new TreeMap<String, String>();
@@ -357,16 +358,16 @@ public class TaskInitiate
 		// Build the map of parameter name to file content.
 		for (Map.Entry<String, List<String>> entry : paramNameToFileName.entrySet())
 		{
-            //log.debug ( "MONA: entry = " + entry );
+            log.debug ( "MONA: entry = " + entry );
 			String parameter = entry.getKey();
-            //log.debug ( "MONA: parameter = " + parameter );
+            log.debug ( "MONA: parameter = " + parameter );
 			List<String> names = entry.getValue();
-            //log.debug ( "MONA: names = " + names );
+            log.debug ( "MONA: names = " + names );
 
 			// The value of the InFile parameter is the contents of the file OR the source document ID, prefixed
 			// with "TaskInputSourceDocument " (see TaskInitiate.convertTaskInput()).
 			List<String> value = parameters.get(parameter);
-            //log.debug ( "MONA: value = " + value );
+            log.debug ( "MONA: value = " + value );
 			if (value == null)
 			{
 				throw new NullPointerException("Value for parameter " + parameter + " is null!");
@@ -374,7 +375,7 @@ public class TaskInitiate
 
             DataType type = null;
             String[] pieces = value.get ( 0 ).split ( " " );
-            //log.debug ( "MONA: pieces = " + pieces );
+            log.debug ( "MONA: pieces = " + pieces );
 
             // Determine type of TaskInputSourceDocument
             if ( pieces != null &&
@@ -382,14 +383,14 @@ public class TaskInitiate
             {
                 TaskInputSourceDocument tisd = new TaskInputSourceDocument
                     ( Long.parseLong ( pieces[1] ) );
-                //log.debug ( "MONA: tisd = " + tisd );
+                log.debug ( "MONA: tisd = " + tisd );
                 type = tisd.getDataType();
             }
 
 			for (int index = 0 ; index < names.size() ; index += 1)
 			{
 				String fileName = names.get(index);
-                //log.debug ( "MONA: fileName = " + fileName );
+                log.debug ( "MONA: fileName = " + fileName );
 				if (fileName == null || fileName.isEmpty())
 				{
 					throw new NullPointerException("Filename for parameter " + parameter + " not found." +
@@ -400,9 +401,9 @@ public class TaskInitiate
                 if ( type == DataType.DIRECTORY )
                 {
                     File tmp = new File ( fileName );
-                    //log.debug ( "MONA: tmp = " + tmp );
+                    log.debug ( "MONA: tmp = " + tmp );
                     String tmpFilename = tmp.getName();
-                    //log.debug ( "MONA: tmpFilename = " + tmpFilename );
+                    log.debug ( "MONA: tmpFilename = " + tmpFilename );
 
 				    if ( ! BaseValidator.isSimplePathFilename ( tmpFilename ) )
 				    {
@@ -431,7 +432,7 @@ public class TaskInitiate
 				}
 
 				String doc = value.get(index);
-                //log.debug ( "MONA: doc = " + doc );
+                log.debug ( "MONA: doc = " + doc );
 
 				// Put the content or source doc ID in our filename <-> content map
 				fileNameToContents.put(fileName, doc);
@@ -441,7 +442,7 @@ public class TaskInitiate
 		// Add a file to the list of those to be staged. File is for debugging.
 		fileNameToContents.put("_COMMANDLINE", (StringUtils.join(command.getCommand(), " ")));
 		String workingDir = tool.getToolResource().getWorkingDirectory(task.getJobHandle());
-        //log.debug ( "MONA: workingDir = " + workingDir );
+        log.debug ( "MONA: workingDir = " + workingDir );
 
 		// We're using DefaultToolResource to stageInput and to submitJob.  TODO: Maybe we should also use it to cancelJob?
 		// DefaultToolResource of course knows how to interpret the content, either as actual content or a source doc ID.
@@ -505,40 +506,59 @@ public class TaskInitiate
 	 */
 	private Map<String, List<String>> convertTaskInput(Task task) throws IOException, SQLException
 	{
-        //log.debug ( "MONA: entered TaskInitiate.convertTaskInput()" );
-        //log.debug ( "MONA: task = " + task );
+        log.debug ( "MONA: entered TaskInitiate.convertTaskInput()" );
+        log.debug ( "MONA: task = " + task );
 		String jobHandle = task.getJobHandle();
 		Map<String, List<String>> params = new TreeMap<String, List<String>>();
-        //log.debug ( "MONA: params = " + params );
+        log.debug ( "MONA: params = " + params );
 
 		//task.input() returns a map of parameter name (with trailing "_") to a list of TaskInputSourceDocument records.
 		Map<String, List<TaskInputSourceDocument>> inputData = task.input();
-        //log.debug ( "MONA: inputData = " + inputData );
+        log.debug ( "MONA: inputData = " + inputData );
 
 		log.debug(jobHandle + ": processing " + inputData.size() + " input parameter collection(s).");
 
 		//Iterate over inputData, the map of param name to list of TaskInputSourceDocuments
 		for (Map.Entry<String, List<TaskInputSourceDocument>> paramEntry : inputData.entrySet())
 		{
-            //log.debug ( "MONA: paramEntry = " + paramEntry );
+            log.debug ( "MONA: paramEntry = " + paramEntry );
 			// param: This is the parameter name
 			String param = paramEntry.getKey();
-            //log.debug ( "MONA: param = " + param );
+            log.debug ( "MONA: param = " + param );
 
 			// srcDocumentList: This is the list of source documents for the current parameter.
 			List<TaskInputSourceDocument> srcDocumentList = paramEntry.getValue();
-            //log.debug ( "MONA: srcDocumentList = " + srcDocumentList );
+            log.debug ( "MONA: srcDocumentList = " + srcDocumentList );
 
 			for (TaskInputSourceDocument document : srcDocumentList)
 			{
-                //log.debug ( "MONA: document = " + document );
+                log.debug ( "MONA: document = " + document );
+                log.debug ( "MONA: document type = " + document.getDataType() );
 				String documentID = "";
 				if (document != null)
 				{
 					String label = getSourceDocumentLabel(document);
-					documentID = "TaskInputSourceDocument " + document.getInputDocumentId() + " " + label;
+                    log.debug ( "MONA: label 1 = " + label );
+
+					documentID = "TaskInputSourceDocument " +
+                        document.getInputDocumentId() + " ";
+
+                    // If data is a directory, we need to pre-pend the
+                    // folder's label
+                    if ( document.getDataType() == DataType.DIRECTORY )
+                    {
+                        long folderid = task.getEnclosingFolderId();
+                        log.debug ( "MONA: folderid = " + folderid );
+                        Folder folder = new Folder ( folderid );
+                        log.debug ( "MONA: folder = " + folder.getLabel() );
+                        documentID += folder.getLabel() + "/";
+                    }
+
+					documentID += label;
+                    log.debug ( "MONA: documentID = " + documentID );
 				}
 				List<String> ids = params.get(param);
+                log.debug ( "MONA: ids = " + ids );
 				if (ids == null)
 				{
 					ids = new ArrayList<String>();

@@ -96,6 +96,7 @@ public class ManageTasks extends DataManager
 
 	@SkipValidation
 	public String refresh() {
+        //logger.info ( "MONA: entered ManageTasks.refresh()" );
 		refreshFolderTaskTabs();
 		return LIST;
 	}
@@ -472,6 +473,7 @@ public class ManageTasks extends DataManager
 	 * Returns all "file" parameters, including the main input parameter
 	 */
 	public Map<String, List<TaskInputSourceDocument>> getInput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getInput()" );
 		try {
 			if (task == null)
 				throw new NullPointerException("No task is currently selected.");
@@ -500,6 +502,7 @@ public class ManageTasks extends DataManager
 	 * Returns only the main input parameter
 	 */
 	public List<TaskInputSourceDocument> getMainInput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getMainInput()" );
 		if (task == null)
 			return null;
 		else {
@@ -516,10 +519,12 @@ public class ManageTasks extends DataManager
 	}
 	
 	public boolean hasMainInput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.hasMainInput()" );
 		return (getMainInput(task) != null);
 	}
 	
 	public int getMainInputCount(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getMainInputCount()" );
 		List<TaskInputSourceDocument> mainInput = getMainInput(task);
 		if (mainInput == null)
 			return 0;
@@ -530,6 +535,7 @@ public class ManageTasks extends DataManager
 	 * Returns all "file" parameters other than the main input parameter
 	 */
 	public Map<String, List<TaskInputSourceDocument>> getParameterInput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getParameterInput()" );
 		Map<String, List<TaskInputSourceDocument>> input = getInput(task);
 		if (input == null)
 			return null;
@@ -555,6 +561,7 @@ public class ManageTasks extends DataManager
 	 * 5. Return true
 	 */
 	public boolean hasParameters(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.hasParameters()" );
 		if (task == null)
 			return false;
 		else {
@@ -585,6 +592,7 @@ public class ManageTasks extends DataManager
 	 * not including the main input parameter
 	 */
 	public int getParameterCount(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getParameterCount()" );
 		if (task == null)
 			return 0;
 		else {
@@ -607,6 +615,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public Map<String, List<TaskOutputSourceDocument>> getOutput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getOutput()" );
 		try {
 			if (task == null)
 				throw new NullPointerException("No task is currently selected.");
@@ -632,6 +641,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public boolean hasOutput(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.hasOutput()" );
 		Map<String, List<TaskOutputSourceDocument>> output = getOutput(task);
 		if (output != null && output.size() > 0)
 			return true;
@@ -639,6 +649,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public int getOutputCount(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.getOutputCount()" );
 		Map<String, List<TaskOutputSourceDocument>> output = getOutput(task);
 		if (output == null)
 			return 0;
@@ -647,11 +658,13 @@ public class ManageTasks extends DataManager
 
 	public boolean hasWorkingDirectory(Task task) throws Exception
 	{
+        //logger.info ( "MONA: entered ManageTasks.hasWorkingDirectory()" );
 		return getWorkbenchSession().workingDirectoryExists(task);
 	}
 
 	public List<FileHandler.FileAttributes> getWorkingDirectoryList(Task task)
 	{
+        //logger.info ( "MONA: entered ManageTasks.getWorkingDirectoryList()" );
 		try
 		{
 			return getWorkbenchSession().listWorkingDirectory(task);
@@ -667,14 +680,17 @@ public class ManageTasks extends DataManager
 	 * Task display page property accessor methods
 	 *================================================================*/
 	public Task getCurrentTask() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTask()" );
 		return (Task)getSessionAttribute(CURRENT_TASK);
 	}
 	
 	public void setCurrentTask(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.setCurrentTask()" );
 		setSessionAttribute(CURRENT_TASK, task);
 	}
 	
 	public boolean isRefreshable() {
+        //logger.info ( "MONA: entered ManageTasks.isRefreshable()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -688,6 +704,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public Long getCurrentTaskId() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskId()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -700,6 +717,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getCurrentTaskLabel() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskLabel()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -712,6 +730,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getCurrentTaskOwner() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskOwner()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -724,6 +743,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getCurrentTaskGroup() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskGroup()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -736,6 +756,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getCurrentTaskCreationDate() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskCreationDate()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -748,6 +769,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getTool() {
+        //logger.info ( "MONA: entered ManageTasks.getTool()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -761,10 +783,12 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getToolLabel() {
+        //logger.info ( "MONA: entered ManageTasks.getToolLabel()" );
 		return getToolLabel(getTool());
 	}
 	
 	public String getToolAction() {
+        //logger.info ( "MONA: entered ManageTasks.getToolAction()" );
 		String tool = getTool();
 		if (tool == null || tool.trim().equals(""))
 			return null;
@@ -772,10 +796,12 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getMainInputParameter() {
+        //logger.info ( "MONA: entered ManageTasks.getMainInputParameter()" );
 		return getMainInputParameter(getTool());
 	}
 	
 	public boolean hasMainInput() {
+        //logger.info ( "MONA: entered ManageTasks.hasMainInput()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -788,6 +814,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public List<TaskInputSourceDocument> getMainInput() {
+        //logger.info ( "MONA: entered ManageTasks.getMainInput()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -800,6 +827,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public int getMainInputCount() {
+        //logger.info ( "MONA: entered ManageTasks.getMainInputCount()" );
 		List<TaskInputSourceDocument> mainInput = getMainInput();
 		if (mainInput == null)
 			return 0;
@@ -807,6 +835,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public boolean hasParameters() {
+        //logger.info ( "MONA: entered ManageTasks.hasParameters()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -819,6 +848,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public Map<String, String> getSimpleParameters() {
+        //logger.info ( "MONA: entered ManageTasks.getSimpleParameters()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -831,6 +861,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public Map<String, List<TaskInputSourceDocument>> getParameterInput() {
+        //logger.info ( "MONA: entered ManageTasks.getParameterInput()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -843,6 +874,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public int getParameterCount() {
+        //logger.info ( "MONA: entered ManageTasks.getParameterCount()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -855,6 +887,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public boolean hasOutput() {
+        //logger.info ( "MONA: entered ManageTasks.hasOutput()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -868,6 +901,7 @@ public class ManageTasks extends DataManager
 
 	public boolean hasWorkingDirectory() 
 	{
+        //logger.info ( "MONA: entered ManageTasks.hasWorkingDirectory()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -881,6 +915,7 @@ public class ManageTasks extends DataManager
 
 	public List<FileHandler.FileAttributes> getWorkingDirectoryList()
 	{
+        //logger.info ( "MONA: entered ManageTasks.getWorkingDirectoryList()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -894,6 +929,7 @@ public class ManageTasks extends DataManager
 
 	
 	public Map<String, List<TaskOutputSourceDocument>> getOutput() {
+        //logger.info ( "MONA: entered ManageTasks.getOutput()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -906,6 +942,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public int getOutputCount() {
+        //logger.info ( "MONA: entered ManageTasks.getOutputCount()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -918,6 +955,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public String getCurrentTaskStage() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentTaskStage()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -935,6 +973,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public boolean hasTaskMessages() {
+        //logger.info ( "MONA: entered ManageTasks.hasTaskMessages()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -950,6 +989,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	public List<TaskLogMessage> getTaskMessages() {
+        //logger.info ( "MONA: entered ManageTasks.getTaskMessages()" );
 		try {
 			Task task = getCurrentTask();
 			if (task == null)
@@ -965,11 +1005,13 @@ public class ManageTasks extends DataManager
 	 * Page methods
 	 *================================================================*/
 	public Page<? extends FolderItem> getCurrentPage() {
+        //logger.info ( "MONA: entered ManageTasks.getCurrentPage()" );
 		return getFolderTaskTabs().getCurrentTab().getContents();
 	}
 	
 	@SuppressWarnings("unchecked")
 	public void setPageSize(Integer pageSize) {
+        //logger.info ( "MONA: entered ManageTasks.setPageSize()" );
 		try {
 			getController().
 				setUserPreference(TASK_PAGE_SIZE, pageSize.toString());
@@ -992,11 +1034,17 @@ public class ManageTasks extends DataManager
 	 * Internal property accessor methods
 	 *================================================================*/
 	protected Task getSelectedTask(Long taskId) {
+        //logger.info ( "MONA: entered ManageTasks.getSelectedTask()" );
+        //logger.info ( "MONA: taskId = " + taskId );
 		try {
 			WorkbenchSession session = getWorkbenchSession();
 			if (session == null)
 				throw new NullPointerException("No session is present.");
-			else return session.findTask(taskId);
+			else {
+                //logger.info ( "MONA: returning " + session.findTask ( taskId ) );
+                return session.findTask(taskId);
+            }
+			//else return session.findTask(taskId);
 		} catch (Throwable error) {
 			reportError(error, "Error retrieving selected task");
 			return null;
@@ -1004,14 +1052,17 @@ public class ManageTasks extends DataManager
 	}
 	
 	public TabbedPanel<Task> refreshFolderTaskTabs() {
+        //logger.info ( "MONA: entered ManageTasks.refreshFolderTaskTabs()" );
 		try {
 			Folder folder = getCurrentFolder();
+            //logger.info ( "MONA: folder = " + folder );
 			TabbedPanel<Task> folderTasks = null;
 			if (folder == null)
 				throw new NullPointerException("No folder is currently selected.");
 			else {
 				//TODO: Add support for multiple task tab categories
 				List<Task> taskList = folder.findTasks();
+                //logger.info ( "MONA: taskList = " + taskList );
 				getWorkbenchSession().sortTasks(taskList, TaskSortableField.ID, true);
 				if (taskList != null && taskList.size() > 0) {
 					folderTasks = new TabbedPanel<Task>(folder);
@@ -1033,6 +1084,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	protected boolean deleteTask(Task task) {
+        //logger.info ( "MONA: entered ManageTasks.deleteTask()" );
 		try {
 			WorkbenchSession session = getWorkbenchSession();
 			if (session == null)
@@ -1054,6 +1106,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	protected String getMainInputParameter(String tool) {
+        //logger.info ( "MONA: entered ManageTasks.getMainInputParameter()" );
 		if (tool == null)
 			return null;
 		else {
@@ -1067,6 +1120,7 @@ public class ManageTasks extends DataManager
 	// BIG_FILES ###
 	public String getData(SourceDocument document) 
 	{
+        //logger.info ( "MONA: entered ManageTasks.getData()" );
 		try
 		{
 			return getSourceDataAsString(document);
@@ -1079,6 +1133,7 @@ public class ManageTasks extends DataManager
 	}
 	
 	protected int moveSelectedTasks() {
+        //logger.info ( "MONA: entered ManageTasks.moveSelectedTasks()" );
 		// get IDs of selected tasks to move
 		int moved = 0;
         String id;
@@ -1114,6 +1169,7 @@ public class ManageTasks extends DataManager
 	 * Updated by Mona to refresh user data size after deletion.
 	 */
 	protected int deleteSelectedTasks() {
+        //logger.info ( "MONA: entered ManageTasks.deleteSelectedTasks()" );
 		int deleted = 0;
         String id;
 		String[] selectedIds = getSelectedIds();
