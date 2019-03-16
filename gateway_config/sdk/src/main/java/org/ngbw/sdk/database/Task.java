@@ -180,7 +180,11 @@ public class Task extends FolderItem implements Comparable<Task> {
 		@Override
 		public void execute(Connection dbConn) throws IOException, SQLException
 		{
+            //log.debug ( "MONA: entered Task.execute()" );
+            //log.debug ( "MONA: m_key value = " + m_key.getValue() );
+            //log.debug ( "MONA: m_parameter = " + m_parameter );
 			TaskInputParameter inputParam = new TaskInputParameter(m_key.getValue(), m_parameter);
+            //log.debug ( "MONA: inputParam = " + inputParam );
 
 			inputParam.save(dbConn);
 
@@ -585,7 +589,6 @@ public class Task extends FolderItem implements Comparable<Task> {
 
 	// data fields
 
-    //private static final Log log = LogFactory.getLog(User.class.getName());
     private static final Log log = LogFactory.getLog(Task.class.getName());
 
 	private static final String TABLE_NAME = "tasks";
