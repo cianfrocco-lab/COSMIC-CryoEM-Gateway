@@ -430,9 +430,12 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
         //log.debug ( "MONA : entered TaskInputSourceDocument.save()" );
         //log.debug ( "MONA : m_sourceDocument = " + m_sourceDocument );
         //log.debug ( "MONA : m_sourceDocumentId 1 = " + m_sourceDocumentId );
+        //log.debug ( "MONA : m_columns.size 1 = " + m_columns.size() );
 
+        /*
         if ( m_sourceDocumentId != null )
-            //log.debug ( "MONA : m_sourceDocumentId.getValue() 1 = " + m_sourceDocumentId.getValue() );
+            log.debug ( "MONA : m_sourceDocumentId.getValue() 1 = " + m_sourceDocumentId.getValue() );
+        */
         
         if ( m_sourceDocument != null )
         {
@@ -445,18 +448,12 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 	            m_sourceDocumentId = new LongColumn ( "SOURCE_DOCUMENT_ID",
                     false );
                 m_columns.add ( m_sourceDocumentId );
+                //log.debug ( "MONA : m_columns.size 2 = " + m_columns.size() );
             }
 
 		    m_sourceDocumentId.setValue
                 ( m_sourceDocument.getSourceDocumentId() );
-            //log.debug ( "MONA : m_sourceDocumentId 2 = " + m_sourceDocumentId );
-            //log.debug ( "MONA : m_sourceDocumentId.getValue() 1 = " + m_sourceDocumentId.getValue() );
         }
-
-        /*
-        if ( m_sourceDocumentId != null )
-            log.debug ( "MONA : m_sourceDocumentId.getValue() 2 = " + m_sourceDocumentId.getValue() );
-        */
 
         // save the task_input_source_documents table entry
 		super.save(dbConn);
