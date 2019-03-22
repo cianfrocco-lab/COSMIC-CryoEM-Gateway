@@ -1507,6 +1507,9 @@ public class DataManager extends FolderManager
 				folderData = new TabbedPanel<UserDataItem>(folder);
 				//folderData = new TabbedPanel<? extends FolderItem>(folder);
 				String pageSize = getController().getUserPreference(DATA_PAGE_SIZE);
+				//hardcoded hack to display all items, until multipage
+				//is working:
+				pageSize = "2000";
                 //logger.debug ( "MONA : pageSize = " + pageSize );
 
 				// physical view tab = All Data Tab
