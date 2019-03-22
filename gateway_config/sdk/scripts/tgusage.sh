@@ -19,7 +19,7 @@ if [ "$3" != "" ]; then
 	ACCOUNT="$3"
 fi
 
-echo "Importing tgusage data for $BEGIN to $END"
+#echo "Importing tgusage data for $BEGIN to $END"
 
 # This gets usage info for all accounts (cosmic2 community account like always, but also individual allocations and iplant)
 ssh cosmic2@comet.sdsc.edu "mkdir tgusage_${HOSTNAME} 2>/dev/null"
