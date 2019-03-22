@@ -1,11 +1,15 @@
 #!/bin/sh
 
 source $HOME/.bashrc
-PATH=/usr/sbin:$PATH
+export SDK_VERSIONS=/projects/cosmic2/gateway/scripts
+export PATH=/usr/sbin:$PATH:$SDK_VERSIONS
 TODAY=`date +%m-%d-%Y`
 #CIPRES_CHARGE=TG-DEB090011
 CIPRES_CHARGE=csd547
+CIPRES_CHARGE=TG-MCB170058
 #IPLANT_CHARGE=TG-MCB110022
+
+source /users/u2/cosmic2-gw/gatewayVE/bin/activate
 
 cd ~/tgusage
 tgusage.sh $1 
