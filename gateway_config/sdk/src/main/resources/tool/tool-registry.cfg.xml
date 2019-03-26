@@ -52,6 +52,25 @@
 				<Parameter key="workspace" value="${comet.workspace}"/>
 			</Parameters>
 		</ToolResource>
+		<ToolResource id="comet-gpu" type="REMOTE_SHELL" 
+			class="org.ngbw.sdk.tool.DefaultToolResource"
+			filehandler="org.ngbw.sdk.tool.SFTPFileHandler" 
+			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
+			<Parameters>
+                <Parameter key="cancel" value="${comet.cancel}"  />
+                <Parameter key="accountGroup" value="teragrid"  />
+                <Parameter key="chargeNumber" value="${cipres.charge.number}"/>
+                <Parameter key="chargeCode" value="${cipres.charge.number}"/>
+                <Parameter key="check" value="${comet.check}"  />
+                <Parameter key="coresPerNode" value="1"  />
+				<Parameter key="fileHost" value="${comet.fileHost}" />
+                <Parameter key="login" value="${comet.login}" />
+                <Parameter key="rc" value="${comet.rc}"  />
+                <Parameter key="runner" value="org.ngbw.sdk.common.util.SSHExecProcessRunner" />
+                <Parameter key="submit" value="${comet.submit}"  />
+				<Parameter key="workspace" value="${comet.workspace}"/>
+			</Parameters>
+		</ToolResource>
 	</ToolResources>
 	<ToolGroups>
 		<ToolGroup id="XSEDE" disable="${teragrid.tools.disable}">
@@ -69,8 +88,20 @@
 			-->
 		</ToolGroup>
 		<ToolGroup id="COMET" isdefault="1">
+			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Preprocessing: motion correction, CTF estimation, particle picking on Comet"
+                toolresource="COMET"
+                configfile="pisexml/particle_picking_ctf_motion.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+
 			<Tool id="RELION_2D_CLASS_COMET" name="Relion 2D classification on Comet"
-				toolresource="COMET"
+				toolresource="comet-gpu"
 				configfile="pisexml/relion_2d_class_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
 				<InputParameters>
@@ -80,6 +111,17 @@
 				<OutputParameters>
 				</OutputParameters>
 			</Tool>
+			<Tool id="RELION_3D_INITIAL_MODEL_COMET" name="Relion 3D initial model calculation on Comet"
+                toolresource="COMET"
+                configfile="pisexml/relion_3d_initial_model_comet.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="RELION_3D_CLASS_COMET" name="Relion 3D classification on Comet"
 				toolresource="COMET"
 				configfile="pisexml/relion_3d_class_comet.xml"

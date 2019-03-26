@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D classification</title>
-    <version>2.1.b1 - last updated 2017.09.15</version>
+    <version>3.0-beta</version>
     <description>Perform 3D classification of single particles with 3D model using Relion</description>
     <authors>S. H. W. Scheres</authors>
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
@@ -91,7 +91,7 @@ Mike -->
 	    <prompt>Image File</prompt>
 		<format>
 		  <language>perl</language>
-		  <code>"--i $value"</code>
+		  <code>"--i \"$value\""</code>
 		</format>
 	    <group>90</group>
 	  </attributes>	  
@@ -107,11 +107,52 @@ Mike -->
 	  	
 <!-- visible input parameters -->	
 
+	<parameter type="Integer" issimple="1" ismandatory="1">
+        <name>K</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Number of classes (K)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--K $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter an integer > 0 for the number of classes</message>
+                    <language>perl</language>
+                    <code>$K &lt; 1</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <parameter type="Integer" issimple="1" ismandatory="1">
+        <name>iter</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Number of iterations (iter)</prompt>
+            <format>
+<language>perl</language>
+<code>"--iter $value"</code>
+            </format>
+            <vdef>
+<value>25</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                <message>Please enter an integer > 0 for the number of iterations</message>
+                <language>perl</language>
+                <code>$iter &lt; 1</code>
+            </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+	
     <parameter type="Integer" issimple="1" ismandatory="1">
 	    <name>particle_diameter</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Diameter of particle, in angstroms (particle_diameter))</prompt>
+		    <prompt>Diameter of particle, in Angstroms (particle_diameter)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--particle_diameter $value"</code>
@@ -123,25 +164,6 @@ Mike -->
 				    <code>$particle_diameter &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Float" issimple="1" ismandatory="1">
-	    <name>angpix</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Pixel size of data, in angstroms/pixel (angpix)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--angpix $value"</code>
-		    </format>
-            <ctrls>
-                <ctrl>
-                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
-                    <language>perl</language>
-                    <code>$angpix &lt; 0.01</code>
-                </ctrl>
-            </ctrls>
 	    </attributes>
     </parameter>
 
@@ -164,7 +186,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Excl" issimple="1" ismandatory="1">
+    <parameter type="Excl" ismandatory="1">
 	    <name>sym</name>
 	    <attributes>
 		    <group>1</group>
@@ -355,85 +377,66 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Switch" issimple="1">
-	    <name>firstiter_cc</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Reference map is on absolute greyscale (firstiter_cc)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>($value) ? "" : "--firstiter_cc"</code>
-		    </format>
+	<parameter type="Switch">
+        <name>firstiter_cc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Reference map is on absolute greyscale (firstiter_cc)</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? "" : "--firstiter_cc"</code>
+            </format>
             <vdef>
                 <value>0</value>
             </vdef>
-	    </attributes>
+        </attributes>
     </parameter>
-
-    <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>ini_high</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Initial low-pass filter, in angstrom (ini_high)</prompt>
+	
+	<parameter type="Integer" ismandatory="1">
+        <name>ini_high</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Initial low-pass filter, in Angstroms (ini_high)</prompt>
             <vdef>
                 <value>60</value>
             </vdef>
-		    <format>
-			    <language>perl</language>
-			    <code>"--ini_high $value"</code>
-		    </format>
-		    <ctrls>
-			    <ctrl>
-                    <message>Please enter an integer > 0 for the initial low-pass filter (in Angstroms)</message>
-				    <language>perl</language>
-				    <code>$ini_high &lt; 1</code>
-			    </ctrl>
-		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Integer" issimple="1" ismandatory="1">
-	    <name>K</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Number of classes (K)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--K $value"</code>
-		    </format>
-		    <ctrls>
-			    <ctrl>
-                    <message>Please enter an integer > 0 for the number of classes</message>
-				    <language>perl</language>
-				    <code>$K &lt; 1</code>
-			    </ctrl>
-		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Integer" issimple="1" ismandatory="1">
-        <name>iter</name>
-        <attributes>
-            <group>1</group>
-            <prompt>Number of iterations (iter)</prompt>
             <format>
-<language>perl</language>
-<code>"--iter $value"</code>
+                <language>perl</language>
+                <code>"--ini_high $value"</code>
             </format>
-            <vdef>
-<value>25</value>
-            </vdef>
             <ctrls>
                 <ctrl>
-                <message>Please enter an integer > 0 for the number of iterations</message>
-                <language>perl</language>
-                <code>$iter &lt; 1</code>
-            </ctrl>
+                    <message>Please enter an integer > 0 for the initial low-pass filter (in Angstroms)</message>
+                    <language>perl</language>
+                    <code>$ini_high &lt; 1</code>
+                </ctrl>
             </ctrls>
         </attributes>
     </parameter>
 
-    <parameter type="Excl" issimple="1" ismandatory="1">
+	<parameter type="Float" ismandatory="1">
+        <name>angpix</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Pixel size of data, in Angstroms/pixel, if not already in star file (angpix)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--angpix $value"</code>
+            </format>
+			<vdef>
+				<value>1</value>
+			</vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
+                    <language>perl</language>
+                    <code>$angpix &lt; 0.01</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <parameter type="Excl" ismandatory="1">
 	    <name>healpix_order</name>
 	    <attributes>
 		    <group>1</group>
@@ -468,7 +471,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Integer" issimple="1" ismandatory="1">
+    <parameter type="Integer" ismandatory="1">
 	    <name>offset_range</name>
 	    <attributes>
 		    <group>1</group>
@@ -490,7 +493,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Integer" issimple="1" ismandatory="1">
+    <parameter type="Integer" ismandatory="1">
 	    <name>offset_step</name>
 	    <attributes>
 		    <group>1</group>
@@ -659,7 +662,7 @@ Mike -->
 	    <name>strict_highres_exp</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Limit resolution E-step to, in angstroms (strict_highres_exp)</prompt>
+		    <prompt>Limit resolution E-step to, in Angstroms (strict_highres_exp)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>($value) ? " --strict_highres_exp $value" : ""</code>

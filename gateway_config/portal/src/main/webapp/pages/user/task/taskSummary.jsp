@@ -38,7 +38,7 @@
         <s:else>Select Tool</s:else>
       </s:a>
       <s:if test="%{hasTool()}">
-		<s:a href="javascript:popitup('%{staticSite}/tools/%{getTool().toLowerCase()}.html')">Click for more info</s:a>
+		<s:a href="javascript:popitup('%{staticSite}/tools/%{getTool().toLowerCase()}')">Click for more info</s:a>
       </s:if>
     </div>
   </div>

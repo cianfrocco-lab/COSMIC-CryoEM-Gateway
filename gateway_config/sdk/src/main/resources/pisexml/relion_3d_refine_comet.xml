@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D refinement</title>
-    <version>2.1.b1 - last updated 2017.09.15</version>
+    <version>3.0-beta</version>
     <description>Iteratively refine 3D volume against single particles using Relion</description>
     <authors>S. H. W. Scheres</authors>
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
@@ -81,7 +81,7 @@ Mike -->
 		<attributes>
 			<format>
 				<language>perl</language>
-                <code>"--auto_refine --flatten_solvent --zero_mask --oversampling 1 --low_resol_join_halves 40 --norm --scale"</code>
+                <code>"--auto_refine --split_random_halves --dont_combine_weights_via_disc --pool 100 --pad 2 --flatten_solvent --zero_mask --oversampling 1  --low_resol_join_halves 40 --norm --scale"</code>  
 			</format>
 			<group>1</group>
 		</attributes>
@@ -94,7 +94,7 @@ Mike -->
 	    <prompt>Images File</prompt>
 		<format>
 		  <language>perl</language>
-		  <code>"--i $value"</code>
+		  <code>"--i \"$value\""</code>
 		</format>
 	    <group>90</group>
 	  </attributes>	  
@@ -114,7 +114,7 @@ Mike -->
 	    <name>particle_diameter</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Diameter of particle, in angstroms (particle_diameter)</prompt>
+		    <prompt>Diameter of particle, in Angstroms (particle_diameter)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>"--particle_diameter $value"</code>
@@ -126,25 +126,6 @@ Mike -->
 				    <code>$particle_diameter &lt; 1</code>
 			    </ctrl>
 		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Float" issimple="1" ismandatory="1">
-	    <name>angpix</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Pixel size of data, in angstroms/pixel (angpix)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--angpix $value"</code>
-		    </format>
-            <ctrls>
-                <ctrl>
-                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
-                    <language>perl</language>
-                    <code>$angpix &lt; 0.01</code>
-                </ctrl>
-            </ctrls>
 	    </attributes>
     </parameter>
 
@@ -167,7 +148,7 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Excl" issimple="1" ismandatory="1">
+    <parameter type="Excl" ismandatory="1">
 	    <name>sym</name>
 	    <attributes>
 		    <group>1</group>
@@ -358,7 +339,29 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Switch" issimple="1">
+	<parameter type="Float" ismandatory="1">
+        <name>angpix</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Pixel size of data, in Angstroms/pixel, if not provided in STAR file (angpix)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--angpix $value"</code>
+            </format>
+			<vdef>
+				<value>1</value>
+			</vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
+                    <language>perl</language>
+                    <code>$angpix &lt; 0.01</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <parameter type="Switch" >
 	    <name>firstiter_cc</name>
 	    <attributes>
 		    <group>1</group>
@@ -373,11 +376,11 @@ Mike -->
 	    </attributes>
     </parameter>
 
-    <parameter type="Integer" issimple="1" ismandatory="1">
+    <parameter type="Integer" ismandatory="1">
 	    <name>ini_high</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Initial low-pass filter, in angstrom (ini_high)</prompt>
+		    <prompt>Initial low-pass filter, in Angstrom (ini_high)</prompt>
             <vdef>
                 <value>60</value>
             </vdef>
@@ -596,32 +599,10 @@ Mike -->
     </parameter>
 
     <parameter type="Integer" ismandatory="1">
-	    <name>tau2_fudge</name>
-	    <attributes>
-		    <group>1</group>
-		    <prompt>Regularization parameter (tau2_fudge)</prompt>
-		    <format>
-			    <language>perl</language>
-			    <code>"--tau2_fudge $value"</code>
-		    </format>
-		    <vdef>
-			    <value>4</value>
-		    </vdef>
-		    <ctrls>
-			    <ctrl>
-                    <message>Please enter an integer between 1 and 4, inclusively, for the regularization parameter</message>
-				    <language>perl</language>
-				    <code>$tau2_fudge &lt; 1 || $tau2_fudge &gt; 4</code>
-			    </ctrl>
-		    </ctrls>
-	    </attributes>
-    </parameter>
-
-    <parameter type="Integer" ismandatory="1">
 	    <name>strict_highres_exp</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Limit resolution E-step to, in angstroms (strict_highres_exp)</prompt>
+		    <prompt>Limit resolution E-step to, in Angstroms (strict_highres_exp)</prompt>
 		    <format>
 			    <language>perl</language>
 			    <code>($value) ? " --strict_highres_exp $value" : ""</code>

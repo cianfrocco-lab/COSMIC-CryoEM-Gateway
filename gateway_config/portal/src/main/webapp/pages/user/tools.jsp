@@ -30,7 +30,7 @@
         (<s:property value="%{#action.getToolVersion(#tool)}"/>)
       </s:if>
       <span class="simpleLink">
-        <s:a href="javascript:popitup('%{staticSite}/tools/%{#tool.toLowerCase()}.html')">
+        <s:a href="javascript:popitup('%{staticSite}/tools/%{#tool.toLowerCase()}')">
           <img src="<s:url value="/images/info.png"/>" border="0"/>
         </s:a>
       </span>
@@ -52,7 +52,7 @@
         (<s:property value="%{#action.getToolVersion(#tool)}"/>)
       </s:if>
       <span class="simpleLink">
-        <s:a href="javascript:popitup('%{staticSite}/tools/%{#tool.toLowerCase()}.html')">
+        <s:a href="javascript:popitup('%{staticSite}/tools/%{#tool.toLowerCase()}')">
           <img src="<s:url value="/images/info.png"/>" border="0"/>
         </s:a>
       </span>
