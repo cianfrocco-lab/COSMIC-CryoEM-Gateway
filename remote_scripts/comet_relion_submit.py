@@ -816,9 +816,8 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 6 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' 
-/bin/tar -cvzf output.tar.gz %s/
 """ \
-	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,outdir)
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
