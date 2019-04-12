@@ -18,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.ngbw.sdk.database.Folder;
+import org.ngbw.sdk.database.User;
 import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.UserDataItem;
 import org.ngbw.web.actions.NgbwSupport;
@@ -58,6 +59,10 @@ public class Transfer2DataManager extends NgbwSupport
             //log.debug ( "MONA : folder label = " + folder.getLabel() );
             //log.debug ( "MONA : folder userid = " + folder.getUserId() );
             //log.debug ( "MONA : folder creation date = " + folder.getCreationDate() );
+            User user = new User ( transfer_record.getUserId() );
+            //log.debug ( "MONA : user = " + user );
+            //log.debug ( "MONA : user.getDataSize() = " + user.getDataSize() );
+            //log.debug ( "MONA : user.queryDataSize() = " + user.queryDataSize() );
         }
         catch ( Exception e )
         {
@@ -66,8 +71,14 @@ public class Transfer2DataManager extends NgbwSupport
             return ( 0 );
         }
 
-        int saved = saveFiles ( transfer_record, destination_path, folder );
-        saved += saveDirectories ( transfer_record, destination_path, folder );
+        // Append user folder label to destination_path
+        String new_destination_path = destination_path + folder.getLabel() +
+            "/";
+        //log.debug ( "MONA : new destination_path = " + new_destination_path );
+        int saved = saveFiles ( transfer_record, new_destination_path,
+            folder );
+        saved += saveDirectories ( transfer_record, new_destination_path,
+            folder );
         reportUserError ( saved + " files/directories were saved" );
 
         return ( saved );
@@ -88,16 +99,19 @@ public class Transfer2DataManager extends NgbwSupport
         //log.debug ( "MONA : destination_path = " + destination_path );
 
         int saved = 0;
+        long size = 0L;
 
         if ( transfer_record == null || destination_path == null ||
             destination_path.trim().equals ( "" ) || folder == null )
             return ( saved );
 
         Long tr_id = transfer_record.getTrId();
+        /*
         String user_data_folder = folder.getLabel();
         //log.debug ( "MONA : user_data_folder = " + user_data_folder );
         destination_path += user_data_folder + "/";
-        //log.debug ( "MONA : new destination_path = " + destination_path );
+        log.debug ( "MONA : new destination_path = " + destination_path );
+        */
 
         // Check and handle directories...
         String dirString = transfer_record.getDirectoryNames();
@@ -144,7 +158,8 @@ public class Transfer2DataManager extends NgbwSupport
 
             if ( files != null && ! files.isEmpty() )
             {
-                //log.debug ( "MONA : files.size() = " + files.size() );
+                size = files.size();
+                //log.debug ( "MONA : size 1 = " + size );
                 for ( File file : files )
                 {
                     //log.debug ( "MONA : file = " + file );
@@ -154,8 +169,10 @@ public class Transfer2DataManager extends NgbwSupport
                     //log.debug ( "MONA : label = " + label );
                     try
                     {
+                        size = FileUtils.sizeOf ( dir );
+                        //log.debug ( "MONA : size 2 = " + size );
                         data_item = new UserDataDirItem ( folder, tr_id, label,
-                            FileUtils.sizeOf ( dir ) );
+                            size );
                         //log.debug ( "MONA : data_item = " + data_item );
                         if ( data_item != null )
                         {
@@ -207,8 +224,10 @@ public class Transfer2DataManager extends NgbwSupport
                     //log.debug ( "MONA : label = " + label );
                     try
                     {
+                        size = FileUtils.sizeOf ( dir );
+                        //log.debug ( "MONA : size 3 = " + size );
                         data_item = new UserDataDirItem ( folder, tr_id, label,
-                            FileUtils.sizeOf ( dir ) );
+                            size );
                         //log.debug ( "MONA : data_item = " + data_item );
                         if ( data_item != null )
                         {

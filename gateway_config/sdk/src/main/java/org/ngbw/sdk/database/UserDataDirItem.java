@@ -42,7 +42,9 @@ import org.ngbw.sdk.WorkbenchException;
  * This class encapsulates information for the Globus transferred directories.
  * Code was copied and modified from Folder.java.  Class is functional but
  * does contain additional member functions that are not use and have been
- * commented out. 
+ * commented out.  Class needs to implement SourceDocument as 
+ * CreateTask.setSelectedInputData() needs to be able to use this class as an
+ * SourceDocument object.
  *
  * @author Mona Wong
  *
@@ -188,13 +190,13 @@ public class UserDataDirItem extends FolderItem
         //m_sourceDocument = new SourceDocumentRow();
 	}
 
-	public UserDataDirItem ( long folderId ) throws IOException, SQLException
+	public UserDataDirItem ( long userdataId ) throws IOException, SQLException
 	{
 		this();
         //log.debug ( "MONA : entered UserDataDirItem() 3" );
         //log.debug ( "MONA : folderId = " + folderId );
 
-		m_key.assignValue ( folderId );
+		m_key.assignValue ( userdataId );
 
 		load();
 	}
@@ -240,13 +242,14 @@ public class UserDataDirItem extends FolderItem
 	}
 
 
-	UserDataDirItem(Connection dbConn, long folderId) throws IOException, SQLException
+	UserDataDirItem ( Connection dbConn, long userdataId)
+        throws IOException, SQLException
 	{
 		this();
         //log.debug ( "MONA : entered UserDataDirItem() 5" );
         //log.debug ( "MONA : folderId = " + folderId );
 
-		m_key.assignValue(folderId);
+		m_key.assignValue ( userdataId );
 
 		load(dbConn);
 	}
@@ -325,11 +328,13 @@ public class UserDataDirItem extends FolderItem
 	// public methods
 
 
+    /*
 	public long getFolderId()
 	{
         //log.debug ( "MONA : entered getFolderId()" );
 		return m_key.getValue();
 	}
+    */
 
     public long getUserDataId()
     {
@@ -524,8 +529,58 @@ public class UserDataDirItem extends FolderItem
         try {
             selectStmt = dbConn.prepareStatement(stmtBuilder.toString());
             int index = 1;
-                                                                                           for (int i = 0 ; i < keys.length ; i += 1)
+            for (int i = 0 ; i < keys.length ; i += 1)
                 index = keys[i].setParameter(selectStmt, index);
+            itemRows = selectStmt.executeQuery();
+            List<UserDataDirItem> dataItems = new ArrayList<UserDataDirItem>();
+
+            while (itemRows.next())
+            {
+                //log.debug ( "MONA : itemRows = " + itemRows );
+                dataItems.add ( new UserDataDirItem ( dbConn,
+                    itemRows.getLong ( 1 ) ) );
+            }
+            return dataItems;
+        }   
+        finally
+        {
+            if (itemRows != null)
+                itemRows.close();
+
+            if (selectStmt != null)
+                selectStmt.close();
+
+            dbConn.close();
+        }
+    }       
+ 
+    /**
+     * Find all entries matching the given userId and label path
+     * @author Mona Wong
+     * @return null if the current item is new; otherwise return a List
+     **/
+	public static List<UserDataDirItem> findDataDirItemsByPath
+        ( Long userId, String label_path ) throws IOException, SQLException
+	{
+        //log.debug ( "MONA : entered UserDataDirItem.findDataDirItemsByPath" );
+        //log.debug ( "MONA: userId = " + userId );
+        //log.debug ( "MONA: label_path 1 = " + label_path );
+        label_path += "%";
+        //log.debug ( "MONA: label_path 2 = " + label_path );
+
+        StringBuilder stmtBuilder = new StringBuilder ( "SELECT " + KEY_NAME +
+            "  FROM " + TABLE_NAME + " WHERE USER_ID = ? AND LABEL like ?" );
+        //log.debug ( "MONA : stmtBuilder 1 = " + stmtBuilder.toString() );
+                                        
+        Connection dbConn =
+            ConnectionManager.getConnectionSource().getConnection();
+        PreparedStatement selectStmt = null;
+        ResultSet itemRows = null;
+
+        try {
+            selectStmt = dbConn.prepareStatement(stmtBuilder.toString());
+            selectStmt.setString ( 1, userId.toString() );
+            selectStmt.setString ( 2, label_path );
                                                                                            itemRows = selectStmt.executeQuery();
             List<UserDataDirItem> dataItems = new ArrayList<UserDataDirItem>();
 
@@ -547,7 +602,7 @@ public class UserDataDirItem extends FolderItem
 
             dbConn.close();
         }
-    }       
+    }
 
 
 	@Override
@@ -569,14 +624,16 @@ public class UserDataDirItem extends FolderItem
 		if (isNew() || otherFolder.isNew())
 			return false;
 
-		return getFolderId() == otherFolder.getFolderId();
+		//return getFolderId() == otherFolder.getFolderId();
+		return getEnclosingFolderId() == otherFolder.getEnclosingFolderId();
 	}
 
 	@Override
 	public int hashCode()
 	{
         //log.debug ( "MONA : entered hashCode()" );
-		return (new Long(getFolderId())).hashCode();
+		//return (new Long(getFolderId())).hashCode();
+		return (new Long(getEnclosingFolderId())).hashCode();
 	}
 
 	@Override
@@ -596,7 +653,8 @@ public class UserDataDirItem extends FolderItem
 		if (other.isNew())
 			return 1;
 
-		return (int) (getFolderId() - other.getFolderId());
+		//return (int) (getFolderId() - other.getFolderId());
+		return (int) (getEnclosingFolderId() - other.getEnclosingFolderId());
 	}
 
 
@@ -644,9 +702,6 @@ public class UserDataDirItem extends FolderItem
         Criterion key = new LongCriterion ( KEY_NAME, m_key.getValue() );
         delete ( dbConn, key );
 		m_key.reset();
-
-        long tr_id = getTransferRecordId();
-        //log.debug ( "MONA : tr_id = " + tr_id );
 	}
 
 	static void delete ( Connection dbConn, long userDataId )
@@ -677,8 +732,6 @@ public class UserDataDirItem extends FolderItem
         ( new DeleteOp ( TABLE_NAME, userDataKey ) ).execute ( dbConn );
                                              
         //SourceDocumentRow.delete ( dbConn, sourceDocumentId );
-
-        //deleteDirectory();
     }
 
     /**
@@ -763,7 +816,6 @@ public class UserDataDirItem extends FolderItem
         //log.debug ( "MONA : entered UserDataDirItem.getDataType()" );
         //log.debug ( "MONA : m_dataType = " + m_dataType.getValue() );
         return DataType.valueOf ( m_dataType.getValue() );
-        //return DataType.DIRECTORY;
     }
 
     public void setDataType ( DataType dataType )
@@ -788,7 +840,7 @@ public class UserDataDirItem extends FolderItem
     public long getSourceDocumentId()
     {
         //return m_sourceDocumentId.getValue();
-        return m_key.getValue();
+        return 0L;
     }
 
     @Override

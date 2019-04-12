@@ -49,7 +49,7 @@ function confirm_form()
 function confirm_form_data()
 {
 	var agree = confirm
-        ( "Are you sure?  If you delete these items, you will not be able to recover them. Also, if you are deleting a STAR file data directory and it appears in multiple folders, ALL entries will be deleted as well!" );
+        ( "Are you sure?  If you delete these items, you will not be able to recover them. Warning, deleting a star file will remove the entire directory!" );
 	if (agree)
 		return true;
 	else return false;

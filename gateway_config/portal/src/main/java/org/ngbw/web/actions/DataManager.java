@@ -226,14 +226,25 @@ public class DataManager extends FolderManager
 
 	@SkipValidation
 	public String cancel() {
+        //logger.debug ( "MONA : entered DataManager.cancel()" );
+        /* dataAction is currently commented out in the dataList.jsp and hence will
+         * return null so the if test below is also commented out so that the
+         * delete feature will work...
 		String dataAction = getDataAction();
 		if (dataAction == null) {
 			addActionError("You must select an action to manipulate your data.");
 		} else {
+        */
 			String[] selectedIds = getSelectedIds();
+            //logger.debug ( "MONA : selectedIds = " + selectedIds );
 			if (selectedIds == null || selectedIds.length < 1) {
+                /*
 				addActionError("You must select one or more data items to " +
 					dataAction.toLowerCase() + " them.");
+                */
+                //logger.debug ( "MONA : LIST = " + LIST );
+				addActionError
+                    ( "You must select one or more data items to delete" );
 			} else {
 				/**/
 				String[] button = (String[])getParameters().get("method:cancel");
@@ -269,18 +280,22 @@ public class DataManager extends FolderManager
 						"please select from the list below.");
 				}
 			}
-		}
+		//}
 		return LIST;
 	}
 
 	@SkipValidation
 	public String deleteSelected() {
+        //logger.debug ( "MONA : entered DataManager.deleteSelected()" );
 		String[] selectedIds = getSelectedIds();
+        //logger.debug ( "MONA : selectedIds = " + selectedIds );
 		if (selectedIds == null || selectedIds.length < 1) {
 			addActionError("You must select one or more data items to delete them.");
 		} else {
 			int deleted = deleteSelectedDataItems();
+            //logger.debug ( "MONA : deleted = " + deleted );
 			int remaining = selectedIds.length - deleted;
+            //logger.debug ( "MONA : remaining = " + remaining );
 			if (deleted > 0) {
 				String result = deleted + " data item";
 				if (deleted != 1) result += "s were ";
@@ -1581,7 +1596,8 @@ public class DataManager extends FolderManager
 	}
 
     /**
-     * Delete the dataItem and the directory which contains the dataItem.
+     * Delete the given UserDataDirItem; if it is a .star file, delete the
+     * directory which contains it
      * @author Mona Wong
      * @param dataItem - the UserDataDirItem object to delete
      * @return the number of items deleted
@@ -1592,7 +1608,7 @@ public class DataManager extends FolderManager
         int deleted = 0;
 
 		if ( dataItem == null )
-	        return ( deleted );
+	        return ( 0 );
 
 		try
         {
@@ -1614,44 +1630,67 @@ public class DataManager extends FolderManager
 
 			else
             {
-                // First, delete the directory
-                Long userId = session.getUser().getUserId();
+                // First, delete all entries for the user with the same path
+                User user = session.getUser();
+                logger.debug ( "user data size 1 = " + user.queryDataSize() );
+                Long userId = user.getUserId();
                 //logger.debug ( "MONA: userId = " + userId );
                 String label = dataItem.getLabel();
+                //logger.debug ( "MONA: label = " + label );
+                File tmp = new File ( label );
+                String label_path = tmp.getParent();
+                //logger.debug ( "MONA: label_path = " + label_path );
+                long folderId = dataItem.getEnclosingFolderId();
+                //logger.debug ( "MONA: folderId = " + folderId );
+                Folder folder = new Folder ( folderId );
+                //logger.debug ( "MONA: folder = " + folder );
+                //logger.debug ( "MONA: folder label = " + folder.getLabel() );
                 File file = new File ( globusRoot + "/" + link_username +
-                    "/" + label );
+                    "/" + folder.getLabel() + "/" + label );
                 //logger.debug ( "MONA: file = " + file );
+                /*
                 if ( file.isDirectory() )
                 {
-                    //logger.debug ( "MONA: deleted " + file );
-                    FileUtils.deleteDirectory ( file );
+                    logger.debug ( "MONA: file is directory" );
+                    //FileUtils.deleteDirectory ( file );
                 }
                 else
                 {
+                */
                     File path = new File ( file.getParent() );
-                    //logger.debug ( "MONA: deleted " + path );
-                    FileUtils.deleteDirectory ( path );
-                }
+                    //logger.debug ( "MONA: file" );
+                    //logger.debug ( "MONA: path " + path );
 
-                List<UserDataDirItem> list = session.findUserDataDirItems
-                    ( label ); 
-                //logger.debug ( "MONA: list = " + list );
-				//Long id = dataItem.getUserDataId();
-                //logger.debug ( "MONA: id = " + id );
+                    // If .star file, we'll delete the entire parent directory
+                    // and all other UserDataDirItems with the same parent
+                    // directory
+                    if ( dataItem.getDataFormat() == DataFormat.STAR )
+                    {
+                        List<UserDataDirItem> list =
+                            session.findUserDataDirItemsByPath ( userId,
+                                label_path ); 
+                        //logger.debug ( "MONA: list = " + list );
+                        //logger.debug ( "MONA: list size = " + list.size() );
+				        //Long id = dataItem.getUserDataId();
 
-                for ( UserDataDirItem item : list )
-                {
-                    /*
-                    logger.debug ( "MONA: item = " + item );
-                    logger.debug ( "MONA: item.getLabel = " +
-                        item.getLabel() );
-                    */
-				    session.deleteUserDataDirItem ( item );
-                    deleted++;
-                }
+                        if ( list == null )
+                            return ( 0 );
 
-                return ( deleted );
-			}
+                        for ( UserDataDirItem item : list )
+                        {
+                            //logger.debug ( "MONA: item = " + item );
+                            //logger.debug ( "MONA: item.getLabel = " +
+                                //item.getLabel() );
+				            session.deleteUserDataDirItem ( item );
+                            deleted++;
+                        }
+                        FileUtils.deleteDirectory ( path );
+                        // Now update user's total data upload size!
+                    }
+			    //}
+                logger.debug ( "MONA: user data size 2 = " + user.queryDataSize() );
+            }
+            return ( deleted );
 		}
 
         catch ( Throwable error )
@@ -1776,8 +1815,10 @@ public class DataManager extends FolderManager
 	}
 
 	protected int deleteSelectedDataItems() {
+        //logger.debug ( "MONA : entered DataManager.deleteSelectedDataItems()" );
 		int deleted = 0;
 		String[] selectedIds = getSelectedIds();
+        //logger.debug ( "MONA : selectedIds = " + selectedIds );
 		if (selectedIds == null || selectedIds.length < 1)
 			return deleted;
 		else {
@@ -1786,7 +1827,9 @@ public class DataManager extends FolderManager
 			for (int i=0; i<selectedIds.length; i++) {
                 String[] parts = selectedIds[i].split ( "-" );
                 String className = parts[0].trim();
+                //logger.debug ( "MONA : className = " + className );
                 Long id = Long.parseLong ( parts[1].trim() );
+                //logger.debug ( "MONA : id = " + id );
 
                 if ( className.equals ( "UserDataItem" ) )
                 {
@@ -1812,20 +1855,13 @@ public class DataManager extends FolderManager
                 else if ( className.equals ( "UserDataDirItem" ) )
                 {
 			        UserDataDirItem dataItem = getSelectedDirData ( id );
+                    //logger.debug ( "MONA : dataItem = " + dataItem );
 
 			        if ( dataItem == null )
-					    addActionError ( "Error deleting data item with ID " +
+					    addActionError ( "Error deleting data directory item with ID " +
 					        id + ": item not found." );
 			        else try
                     {
-                        /*
-					    if ( deleteData ( dataItem ) )
-					    {
-						    user = dataItem.getUser();
-						    deleted++;
-					    }
-                        */
-
                         int count = deleteData ( dataItem );
 
                         if ( count > 0 )

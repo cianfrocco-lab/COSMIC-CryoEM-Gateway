@@ -179,7 +179,7 @@
         </tr>
       </s:iterator>
     </table>
-    <!--
+    <!-- if the following code gets re-enabled, update DataManager.java cancel()
     <div class="form-group">
       <div class="action-group">
         <div class="action-des pull-left">
@@ -192,11 +192,9 @@
       </div>
     </div>
     -->
-    <!--
     <div class="form-group">
       <s:submit cssClass="btn btn-primary" value="Delete Selected" method="cancel" onclick="return confirm_form_data()"/>
     </div>
-    -->
   </s:form>
 </s:if>
 <s:else>
