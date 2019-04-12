@@ -476,43 +476,6 @@ public class WorkbenchSession {
 		}
 	}
 
-    /**
-     * Method returns the persistent UserDataDirItem instance of the given
-     * id or null if instance is not found
-     * @author Mona Wong
-     **/
-	public UserDataDirItem findUserDataDirItem ( Long id )
-        throws IOException, SQLException
-    {
-		try
-        {
-			return new UserDataDirItem ( id );
-		}
-		catch ( WorkbenchException wbErr )
-        {
-			return null;
-		}
-	}
-
-    /**
-     * Method gets a List of persistent UserDataDirItem instances for the
-     * given user and label
-     * @author Mona Wong
-     * @return List of UserDataDirItem or null
-     **/
-	public List<UserDataDirItem> findUserDataDirItems ( String label )
-        throws IOException, SQLException
-    {
-		try
-        {
-			return UserDataDirItem.findDataDirItems ( userId, label );
-		}
-		catch ( WorkbenchException wbErr )
-        {
-			return null;
-		}
-	}
-
 	/**
 	 * Method saves the submitted UserDataItem into the submitted Folder and
 	 * returns the persisted UserDataItem instance.
@@ -540,6 +503,46 @@ public class WorkbenchSession {
 	 */
 	public void deleteUserDataItem(UserDataItem dataItem) throws IOException, SQLException {
 		dataItem.delete();
+	}
+
+    /**
+     * Method returns the persistent UserDataDirItem instance of the given
+     * id or null if instance is not found
+     * @author Mona Wong
+     **/
+	public UserDataDirItem findUserDataDirItem ( Long id )
+        throws IOException, SQLException
+    {
+		try
+        {
+			return new UserDataDirItem ( id );
+		}
+		catch ( WorkbenchException wbErr )
+        {
+			return null;
+		}
+	}
+
+    /**
+     * Method gets a List of persistent UserDataDirItem instances for the
+     * given user id and label path (JUST match the path, without the trailing
+     * file)
+     * @author Mona Wong
+     * @return List of UserDataDirItem or null
+     **/
+	public List<UserDataDirItem> findUserDataDirItemsByPath (
+        long user_id, String label_path )
+        throws IOException, SQLException
+    {
+		try
+        {
+			return UserDataDirItem.findDataDirItemsByPath ( userId,
+                label_path );
+		}
+		catch ( WorkbenchException wbErr )
+        {
+			return null;
+		}
 	}
 
 	public void deleteUserDataDirItem ( UserDataDirItem dataItem )
