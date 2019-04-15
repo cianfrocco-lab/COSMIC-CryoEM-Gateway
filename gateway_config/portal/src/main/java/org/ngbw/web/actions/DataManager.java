@@ -1632,8 +1632,8 @@ public class DataManager extends FolderManager
             {
                 // First, delete all entries for the user with the same path
                 User user = session.getUser();
-                logger.debug ( "user data size 1 = " + user.queryDataSize() );
-                Long userId = user.getUserId();
+                //logger.debug ( "user data size 1 = " + user.queryDataSize() );
+                //Long userId = user.getUserId();
                 //logger.debug ( "MONA: userId = " + userId );
                 String label = dataItem.getLabel();
                 //logger.debug ( "MONA: label = " + label );
@@ -1648,47 +1648,35 @@ public class DataManager extends FolderManager
                 File file = new File ( globusRoot + "/" + link_username +
                     "/" + folder.getLabel() + "/" + label );
                 //logger.debug ( "MONA: file = " + file );
-                /*
-                if ( file.isDirectory() )
-                {
-                    logger.debug ( "MONA: file is directory" );
-                    //FileUtils.deleteDirectory ( file );
-                }
-                else
-                {
-                */
-                    File path = new File ( file.getParent() );
-                    //logger.debug ( "MONA: file" );
-                    //logger.debug ( "MONA: path " + path );
+                File path = new File ( file.getParent() );
+                //logger.debug ( "MONA: file" );
+                //logger.debug ( "MONA: path " + path );
 
-                    // If .star file, we'll delete the entire parent directory
-                    // and all other UserDataDirItems with the same parent
-                    // directory
-                    if ( dataItem.getDataFormat() == DataFormat.STAR )
+                // If .star file, we'll delete the entire parent directory
+                // and all other UserDataDirItems with the same parent
+                // directory
+                if ( dataItem.getDataFormat() == DataFormat.STAR )
+                {
+                    List<UserDataDirItem> list =
+                        UserDataDirItem.findItemsByUserFolderIdPath 
+                        ( user, folderId, label_path ); 
+                    //logger.debug ( "MONA: list = " + list );
+                    //logger.debug ( "MONA: list size = " + list.size() );
+
+                    if ( list == null )
+                        return ( 0 );
+
+                    for ( UserDataDirItem item : list )
                     {
-                        List<UserDataDirItem> list =
-                            session.findUserDataDirItemsByPath ( userId,
-                                label_path ); 
-                        //logger.debug ( "MONA: list = " + list );
-                        //logger.debug ( "MONA: list size = " + list.size() );
-				        //Long id = dataItem.getUserDataId();
-
-                        if ( list == null )
-                            return ( 0 );
-
-                        for ( UserDataDirItem item : list )
-                        {
-                            //logger.debug ( "MONA: item = " + item );
-                            //logger.debug ( "MONA: item.getLabel = " +
-                                //item.getLabel() );
-				            session.deleteUserDataDirItem ( item );
-                            deleted++;
-                        }
-                        FileUtils.deleteDirectory ( path );
-                        // Now update user's total data upload size!
+                        //logger.debug ( "MONA: item = " + item );
+                        //logger.debug ( "MONA: item.getLabel = " +
+                        //item.getLabel() );
+				        session.deleteUserDataDirItem ( item );
+                        deleted++;
                     }
-			    //}
-                logger.debug ( "MONA: user data size 2 = " + user.queryDataSize() );
+                    FileUtils.deleteDirectory ( path );
+                }
+                user.queryDataSize();
             }
             return ( deleted );
 		}

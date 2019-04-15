@@ -35,6 +35,7 @@ import org.ngbw.sdk.core.shared.SourceDocumentType;
 import org.ngbw.sdk.core.types.DataFormat;
 import org.ngbw.sdk.core.types.DataType;
 import org.ngbw.sdk.core.types.EntityType;
+import org.ngbw.sdk.database.User;
 import org.ngbw.sdk.WorkbenchException;
 
 
@@ -555,21 +556,29 @@ public class UserDataDirItem extends FolderItem
     }       
  
     /**
-     * Find all entries matching the given userId and label path
+     * Find all entries matching the given user, folder and label path
      * @author Mona Wong
      * @return null if the current item is new; otherwise return a List
      **/
-	public static List<UserDataDirItem> findDataDirItemsByPath
-        ( Long userId, String label_path ) throws IOException, SQLException
+    static public List<UserDataDirItem> findItemsByUserFolderIdPath
+        ( User user, long folderId, String label_path )
+        throws IOException, SQLException
 	{
-        //log.debug ( "MONA : entered UserDataDirItem.findDataDirItemsByPath" );
+        //log.debug ( "MONA : entered UserDataDirItem.findItemsByUserFolderIdPath" );
+
+        if ( user == null || folderId <= 0 || label_path == null )
+            throw new IOException ( "Invalid parameter!" );
+
+        Long userId = user.getUserId();
         //log.debug ( "MONA: userId = " + userId );
+        //log.debug ( "MONA: folderId = " + folderId );
         //log.debug ( "MONA: label_path 1 = " + label_path );
         label_path += "%";
         //log.debug ( "MONA: label_path 2 = " + label_path );
 
         StringBuilder stmtBuilder = new StringBuilder ( "SELECT " + KEY_NAME +
-            "  FROM " + TABLE_NAME + " WHERE USER_ID = ? AND LABEL like ?" );
+            "  FROM " + TABLE_NAME +
+            " WHERE USER_ID = ? AND ENCLOSING_FOLDER_ID = ? AND LABEL like ?" );
         //log.debug ( "MONA : stmtBuilder 1 = " + stmtBuilder.toString() );
                                         
         Connection dbConn =
@@ -578,13 +587,14 @@ public class UserDataDirItem extends FolderItem
         ResultSet itemRows = null;
 
         try {
-            selectStmt = dbConn.prepareStatement(stmtBuilder.toString());
+            selectStmt = dbConn.prepareStatement ( stmtBuilder.toString() );
             selectStmt.setString ( 1, userId.toString() );
-            selectStmt.setString ( 2, label_path );
+            selectStmt.setString ( 2, String.valueOf ( folderId ) );
+            selectStmt.setString ( 3, label_path );
                                                                                            itemRows = selectStmt.executeQuery();
             List<UserDataDirItem> dataItems = new ArrayList<UserDataDirItem>();
 
-            while (itemRows.next())
+            while ( itemRows.next() )
             {
                 //log.debug ( "MONA : itemRows = " + itemRows );
                 dataItems.add ( new UserDataDirItem ( dbConn,
@@ -594,10 +604,10 @@ public class UserDataDirItem extends FolderItem
         }   
                                                                                        finally
         {
-            if (itemRows != null)
+            if ( itemRows != null )
                 itemRows.close();
 
-            if (selectStmt != null)
+            if ( selectStmt != null )
                 selectStmt.close();
 
             dbConn.close();
