@@ -523,28 +523,6 @@ public class WorkbenchSession {
 		}
 	}
 
-    /**
-     * Method gets a List of persistent UserDataDirItem instances for the
-     * given user id and label path (JUST match the path, without the trailing
-     * file)
-     * @author Mona Wong
-     * @return List of UserDataDirItem or null
-     **/
-	public List<UserDataDirItem> findUserDataDirItemsByPath (
-        long user_id, String label_path )
-        throws IOException, SQLException
-    {
-		try
-        {
-			return UserDataDirItem.findDataDirItemsByPath ( userId,
-                label_path );
-		}
-		catch ( WorkbenchException wbErr )
-        {
-			return null;
-		}
-	}
-
 	public void deleteUserDataDirItem ( UserDataDirItem dataItem )
         throws IOException, SQLException
     {
