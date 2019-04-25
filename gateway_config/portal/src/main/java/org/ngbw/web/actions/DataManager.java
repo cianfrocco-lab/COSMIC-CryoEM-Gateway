@@ -11,7 +11,6 @@ import java.util.TreeMap;
 import java.util.Vector;
 import java.util.ArrayList;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts2.interceptor.validation.SkipValidation;
@@ -1612,45 +1611,20 @@ public class DataManager extends FolderManager
 
 		try
         {
-            String globusRoot =
-                Workbench.getInstance().getProperties().getProperty
-                ( "database.globusRoot" );
-            //logger.debug ( "MONA: globusRoot = " + globusRoot );
-            String link_username = ( String ) getSession().get
-                ( OauthConstants.LINK_USERNAME );
-            //logger.debug ( "MONA: link_username = " + link_username );
 			WorkbenchSession session = getWorkbenchSession();
             //logger.debug ( "MONA: session = " + session );
 			if ( session == null )
 				throw new NullPointerException ( "No session is present." );
 
-            else if ( globusRoot == null || link_username == null )
-				throw new NullPointerException
-                    ( "Cannot determine file location." );
-
 			else
             {
                 // First, delete all entries for the user with the same path
                 User user = session.getUser();
-                //logger.debug ( "user data size 1 = " + user.queryDataSize() );
-                //Long userId = user.getUserId();
-                //logger.debug ( "MONA: userId = " + userId );
                 String label = dataItem.getLabel();
-                //logger.debug ( "MONA: label = " + label );
                 File tmp = new File ( label );
                 String label_path = tmp.getParent();
-                //logger.debug ( "MONA: label_path = " + label_path );
                 long folderId = dataItem.getEnclosingFolderId();
                 //logger.debug ( "MONA: folderId = " + folderId );
-                Folder folder = new Folder ( folderId );
-                //logger.debug ( "MONA: folder = " + folder );
-                //logger.debug ( "MONA: folder label = " + folder.getLabel() );
-                File file = new File ( globusRoot + "/" + link_username +
-                    "/" + folder.getLabel() + "/" + label );
-                //logger.debug ( "MONA: file = " + file );
-                File path = new File ( file.getParent() );
-                //logger.debug ( "MONA: file" );
-                //logger.debug ( "MONA: path " + path );
 
                 // If .star file, we'll delete the entire parent directory
                 // and all other UserDataDirItems with the same parent
@@ -1669,12 +1643,11 @@ public class DataManager extends FolderManager
                     for ( UserDataDirItem item : list )
                     {
                         //logger.debug ( "MONA: item = " + item );
-                        //logger.debug ( "MONA: item.getLabel = " +
-                        //item.getLabel() );
-				        session.deleteUserDataDirItem ( item );
+                        //logger.debug ( "MONA: item.getLabel = " + item.getLabel() );
+                        item.delete();
+                        item.deleteDirectory();
                         deleted++;
                     }
-                    FileUtils.deleteDirectory ( path );
                 }
                 user.queryDataSize();
             }
