@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,6 +37,7 @@ import org.ngbw.sdk.core.types.DataFormat;
 import org.ngbw.sdk.core.types.DataType;
 import org.ngbw.sdk.core.types.EntityType;
 import org.ngbw.sdk.database.User;
+import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchException;
 
 
@@ -478,6 +480,39 @@ public class UserDataDirItem extends FolderItem
 
 
     /**
+     * Delete the directory where this data directory item is in
+     * @return boolean true if successful; false if not
+     * @throws IOException
+     * @throws SQLException Any database error
+     */
+    public boolean deleteDirectory() throws IOException, SQLException
+    {
+        //log.debug ( "MONA : entered UserDataDirItem.deleteDirectory()" );
+
+        boolean reply = false;
+        long folderId = getEnclosingFolderId();
+        //log.debug ( "MONA: folderId = " + folderId );
+        Folder folder = new Folder ( folderId );
+        //log.debug ( "MONA: folder = " + folder );
+        String globusRoot = Workbench.getInstance().getProperties().getProperty
+            ( "database.globusRoot" );
+        //log.debug ( "MONA: globusRoot = " + globusRoot );
+        String label = getLabel();
+        //log.debug ( "MONA: label = " + label );
+        User user = new User ( getUserId() );
+        File file = new File ( globusRoot + "/" + user.getUsername() + "/" +
+            folder.getLabel() + "/" + label );
+        //log.debug ( "MONA: file = " + file );
+        File path = new File ( file.getParent() );
+        //log.debug ( "MONA: path = " + path );
+        FileUtils.deleteDirectory ( path );
+        reply = true;
+
+        return ( reply );
+    }
+
+
+    /**
      * Find all entries matching the given userId and label
      * @author Mona Wong
      * @return null if the current item is new; otherwise return a List
@@ -611,6 +646,45 @@ public class UserDataDirItem extends FolderItem
                 selectStmt.close();
 
             dbConn.close();
+        }
+    }
+
+
+    /**
+     * Find items by number of days greater than now
+     *
+     * @param age the number of days before now
+     * @return List of UserDataDirItems
+     * @throws IOException   
+     * @throws SQLException Any database error thrown by the functions called
+     */
+    static public List<UserDataDirItem> findDataItemsByAge ( int age )
+        throws IOException, SQLException
+    {
+        Connection dbConn = ConnectionManager.getConnectionSource().getConnection();
+        PreparedStatement selectStmt = null;
+        ResultSet itemRows = null;
+                                                  
+        try
+        {
+            selectStmt = dbConn.prepareStatement ( "SELECT " + KEY_NAME +
+                " FROM " + TABLE_NAME + " WHERE DATEDIFF(NOW(), CREATION_DATE) > ? " );
+            selectStmt.setInt ( 1, age );
+            itemRows = selectStmt.executeQuery();
+            List<UserDataDirItem> dataItems = new ArrayList<UserDataDirItem>();
+            while ( itemRows.next() )
+                dataItems.add ( new UserDataDirItem ( dbConn,
+                    itemRows.getLong ( 1 ) ) );
+
+            return ( dataItems );
+        }
+        finally
+        {
+            if ( itemRows != null )
+                itemRows.close();
+                                                                                                    if ( selectStmt != null )
+                selectStmt.close();
+                                                                                                    dbConn.close();
         }
     }
 
