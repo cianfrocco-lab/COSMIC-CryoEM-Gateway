@@ -9,7 +9,10 @@
     <version>3.0-beta</version>
     <description>Calculate 2D class averages using Relion</description>
     <authors>S. H. W. Scheres</authors>
+<!--
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
+ -->
+    <reference>http://www.sciencedirect.com/science/article/pii/S1047847712002481</reference>
     <category>Structural Biology</category>
   </head>
 
