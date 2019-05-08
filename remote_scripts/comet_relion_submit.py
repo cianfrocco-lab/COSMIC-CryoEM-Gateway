@@ -482,9 +482,15 @@ def prepareRelionRun(args):
 			gpuextra1='#SBATCH --gres=gpu:k80:4\n'
         		gpuextra2='--gpu 0,1,2,3'
         		gpuextra3='relion/3.0_beta_gpu'        
-			os.makedirs('Class3D_cosmic')
-                        os.makedirs('Class3D_cosmic/job001/')
-                        outdir='Class3D_cosmic/job001'
+			if not os.path.exists('Class3D_cosmic'):
+				os.makedirs('Class3D_cosmic')
+			counter=1
+                        while counter<=500:
+        	                if not os.path.exists('Class3D_cosmic/job%03i' %(counter)):
+	        	                os.makedirs('Class3D_cosmic/job%03i' %(counter))
+                        	        outdir='Class3D_cosmic/job%03i' %(counter)
+                                	counter=10000
+                                counter=counter+1
 			#Get num iters: 
 			varcounter=0
 			for variable in inputline.split():
