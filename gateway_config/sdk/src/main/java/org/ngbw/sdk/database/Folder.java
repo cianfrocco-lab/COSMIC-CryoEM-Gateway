@@ -4,6 +4,7 @@
 package org.ngbw.sdk.database;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,6 +18,10 @@ import java.util.TreeMap;
 
 import org.ngbw.sdk.WorkbenchException;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 /**
  *
@@ -27,6 +32,7 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 
 	// nested classes
 
+    private static final Log log = LogFactory.getLog ( Folder.class );
 
 	/**
 	 *
@@ -365,6 +371,19 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 		return folders.get(0);
 	}
 
+    public static String globusPath ( Folder folder, User user )
+    {
+        //log.debug ( "MONA: Folder.globusPath()" );
+        //log.debug ( "MONA: user = " + user );
+
+        if ( folder == null || user == null )
+            return ( null );
+
+        String dir = user.getGlobusDirectory() + "/" + folder.getLabel();
+        //log.debug ( "MONA: dir = " + dir );
+        return ( dir );
+    }
+
 	@Override
 	public boolean equals(Object other)
 	{
@@ -477,6 +496,8 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 
 	static void delete(Connection dbConn, long folderId) throws IOException, SQLException
 	{
+        //log.debug ( "MONA: Folder.delete 2" );
+        //log.debug ( "MONA: folderId = " + folderId );
 		Criterion folderKey = new LongCriterion(KEY_NAME, folderId);
 
 		(new DeleteOp("folder_preferences", folderKey)).execute(dbConn);
@@ -542,9 +563,17 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 		return result;
 	}
 
-	private static void deleteData(Connection dbConn, long folderId) throws IOException, SQLException
-	{
-		PreparedStatement selectStmt = dbConn.prepareStatement("SELECT USERDATA_ID FROM userdata WHERE ENCLOSING_FOLDER_ID = ?");
+
+    /**
+     * Updated by Mona to add deleting of new UserDataDirItem...
+     **/
+    private static void deleteData ( Connection dbConn, long folderId )
+        throws IOException, SQLException
+    {
+        //log.debug ( "MONA: Folder.deleteData" );
+        // First, delete the file data (original code)
+		PreparedStatement selectStmt = dbConn.prepareStatement
+            ( "SELECT USERDATA_ID FROM userdata WHERE ENCLOSING_FOLDER_ID = ?" );
 		ResultSet dataRows = null;
 
 		try {
@@ -561,7 +590,25 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 
 			selectStmt.close();
 		}
-	}
+
+        // Next, delete the globus directory data
+        Folder folder = new Folder ( folderId );
+        User user = new User ( folder.getUserId() );
+        List <UserDataDirItem> items =
+            UserDataDirItem.findItemsByUserFolderIds
+                ( user.getUserId(), folderId );
+        //log.debug ( "MONA: items size = " + items.size() );
+
+        for ( UserDataDirItem item : items )
+            item.delete();
+
+        String globuspath = globusPath ( folder, user );
+        File path = new File ( globuspath );
+
+        if ( path.exists() )
+            FileUtils.deleteDirectory ( path );
+    }
+
 
 	private static void deleteTasks(Connection dbConn, long folderId) throws IOException, SQLException
 	{
@@ -604,4 +651,5 @@ public class Folder extends FolderItem implements Comparable<Folder> {
 			selectStmt.close();
 		}
 	}
+
 }
