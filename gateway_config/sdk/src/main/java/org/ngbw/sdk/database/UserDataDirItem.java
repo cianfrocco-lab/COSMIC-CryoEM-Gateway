@@ -480,7 +480,7 @@ public class UserDataDirItem extends FolderItem
 
 
     /**
-     * Delete the directory where this data directory item is in
+     * Delete the directory where this data item is in
      * @return boolean true if successful; false if not
      * @throws IOException
      * @throws SQLException Any database error
@@ -494,19 +494,18 @@ public class UserDataDirItem extends FolderItem
         //log.debug ( "MONA: folderId = " + folderId );
         Folder folder = new Folder ( folderId );
         //log.debug ( "MONA: folder = " + folder );
-        String globusRoot = Workbench.getInstance().getProperties().getProperty
-            ( "database.globusRoot" );
-        //log.debug ( "MONA: globusRoot = " + globusRoot );
-        String label = getLabel();
-        //log.debug ( "MONA: label = " + label );
         User user = new User ( getUserId() );
-        File file = new File ( globusRoot + "/" + user.getUsername() + "/" +
-            folder.getLabel() + "/" + label );
+        String globuspath = Folder.globusPath ( folder, user );
+        //log.debug ( "MONA: globuspath 1 = " + globuspath );
+        File file = new File ( globuspath + "/" + getLabel() );
         //log.debug ( "MONA: file = " + file );
         File path = new File ( file.getParent() );
         //log.debug ( "MONA: path = " + path );
-        FileUtils.deleteDirectory ( path );
-        reply = true;
+        if ( path.exists() )
+        {
+            FileUtils.deleteDirectory ( path );
+            reply = true;
+        }
 
         return ( reply );
     }
@@ -524,18 +523,13 @@ public class UserDataDirItem extends FolderItem
         //log.debug ( "MONA: userId = " + userId );
         //log.debug ( "MONA: label = " + label );
 
-        /*
-		if ( isNew() )
-			return null;
-        */
-
 		return findDataDirItems ( new LongCriterion
             ( "USER_ID", userId ), new StringCriterion ( "LABEL", label ) );
 	}
 
 
     /*
-     *  Returns list of matching directory items.
+     *  Returns list of matching items.
      *  Multiple criteria are AND'd together (all must be satisfied).
      *  Returns empty list if nothing matches.
      */
@@ -590,6 +584,28 @@ public class UserDataDirItem extends FolderItem
         }
     }       
  
+
+    /**
+     * Find all entries matching the given user and folder
+     * @author Mona Wong
+     * @return null if the current item is new; otherwise return a List
+     **/
+    static public List<UserDataDirItem> findItemsByUserFolderIds
+        ( long userId, long folderId ) throws IOException, SQLException
+	{
+        //log.debug ( "MONA : entered UserDataDirItem.findItemsByUserFolderIds" );
+        //log.debug ( "MONA: userId = " + userId );
+        //log.debug ( "MONA: folderId = " + folderId );
+
+        if ( userId <= 0 || folderId <= 0 )
+            return null;
+            //throw new IOException ( "Invalid parameter!" );
+
+        return ( findDataDirItems ( new LongCriterion ( "USER_ID", userId ),
+            new LongCriterion ( "ENCLOSING_FOLDER_ID", folderId ) ) );
+    }
+
+
     /**
      * Find all entries matching the given user, folder and label path
      * @author Mona Wong
