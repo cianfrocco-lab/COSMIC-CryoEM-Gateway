@@ -1,7 +1,6 @@
 #!/bin/sh
 
 source $HOME/.bashrc
-export SDK_VERSIONS=/projects/cosmic2/gateway/scripts
 export PATH=/usr/sbin:$PATH:$SDK_VERSIONS
 TODAY=`date +%m-%d-%Y`
 #CIPRES_CHARGE=TG-DEB090011
