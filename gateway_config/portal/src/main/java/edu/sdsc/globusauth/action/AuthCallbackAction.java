@@ -1,8 +1,10 @@
 package edu.sdsc.globusauth.action;
 /**
  * Created by cyoun on 10/6/16.
+ * Updated by Mona Wong 6/7/19
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -21,7 +23,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
 import com.opensymphony.xwork2.inject.Inject;
 import edu.sdsc.globusauth.controller.ProfileManager;
-//import edu.sdsc.globusauth.model.OauthProfile;
 import org.ngbw.sdk.database.OauthProfile;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
@@ -30,6 +31,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.views.util.UrlHelper;
 import org.ngbw.sdk.UserAuthenticationException;
+import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.sdk.common.util.ValidationResult;
 import org.ngbw.sdk.database.TransferRecord;
@@ -400,7 +402,10 @@ public class AuthCallbackAction extends FolderManager {
             if (!activateLogin(controller,existing_user.getUsername())) {
                 return userid;
             }
-        } else {
+        }
+        
+        // Here is where new user accounts are created
+        else {
             String password = "Globus" + profile.getUsername() + Calendar.getInstance().getTimeInMillis();
             ValidationResult result = controller.registerUser(profile.getUsername(), password,
                     profile.getEmail(), profile.getFirstname(), profile.getLastname(),
@@ -415,7 +420,22 @@ public class AuthCallbackAction extends FolderManager {
                     reportUserError(error);
                 return userid;
             } else {
-                addActionMessage("User account \"" + getUsername() + "\" successfully created.");
+                String username = profile.getUsername();
+                //logger.debug ( "MONA: username = " + username );
+                addActionMessage ( "User account \"" + username +
+                    "\" successfully created." );
+
+                // Now create user's toplevel data directory
+                String globusRoot =
+                    Workbench.getInstance().getProperties().getProperty
+                    ( "database.globusRoot" );
+                //logger.debug ( "MONA: globusRoot = " + globusRoot );
+
+                File dir = new File ( globusRoot + "/" + username );
+                //logger.debug ( "MONA: dir = " + dir );
+                dir.mkdir();
+                //logger.debug ( "MONA: mkdir done!" );
+                
                 if (finalizeLogin() != true) {
                     return userid;
                 }

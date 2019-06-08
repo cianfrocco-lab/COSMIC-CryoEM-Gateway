@@ -894,7 +894,7 @@ public class TransferAction extends NgbwSupport {
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
                 //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
-                reportUserError("Error, unable to access XSEDE Comet storage.");
+                reportUserError ( "Error, unable to create your data directory on XSEDE Comet storage.");
                 return false;
             }
             return true;
