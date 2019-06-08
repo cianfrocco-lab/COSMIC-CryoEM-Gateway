@@ -507,6 +507,10 @@ public class CreateData extends DataManager
             case "star" :
                 type = DataType.valueOf ( "STAR" );
                 break;
+
+            case "mrc" :
+                type = DataType.valueOf ( "MRC" );
+                break;
         }
 
         return ( type );
