@@ -4,10 +4,15 @@ package edu.sdsc.globusauth.action;
  * Updated by Mona Wong 6/7/19
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.SecureRandom;
 import java.util.*;
 import com.google.api.client.auth.oauth2.*;
@@ -431,10 +436,41 @@ public class AuthCallbackAction extends FolderManager {
                     ( "database.globusRoot" );
                 //logger.debug ( "MONA: globusRoot = " + globusRoot );
 
+                /* Following code used java.io.File which did not allow group
+                 * write permission which we need...
                 File dir = new File ( globusRoot + "/" + username );
                 //logger.debug ( "MONA: dir = " + dir );
                 dir.mkdir();
-                //logger.debug ( "MONA: mkdir done!" );
+                */
+
+                // Create the user's top-level Globus data directory with
+                // no access for world.  If there is a problem creating the
+                // directory, will display message to user AND email adminAddr
+                try
+                {
+                    Set<PosixFilePermission> perms =
+                        PosixFilePermissions.fromString ( "rwxrwx---" );
+                    FileAttribute<Set<PosixFilePermission>> fileAttributes =
+                        PosixFilePermissions.asFileAttribute ( perms );
+                    Path path = Paths.get ( globusRoot + "/" + username );
+                    //logger.debug ( "MONA: path = " + path );
+                    Files.createDirectory ( path, fileAttributes );
+                    //logger.debug ( "MONA: mkdir done!" );
+                } 
+                catch ( IOException e )
+                {
+                    addActionMessage
+                        ( "Sorry, unable to create your data directory! Admin has been notified." ); 
+
+                    Properties wbProperties =
+                        Workbench.getInstance().getProperties();
+                    String EMAIL_SENDER = wbProperties.getProperty ( "email.adminAddr");
+                    sendEmail ( EMAIL_SENDER,
+                        "Gateway error requiring admin attenion!",
+                        "Unable to create new user " + username +
+                        "Globus top-level data directory at " + path + 
+                        " (AuthCallbackAction.registerUser)" );
+                }
                 
                 if (finalizeLogin() != true) {
                     return userid;
