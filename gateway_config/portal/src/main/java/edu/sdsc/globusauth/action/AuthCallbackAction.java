@@ -468,7 +468,8 @@ public class AuthCallbackAction extends FolderManager {
                     sendEmail ( EMAIL_SENDER,
                         "Gateway error requiring admin attenion!",
                         "Unable to create new user " + username +
-                        "Globus top-level data directory at " + path + 
+                        "Globus top-level data directory at " + globusRoot + 
+                        "/" + username +
                         " (AuthCallbackAction.registerUser)" );
                 }
                 
