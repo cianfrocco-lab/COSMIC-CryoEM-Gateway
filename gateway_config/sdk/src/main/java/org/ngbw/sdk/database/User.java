@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.ngbw.sdk.ValidationException;
+import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchException;
 import org.ngbw.sdk.common.util.StringUtils;
 import org.ngbw.sdk.core.shared.UserRole;
@@ -690,6 +691,19 @@ public class User extends VersionedRow implements Comparable<User> {
 	{
 		m_active.setValue(active);
 	}
+
+
+    public String getGlobusDirectory()
+    {
+        //log.debug ( "MONA: User.getGlobusDirectory()" );
+        String globus_root =
+            Workbench.getInstance().getProperties().getProperty
+            ( "database.globusRoot" );
+        //log.debug ( "MONA: globus_root = " + globus_root );
+        String username = getUsername();
+        //log.debug ( "MONA: globus_root = " + globus_root );
+        return ( globus_root + "/" + username );
+    }
 
 
 	/**
