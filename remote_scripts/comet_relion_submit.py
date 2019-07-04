@@ -232,8 +232,10 @@ def preparePreprocessingRun(inputline,jobdir):
 		input_mic_file=input_starfile.split('/')
 		del input_mic_file[0]
 		input_mic_file='/'.join(input_mic_file)
+		input_mic_file=newstarname
 		o1.write('%s\n' %(input_mic_file))
 		input_starfile=input_mic_file
+		input_starfile=newstarname
 	o1.write('here3')
 	ctf_cmd=''
 	ctf_sel_cmd=''
@@ -284,6 +286,7 @@ def preparePreprocessingRun(inputline,jobdir):
 		if movie_align is False: 
 			#Get mic name from starfile
 			o1.write('here8\n')
+			'''
 			for line in open(starfilename,'r'): 
 				if len(line)<40: 
 					continue
@@ -292,6 +295,12 @@ def preparePreprocessingRun(inputline,jobdir):
 				del l[-1]
 				mic_dir='\t'.join(l)
 			mics_for_picking_symlink='ln -s %s/%s/%s/*.mrc %s/' %(userdir,foldername,mic_dir,picking_outdir)
+			'''
+			mics_to_symlink=starfilename.split('/')
+			del mics_to_symlink[-1]
+			mics_to_symlink='/'.join(mics_to_symlink)
+			mics_for_picking_symlink='ln -s %s/*.mrc %s/' %(mics_to_symlink,picking_outdir)
+				
 		#Write out config.json file: 
 		config_open=open('/home/cosmic2/software_dependencies/crYOLO/config.json','r')
         	new_config=open('config.json','w')
@@ -359,9 +368,9 @@ def prepareRelionRun(args):
 	tmplog.write("inputline (%s)\n" % inputline)
 	partition='gpu'
 	nodes=1
-	gpuextra1='#SBATCH --gres=gpu:k80:4\n'
-	gpuextra2='--gpu 0,1,2,3'
-	gpuextra3='relion/3.0_beta_gpu'
+	gpuextra1='#SBATCH --gres=gpu:p100:4\n'
+	gpuextra2='--gpu 0:1:2:3'
+	gpuextra3='relion/3.0.5_gpu'
 	#Get input file
 	#inputZipFile=inputline.split()[returnEntryNumber(inputline,'--i')].strip('"')
         elements = string.split(inputline, '"')
@@ -473,15 +482,15 @@ def prepareRelionRun(args):
 	
 	#Create output dirs
 	if '--ref' in inputline:
-                partition='compute'
-		gpuextra1=''
-		gpuextra2=''
-		gpuextra3='relion/3.0_beta_cpu'
+                #partition='compute'
+		#gpuextra1=''
+		#gpuextra2=''
+		#gpuextra3='relion/3.0_beta_cpu'
 		if '--auto_refine' not in inputline:
                 	partition='gpu'
-			gpuextra1='#SBATCH --gres=gpu:k80:4\n'
-        		gpuextra2='--gpu 0,1,2,3'
-        		gpuextra3='relion/3.0_beta_gpu'        
+			gpuextra1='#SBATCH --gres=gpu:p100:4\n'
+        		gpuextra2='--gpu 0:1:2:3'
+        		gpuextra3='relion/3.0.5_gpu'
 			if not os.path.exists('Class3D_cosmic'):
 				os.makedirs('Class3D_cosmic')
 			counter=1
@@ -559,7 +568,8 @@ def prepareRelionRun(args):
 		runtime=24
 	if numLines > 100000:
 		runtime=24
-	mpi_to_use=4 
+	mpi_to_use=5
+	''' 
 	if '--auto_refine' in inputline:
 		if numLines > 10000:
                 	nodes=2
@@ -586,6 +596,7 @@ def prepareRelionRun(args):
                 	nodes=10
 	                runtime=24
 		mpi_to_use=nodes*4
+	'''
 	#>> Write number to scheduler.conf
 	if not os.path.exists('scheduler.conf'):
 		print 'Error=1'
@@ -620,7 +631,7 @@ def prepareRelionRun(args):
 		relion_command=' '.join(inputline_list)+'  %s' %(newstarname)
 		tmplog.write(relion_command)	
 
-	return relion_command,outdir,DirToSymLink,runtime,nodes,numiters,inputZipFile.split('/')[0],partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use #print 'cmd="%s"' %(relion_command)
+	return relion_command,outdir,DirToSymLink,runtime,nodes,numiters,inputZipFile.split('/')[0],partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname #print 'cmd="%s"' %(relion_command)
 
 def returnEntryNumber(inputlist,queryString):
 	'''Returns entry number in list for a given string in a list'''
@@ -773,7 +784,7 @@ if 'relion_refine_mpi' in args['commandline']:
 	jobtype='relion'
 
 if jobtype == 'relion': 
-	relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=prepareRelionRun(args)
+	relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname=prepareRelionRun(args)
 	runminutes = math.ceil(60 * runhours)
 	hours, minutes = divmod(runminutes, 60)
 	runtime = "%02d:%02d:00" % (hours, minutes)
@@ -788,6 +799,10 @@ if jobtype == 'relion':
 	for line in open('_JOBINFO.TXT','r'):
 		if 'User\ Name=' in line: 
 			username=line.split('=')[-1].strip()
+	jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
 	ntaskspernode = int(properties_dict['ntasks-per-node'])
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
@@ -810,20 +825,22 @@ if jobtype == 'relion':
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 module purge
+module load cuda/9.2
 module load gnutools
 module load intel/2015.6.233
 module load intelmpi/2015.6.233
 module load %s
 date 
-export OMP_NUM_THREADS=6
+export OMP_NUM_THREADS=5
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 6 %s >>stdout.txt 2>>stderr.txt
-/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' 
+mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
+/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 """ \
-	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command)
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
@@ -854,7 +871,7 @@ if jobtype == 'pipeline':
 
 	#General parameters
         totcores=24
-	runminutes = math.ceil(30)
+	runminutes = math.ceil(600)
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         o1=open('_JOBINFO.TXT','a')
@@ -884,7 +901,7 @@ if jobtype == 'pipeline':
                         if 'MotionCorr_cosmic' in entry:
                                 job=entry.split('/')[1]
 		motiondirname='MotionCorr_cosmic/%s' %(job)		
-		transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s'\n" %(username,DirToSymLink,motiondirname,movie_align_cmd)
+		transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,motiondirname,movie_align_cmd)
 
 	if len(ctf_cmd) >0: 
 		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,ctf_cmd)
@@ -893,7 +910,7 @@ if jobtype == 'pipeline':
         	        if 'CtfFind_cosmic' in entry:
                 	        job=entry.split('/')[1]
 	        ctfdirname='CtfFind_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s'\n" %(username,DirToSymLink,ctfdirname,ctf_cmd)
+        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,ctfdirname,ctf_cmd)
 
 	if len(picking_cmd)>0:
 		runcmd=runcmd+'%s\n' %(mics_for_picking_symlink)
@@ -903,7 +920,7 @@ if jobtype == 'pipeline':
                 	if 'crYOLO_cosmic' in entry:
                         	job=entry.split('/')[1]
         	pickdirname='crYOLO_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s'\n" %(username,DirToSymLink,pickdirname,picking_cmd)
+        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,pickdirname,picking_cmd)
 
 	if len(extraction_cmd)>0:
 		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,extraction_cmd)
@@ -911,7 +928,7 @@ if jobtype == 'pipeline':
                 	if 'Extract_cosmic' in entry:
                         	job=entry.split('/')[1]
         	extractdirname='Extract_cosmic/%s' %(job)
-	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s'\n" %(username,DirToSymLink,extractdirname,extraction_cmd)
+	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,extractdirname,extraction_cmd)
 
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
@@ -940,7 +957,7 @@ module load singularity
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
-echo 'Job started running && date' >> job_status.txt
+echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 %s
 %s
