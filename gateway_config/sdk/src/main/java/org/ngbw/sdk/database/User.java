@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,16 @@ import org.ngbw.sdk.core.shared.UserRole;
 public class User extends VersionedRow implements Comparable<User> {
 	public static final String TERAGRID = "teragrid";
 	public static final String DATA_SIZE_EXCEEDS_MAX = "data_size_exceeds_max";
+
+	public static final Map<String, String> US_TERRITORIES = new HashMap<>();
+
+	static {
+		US_TERRITORIES.put("US", "US"); // United States
+		US_TERRITORIES.put("AS", "AS"); // American Samoa
+		US_TERRITORIES.put("GU", "GU"); // Guam
+		US_TERRITORIES.put("PR", "PR"); // Puerto Rico
+		US_TERRITORIES.put("VI", "VI"); // Virgin Island
+	}
 
 	// nested classes
 
@@ -687,6 +698,12 @@ public class User extends VersionedRow implements Comparable<User> {
 		return m_active.getValue();
 	}
 
+	public boolean isUsUser ()
+	{
+		String country = this.getCountry();
+		return (country == null)? false : (US_TERRITORIES.get(country.trim()) != null);
+	}
+
 	public void setActive(Boolean active)
 	{
 		m_active.setValue(active);
@@ -847,6 +864,40 @@ public class User extends VersionedRow implements Comparable<User> {
 		//return findUsers(new NotNullCriterion("ACTIVATION_CODE", Types.VARCHAR));
 		return findUsers(new StringCriterion("ACTIVATION_CODE", null));
 	}
+	public static User findUser ( String username ) throws IOException, SQLException
+	{
+		List<User> users = retrieveUsers(new StringCriterion("USERNAME", username), new StringCriterion("ACTIVATION_CODE", null));
+		return (users == null || users.isEmpty())? null : users.get(0);
+	}
+	public static User findUserByEmail ( String email ) throws IOException, SQLException
+	{
+		List<User> users = retrieveUsers(new StringCriterion("EMAIL", email), new StringCriterion("ACTIVATION_CODE", null));
+		return (users == null || users.isEmpty())? null : users.get(0);
+	}
+	/*
+	* Email is unique for each role except REST_END_USER_UMBRELLA. For umbrella users, email is
+	* unique for each value of umbrella_appname. umbrella_appname is empty except for
+	* REST_END_USER_UMBRELLA accounts.
+	*
+	* This only returns the first user found so should not be called for REST_END_USER_UMBRELLA
+	* users.
+	*/
+	public static User findUserByEmail ( String email, UserRole role ) throws IOException, SQLException
+	{
+		List<User> users;
+
+		if (role == null)
+		{
+			users = retrieveUsers(new StringCriterion("EMAIL", email), new StringCriterion("ACTIVATION_CODE", null));
+		}
+		else
+		{
+			users = retrieveUsers(new StringCriterion("EMAIL", email), new StringCriterion("ROLE", role.toString()), new StringCriterion("ACTIVATION_CODE", null));
+		}
+
+		return (users == null || users.isEmpty())? null : users.get(0);
+	}
+
 	public static List<User> findActiveUsersByRole(UserRole role) throws IOException, SQLException
 	{
 		if (role == null)
@@ -903,6 +954,105 @@ public class User extends VersionedRow implements Comparable<User> {
 	{
 		return findUsers();
 	}
+
+    /**
+ *      * Retrieves all users with specified role.
+ *           *
+ *                * @param role
+ *                     * @return
+ *                          * @throws IOException
+ *                               * @throws SQLException
+ *                                    */
+	public static List<User> findAllUsers ( UserRole role ) throws IOException, SQLException
+	{
+		if (role == null)
+		{
+			return retrieveUsers();
+		}
+
+		return retrieveUsers(new StringCriterion("ROLE", role.toString()));
+	}
+
+    /**
+     * Queries the database for a list of users base on criterion/criteria.
+     *
+     * <pre>
+     * If multiple criteria are specified, they will be AND'd together.
+     * </pre>
+     *
+     * @param keys criteria
+     * @return
+     * @throws IOException
+     * @throws SQLException
+     */
+    private static List<User> retrieveUsers ( Criterion ... keys ) throws IOException, SQLException
+    {
+        //logger.info("BEGIN: retrieveUsers(Criterion ...)::List<User>");
+
+        // TODO: find a way to combine criterion with relational operators.
+
+        StringBuilder stmtBuilder = new StringBuilder("SELECT " + KEY_NAME + " FROM " + TABLE_NAME);
+
+        if (keys.length > 0)
+        {
+            stmtBuilder.append(" WHERE ");
+            stmtBuilder.append(keys[0].getPhrase());
+
+            for (int i = 1; i < keys.length; i += 1)
+            {
+                stmtBuilder.append(" AND ");
+                stmtBuilder.append(keys[i].getPhrase());
+            }
+        }
+
+        Connection dbConn = null;
+        PreparedStatement selectStmt = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            //logger.debug("PreparedStatement >>>\n"+ stmtBuilder.toString());
+
+            dbConn = ConnectionManager.getConnectionSource().getConnection();
+            selectStmt = dbConn.prepareStatement(stmtBuilder.toString());
+
+            int index = 1;
+
+            for (int i = 0; i < keys.length; i += 1)
+            {
+                index = keys[i].setParameter(selectStmt, index);
+            }
+
+            resultSet = selectStmt.executeQuery();
+
+            List<User> users = new ArrayList<User>();
+
+            while (resultSet.next())
+            {
+                users.add(new User(dbConn, resultSet.getLong(1)));
+            }
+
+            //logger.info("END: retrieveUsers(Criterion ...)::List<User>");
+
+            return users;
+        }
+        finally
+        {
+            if (resultSet != null)
+            {
+            	resultSet.close();
+            }
+
+            if (selectStmt != null)
+            {
+            	selectStmt.close();
+            }
+
+            dbConn.close();
+
+            //logger.info("FINALLY: retrieveUsers(Criterion ...)::List<User>");
+        }
+    }
 	public static List<User> findAllUsersByRole(UserRole role) throws IOException, SQLException
 	{
 		if (role == null)

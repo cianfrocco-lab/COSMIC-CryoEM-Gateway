@@ -606,6 +606,8 @@ public class Task extends FolderItem implements Comparable<Task> {
 	private OutputMap m_taskOutput;
 	private OutputMap m_intermediateTaskOutput;
 	private LogMessageList m_logMessages;
+	private boolean runOnGpu = false;
+	private Long resourceConversionId = null;
 
 
 	// constructors
@@ -654,6 +656,7 @@ public class Task extends FolderItem implements Comparable<Task> {
 		setEnclosingFolderId(otherTask.getEnclosingFolderId());
 		setAppname(otherTask.getAppname());
 		setCreationDate(Calendar.getInstance().getTime());
+		setResourceConversionId(otherTask.getResourceConversionId());
 
 		m_properties = new PropertyMap(new TreeMap<String, String>());
 
@@ -662,6 +665,8 @@ public class Task extends FolderItem implements Comparable<Task> {
 		m_toolParameters = new ParameterMap(new TreeMap<String, String>());
 
 		m_toolParameters.putAll(otherTask.toolParameters());
+
+		setRunOnGpu(otherTask.isRunOnGpu());
 
 		m_taskInput = new InputMap(new TreeMap<String, List<TaskInputSourceDocument>>());
 
@@ -785,6 +790,17 @@ public class Task extends FolderItem implements Comparable<Task> {
 		m_isTerminal.setValue(b);
 	}
 
+    public boolean isRunOnGpu ()
+    {
+        return runOnGpu;
+    }
+
+
+    public void setRunOnGpu ( Boolean b )
+    {
+        runOnGpu = b;
+    }
+
 
 	public TaskRunStage getStage()
 	{
@@ -809,6 +825,16 @@ public class Task extends FolderItem implements Comparable<Task> {
 	public void setTool(Tool tool)
 	{
 		setToolId(tool.getToolId());
+	}
+
+	public Long getResourceConversionId ()
+	{
+		return this.resourceConversionId;
+	}
+
+	public void setResourceConversionId ( Long l )
+	{
+		this.resourceConversionId = l;
 	}
 
 	@Override
@@ -975,6 +1001,39 @@ public class Task extends FolderItem implements Comparable<Task> {
 		}
 
 		return m_logMessages;
+	}
+
+	public Task createClone () throws IOException, SQLException
+	{
+		Task clone = new Task();
+
+		clone.setComment(getComment());
+		clone.setOk(true);
+		clone.setTerminal(false);
+		clone.setStage(TaskRunStage.NEW);
+		clone.setToolId(getToolId());
+		clone.setUserId(getUserId());
+		clone.setGroupId(getGroupId());
+		clone.setLabel(getLabel());
+		clone.setEnclosingFolderId(getEnclosingFolderId());
+		clone.setAppname(getAppname());
+		clone.setCreationDate(Calendar.getInstance().getTime());
+		clone.properties().putAll(properties());
+		clone.toolParameters().putAll(toolParameters());
+
+		for (Map.Entry<String, List<TaskInputSourceDocument>> entry : input().entrySet())
+		{
+			List<TaskInputSourceDocument> inputDocs = new ArrayList<TaskInputSourceDocument>();
+
+			for (TaskInputSourceDocument doc : entry.getValue())
+			{
+				inputDocs.add(new TaskInputSourceDocument(doc));
+			}
+
+			clone.input().put(entry.getKey(), inputDocs);
+		}
+
+		return clone;
 	}
 
 	@Override

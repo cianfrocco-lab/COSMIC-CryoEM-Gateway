@@ -944,6 +944,7 @@ public class TransferAction extends NgbwSupport {
         tr.setDirectories(r.document.getInt("directories"));
         tr.setFilesSkipped(r.document.getInt("files_skipped"));
         tr.setByteTransferred(r.document.getLong("bytes_transferred"));
+        logger.debug("butes_transferred: "+r.document.getLong("bytes_transferred"));
 
         Folder current_folder = getCurrentFolder();
         long folder_id = current_folder.getFolderId();

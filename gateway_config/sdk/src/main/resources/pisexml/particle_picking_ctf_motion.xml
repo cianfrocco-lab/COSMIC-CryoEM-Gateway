@@ -38,14 +38,47 @@
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
+<!--
+                 "gpu=4\\n" .
+ -->
+                 "ChargeFactor=1.0\\n" .
 				 "ntasks-per-node=15\\n" .
 				 "node_exclusive=1\\n" .
+				 "runhours=12\\n" .
 				 "nodes=10\\n"
 				</code>
 			</format>
 			<group>1</group>
 		</attributes>
 	</parameter>	
+
+    <parameter type="Float" ishidden="1" issimple="1" ismandatory="1">
+            <name>runtime</name>
+            <attributes>
+                    <group>1</group>
+                    <paramfile>scheduler.conf</paramfile>
+                    <prompt>Maximum runtime in hours (runtime)</prompt>
+                    <vdef>
+                            <value>12</value>
+                    </vdef>
+                    <comment>
+                            <value>
+                                Estimate the maximum time your job will need to run (up to 48 hrs).  Your job will be killed if it doesn't finish within the time you specify, however jobs with shorter maximum run times are often scheduled sooner than longer jobs.
+                            </value>
+                    </comment>
+                    <ctrls>
+                            <ctrl>
+                    <message>Please enter a float between 0.1 and 48.0, inclusively, for the maximum run time (in hours)</message>
+                                    <language>perl</language>
+                    <code>$runtime &lt; 0.1 || $runtime &gt; 48.0</code>
+                            </ctrl>
+                    </ctrls>
+                    <format>
+                            <language>perl</language>
+                            <code>"runhours=$value\\n"</code>
+                    </format>
+            </attributes>
+    </parameter>
 
 <!-- create the non-configurable command line -->
 <!--  -->
@@ -124,6 +157,18 @@
         </attributes>
     </parameter>	
 
+    <parameter type="InFile" issimple="1">
+        <name>gain_ref</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Provide gain reference file if aligning un-gain-correction movies</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_ref $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
     <parameter type="Float" issimple="1" ismandatory="1">
         <name>apix</name>
         <attributes>
@@ -197,6 +242,54 @@
                 <language>perl</language>
                 <code>"--diameter $value"</code>
             </format>
+        </attributes>
+    </parameter>
+
+    <parameter type="Excl" ismandatory="1">
+        <name>rotmotion</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MOTION CORRECTION: Gain reference rotation?</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_rot $value"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+            <vlist>
+                <value>0</value>
+                <label>No rotation</label>
+                <value>1</value>
+                <label>90 degrees</label>
+				<value>2</value>
+                <label>180 degrees</label>
+				<value>3</value>
+                <label>270 degrees</label>
+            </vlist>
+        </attributes>
+    </parameter>
+	
+    <parameter type="Excl" ismandatory="1">
+        <name>flipmotion</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MOTION CORRECTION: Flip gain reference?</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_flip $value"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+            <vlist>
+                <value>0</value>
+                <label>No flipping</label>
+                <value>1</value>
+				<label>Flip upside down</label>
+                <value>2</value>
+				<label>Flip left to right</label>
+            </vlist>
         </attributes>
     </parameter>
 
@@ -313,18 +406,6 @@
                     <code>$movie_tiles &lt; 1</code>
                 </ctrl>
             </ctrls>
-        </attributes>
-    </parameter>
-
-	<parameter type="InFile">
-        <name>gain_ref</name>
-        <attributes>
-            <group>1</group>
-            <prompt>MOTION CORRECTION: Provide gain reference file if aligning un-gain-correction movies</prompt>
-            <format>
-                <language>perl</language>
-                <code>"--gain_ref $value"</code>
-            </format>
         </attributes>
     </parameter>
 

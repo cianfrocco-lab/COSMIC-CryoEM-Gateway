@@ -164,7 +164,7 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 		{
 			return new LocalFileHandler();
 		}
-		return toolRegistry.getToolResource(m_rt.getResource()).getFileHandler();
+		return toolRegistry.getToolResource(runningTask.getResource()).getFileHandler();
 	}
 
 	protected SSHExecProcessRunner getProcessRunner() throws Exception
@@ -300,7 +300,7 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 		SSHExecProcessRunner runner = getProcessRunner(); 
 
 		String finalCommand  = (m_rc == null) ? "" : ("source " + m_rc + "; ");
-		finalCommand += m_cancel + " -j " + m_rt.getRemoteJobId();
+		finalCommand += m_cancel + " -j " + runningTask.getRemoteJobId();
 		finalCommand += " -d " + m_workingDir;
 
 		m_log.debug("Running ssh command: " + finalCommand);

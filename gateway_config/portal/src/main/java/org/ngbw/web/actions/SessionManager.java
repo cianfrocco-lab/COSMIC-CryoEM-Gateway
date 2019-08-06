@@ -853,6 +853,22 @@ public class SessionManager extends NgbwSupport
 		return;
 	}
 
+    protected boolean validateLoginInputs ()
+    {
+        if (getUsername() == null || getUsername().trim().isEmpty())
+        {
+            addFieldError("username", "Username is required.");
+            logger.debug("SessionManager.validateLogin(): username is null");
+        }
+
+        if (getCurrentPassword() == null || getCurrentPassword().trim().isEmpty())
+        {
+            addFieldError("currentPassword", "Password is required.");
+            logger.debug("SessionManager.validateLogin(): password is null");
+        }
+
+        return !hasFieldErrors();
+    }
 
 	protected boolean validateLogin() {
 		String username = getUsername();

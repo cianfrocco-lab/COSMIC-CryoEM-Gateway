@@ -66,6 +66,8 @@ Mike -->
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
+                 "gpu=4\\n" .
+                 "ChargeFactor=1.0\\n" .
 				 "ntasks-per-node=15\\n" .
 				 "node_exclusive=1\\n" .
 				 "nodes=10\\n"
@@ -544,6 +546,33 @@ Mike -->
 	    </attributes>
     </parameter>
     -->
+    <parameter type="Float" ishidden="1" issimple="1" ismandatory="1">
+            <name>runtime</name>
+            <attributes>
+                    <group>1</group>
+                    <paramfile>scheduler.conf</paramfile>
+                    <prompt>Maximum Relion runtime in hours (runtime)</prompt>
+                    <vdef>
+                            <value>12</value>
+                    </vdef>
+                    <comment>
+                            <value>
+                                Estimate the maximum time your job will need to run (up to 48 hrs).  Your job will be killed if it doesn't finish within the time you specify, however jobs with shorter maximum run times are often scheduled sooner than longer jobs.
+                            </value>
+                    </comment>
+                    <ctrls>
+                            <ctrl>
+                    <message>Please enter a float between 0.1 and 48.0, inclusively, for the maximum run time (in hours)</message>
+                                    <language>perl</language>
+                    <code>$runtime &lt; 0.1 || $runtime &gt; 48.0</code>
+                            </ctrl>
+                    </ctrls>
+                    <format>
+                            <language>perl</language>
+                            <code>"runhours=$value\\n"</code>
+                    </format>
+            </attributes>
+    </parameter>
 
     <!-- Advanced parameters -->
     

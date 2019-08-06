@@ -9,6 +9,7 @@ import java.util.Vector;
 import org.apache.log4j.Logger;
 
 import org.apache.struts2.interceptor.validation.SkipValidation;
+import org.ngbw.sdk.UsageLimitException;
 import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.tool.Tool;
 import org.ngbw.sdk.tool.DisabledResourceException;
@@ -21,9 +22,11 @@ import org.ngbw.sdk.database.FolderItem;
 import org.ngbw.sdk.database.SourceDocument;
 import org.ngbw.sdk.database.Task;
 import org.ngbw.sdk.database.TaskInputSourceDocument;
+import org.ngbw.sdk.database.User;
 import org.ngbw.sdk.database.UserDataItem;
 import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.util.UserDataItemSortableField;
+import org.ngbw.sdk.jobs.UsageLimit;
 
 /**
  * Struts action class to handle creation (create/edit)
@@ -212,7 +215,14 @@ public class CreateTask extends ManageTasks
 						}
 					} 
 					return INPUT;
-				} catch(Throwable error)
+				}
+                catch ( UsageLimitException ule )
+                {
+                    logger.error(ule.getMessage());
+                    reportUserError("You have reached active jobs limit.");
+                    return ERROR;
+                }
+				catch(Throwable error)
 				{
 					reportUserError(error, "Error saving task \"" + getLabel() + "\"");
 					return ERROR;
@@ -242,6 +252,15 @@ public class CreateTask extends ManageTasks
 								return INPUT;
 							}
 						}
+                        catch ( UsageLimitException ule )
+                        {
+                            logger.error(ule.getMessage());
+
+                            setCurrentTask(null);
+                            refreshFolderTaskTabs();
+                            reportUserError(ule.getMessage());
+                            return LIST_ERROR;
+                        }
 						catch (DisabledResourceException e)
 						{
 							setCurrentTask(null);
@@ -1145,7 +1164,7 @@ public class CreateTask extends ManageTasks
 		}
 	}
 
-	private Task saveAndRunTask() throws DisabledResourceException 
+	private Task saveAndRunTask() throws DisabledResourceException, UsageLimitException
 	{
         //logger.debug ( "MONA: entered CreateTask.saveAndRunTask()" );
 		try 
@@ -1181,6 +1200,17 @@ public class CreateTask extends ManageTasks
 				logger.debug("removing TOOL_GUI_OPENED");
 				task.toolParameters().remove(TOOL_GUI_OPENED);
 			}
+
+			User user = super.getWorkbenchSession().getUser();
+
+			String toolId = super.getTool();
+			// Verify active jobs count.
+			UsageLimit.getInstance().verifyActiveJobCount(user, null);
+          
+			// Verify SU usages.
+			UsageLimit.getInstance().verifySULimit(user, null, toolId, loggedInViaIPlant());
+            
+			// ***** User has not reached the limit, continue with the process. //
 			workbench.saveAndSubmitTask(task, folder, loggedInViaIPlant());
 
 			logger.debug(getUsernameString() + "SAVE AND RUN taskId = " + task.getTaskId() + ", task.getToolId() is " + task.getToolId()); 
@@ -1189,7 +1219,7 @@ public class CreateTask extends ManageTasks
 			refreshFolderTaskTabs();
 			return task;
 		} 
-		catch(DisabledResourceException e)
+		catch( UsageLimitException | DisabledResourceException e)
 		{
 			throw e;
 		}

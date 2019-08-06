@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -97,13 +98,33 @@ public class TaskInitiate
 			}
 			stage = TaskRunStage.QUEUE;
 
+			task.setJobHandle(getNewJobHandle(task.getToolId()));
+
 			// If front end didn't compute this, do it now.  REST does, portal2 doesn't.
 			if (predictedSus == null)
 			{
 				predictedSus = predictSus(tool, task);
 			}
+            log.debug(String.format("Predicted SUs=[%d]", predictedSus));
 
-			task.setJobHandle(getNewJobHandle(task.getToolId()));
+            Map<String, List<String>> inputParams = convertTaskInput(task);
+            RenderedCommand rc = tool.validateCommand(task.toolParameters(), inputParams);
+
+            task.setRunOnGpu(isJobRunningOnGPU(rc.getSchedulerProperties()));
+			log.debug("rc.getSchedulerProperties(): (" + rc.getSchedulerProperties() + "(");
+
+            Long resourceConversionId =
+                    (task.isRunOnGpu())?
+                    Workbench.getInstance().getGPUresourceConversionId() :
+                    Workbench.getInstance().getCPUresourceConversionId();
+
+			log.debug("resourceConversionId: (" + resourceConversionId + "(");
+            task.setResourceConversionId(resourceConversionId);
+//            task.setResourceModifier((task.isRunOnGpu())? "comet-gpu" : "comet");
+//
+//            //            task.setJobHandle(getNewJobHandle(task.getToolId()));
+
+//			task.setJobHandle(getNewJobHandle(task.getToolId()));
 			rt = WorkQueue.postWork(task, tool, tool.getTgChargeNumber(loggedInViaIPlant, user), predictedSus);
 
 
@@ -134,6 +155,8 @@ public class TaskInitiate
 		try
 		{
 			Map<String, List<String>> inputParams = convertTaskInput(task);
+			log.debug("inputParams is: " + inputParams +  "\n");
+			log.debug("itoolParameters is: " + task.toolParameters() + "\n");
 			RenderedCommand rc = tool.validateCommand(task.toolParameters(), inputParams);
 			Long l = tool.getPredictedSus(rc.getSchedulerProperties());
 			return l;
@@ -588,4 +611,8 @@ public class TaskInitiate
 
 		return "NGBW-JOB-" + toolId + "-" + uuid;
 	}
+    public boolean isJobRunningOnGPU ( Properties p )
+    {
+        return SchedulerProperties.isGpu(p);
+    }
 }

@@ -68,6 +68,8 @@ Mike -->
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
+				 "gpu=4\\n" .
+				 "ChargeFactor=1.0\\n" .
 				 "ntasks-per-node=15\\n" .
 				 "node_exclusive=1\\n" .
 				 "nodes=10\\n"
@@ -156,7 +158,8 @@ Mike -->
     <!-- Advanced Parameters -->
 
     <!-- DISABLED : set the run time 
-    <parameter type="Float" issimple="1" ismandatory="1">
+    -->
+    <parameter type="Float" ishidden="1" issimple="1" ismandatory="1">
 	    <name>runtime</name>
 	    <attributes>
 		    <group>1</group>
@@ -183,7 +186,6 @@ Mike -->
 		    </format>
 	    </attributes>
     </parameter>
-    -->
 
     <!-- DISABLE output directory parameter; due to XML syntax, had to add
          a blank between "- -" so if you are going to re-enable this

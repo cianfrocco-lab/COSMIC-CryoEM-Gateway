@@ -162,15 +162,16 @@ public class AuthCallbackAction extends FolderManager {
                     getSession().remove(OauthConstants.OAUTH2_STATE);
                     // Parsing about the user
                     // logger.info("Token: " + tokenResponse.toPrettyString());
+                    logger.info("Token: " + tokenResponse.toPrettyString());
                     IdToken id_token = IdToken.parse(jsonFactory, (String) tokenResponse.get(OauthConstants.ID_TOKEN));
                     logger.info("Id token: " + id_token.toString());
                     logger.info("Other tokens: "+tokenResponse.get("other_tokens"));
 
                     ArrayList<ArrayMap> otokens = (ArrayList<ArrayMap>) tokenResponse.get("other_tokens");
-                    //for (ArrayMap js: jp) {
-                    //    for (Object k: js.keySet())
-                    //    logger.info("JS key: "+(String)k+" value: "+ js.get(k));
-                    //}
+                    for (ArrayMap js: otokens) {
+                        for (Object k: js.keySet())
+                        logger.info("JS key: "+(String)k+" value: "+ js.get(k));
+                    }
 
                     String name = (String) id_token.getPayload().get(OauthConstants.NAME);
                     String[] names = name.split(" ");
