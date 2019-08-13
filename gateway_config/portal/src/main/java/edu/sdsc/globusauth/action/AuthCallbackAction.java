@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -398,11 +399,17 @@ public class AuthCallbackAction extends FolderManager {
     }
 
     public long registerUser() {
+        //logger.debug ( "MONA: entered AuthCallbackAction.registerUser()" );
         long userid = -1L;
         SessionController controller = getController();
         //checking existing user
         User existing_user = controller.getUserByEmail(profile.getEmail());
+        //logger.debug ( "MONA: existing_user = " + existing_user );
         if (existing_user != null) {
+            /*
+            logger.debug ( "MONA: existing_user.getUsername() = " +
+                existing_user.getUsername() );
+            */
             profile.setLinkUsername(existing_user.getUsername());
             if (!activateLogin(controller,existing_user.getUsername())) {
                 return userid;
@@ -415,6 +422,7 @@ public class AuthCallbackAction extends FolderManager {
             ValidationResult result = controller.registerUser(profile.getUsername(), password,
                     profile.getEmail(), profile.getFirstname(), profile.getLastname(),
                     profile.getInstitution(), null);
+            //logger.debug ( "MONA: result = " + result );
             if (result == null) {
                 addActionError("Sorry, there was an error creating your account.");
                 return userid;
@@ -450,30 +458,38 @@ public class AuthCallbackAction extends FolderManager {
                 {
                     Set<PosixFilePermission> perms =
                         PosixFilePermissions.fromString ( "rwxrwx---" );
+                    //logger.debug ( "MONA: perms = " + perms );
                     FileAttribute<Set<PosixFilePermission>> fileAttributes =
                         PosixFilePermissions.asFileAttribute ( perms );
+                    //logger.debug ( "MONA: fileAttributes = " + fileAttributes );
+                    //logger.debug ( "MONA: fileAttributes.name = " + fileAttributes.name() );
                     Path path = Paths.get ( globusRoot + "/" + username );
                     //logger.debug ( "MONA: path = " + path );
                     Files.createDirectory ( path, fileAttributes );
                     //logger.debug ( "MONA: mkdir done!" );
+                    Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
+                    //logger.debug ( "MONA: tmpperms = " + tmpperms );
                 } 
                 catch ( IOException e )
                 {
-                    addActionMessage
-                        ( "Sorry, unable to create your data directory! Admin has been notified." ); 
-
+                    //logger.debug ( "MONA: catch exception: " + e );
                     Properties wbProperties =
                         Workbench.getInstance().getProperties();
-                    String EMAIL_SENDER = wbProperties.getProperty ( "email.adminAddr");
-                    sendEmail ( EMAIL_SENDER,
+                    String admin = wbProperties.getProperty
+                        ( "email.adminAddr");
+                    //logger.debug ( "MONA: admin = " + admin );
+                    sendEmail ( admin,
                         "Gateway error requiring admin attenion!",
                         "Unable to create new user " + username +
-                        "Globus top-level data directory at " + globusRoot + 
+                        " Globus top-level data directory at " + globusRoot + 
                         "/" + username +
                         " (AuthCallbackAction.registerUser)" );
+                    addActionMessage
+                        ( "Sorry, unable to create your data directory! Admin has been notified." ); 
                 }
                 
                 if (finalizeLogin() != true) {
+                    //logger.debug ( "MONA: finalizeLogin..." );
                     return userid;
                 }
             }
