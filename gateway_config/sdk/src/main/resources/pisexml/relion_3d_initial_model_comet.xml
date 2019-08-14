@@ -9,7 +9,11 @@
     <version>3.0-beta</version>
     <description>Calculate initial 3D models using Relion</description>
     <authors>S. H. W. Scheres</authors>
+<!--
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
+ -->
+	<reference>http://www.sciencedirect.com/science/article/pii/S104784771200248
+1</reference>
     <category>Structural Biology</category>
     <doclink>http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Main_Page</doclink>
   </head>

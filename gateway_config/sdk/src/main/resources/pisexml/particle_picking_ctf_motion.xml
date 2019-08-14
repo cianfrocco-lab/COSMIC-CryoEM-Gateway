@@ -124,6 +124,18 @@
         </attributes>
     </parameter>	
 
+    <parameter type="InFile" issimple="1">
+        <name>gain_ref</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Provide gain reference file if aligning un-gain-correction movies</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_ref $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
     <parameter type="Float" issimple="1" ismandatory="1">
         <name>apix</name>
         <attributes>
@@ -197,6 +209,54 @@
                 <language>perl</language>
                 <code>"--diameter $value"</code>
             </format>
+        </attributes>
+    </parameter>
+
+    <parameter type="Excl" ismandatory="1">
+        <name>rotmotion</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MOTION CORRECTION: Gain reference rotation?</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_rot $value"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+            <vlist>
+                <value>0</value>
+                <label>No rotation</label>
+                <value>1</value>
+                <label>90 degrees</label>
+				<value>2</value>
+                <label>180 degrees</label>
+				<value>3</value>
+                <label>270 degrees</label>
+            </vlist>
+        </attributes>
+    </parameter>
+	
+    <parameter type="Excl" ismandatory="1">
+        <name>flipmotion</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MOTION CORRECTION: Flip gain reference?</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--gain_flip $value"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+            <vlist>
+                <value>0</value>
+                <label>No flipping</label>
+                <value>1</value>
+				<label>Flip upside down</label>
+                <value>2</value>
+				<label>Flip left to right</label>
+            </vlist>
         </attributes>
     </parameter>
 
@@ -313,18 +373,6 @@
                     <code>$movie_tiles &lt; 1</code>
                 </ctrl>
             </ctrls>
-        </attributes>
-    </parameter>
-
-	<parameter type="InFile">
-        <name>gain_ref</name>
-        <attributes>
-            <group>1</group>
-            <prompt>MOTION CORRECTION: Provide gain reference file if aligning un-gain-correction movies</prompt>
-            <format>
-                <language>perl</language>
-                <code>"--gain_ref $value"</code>
-            </format>
         </attributes>
     </parameter>
 
