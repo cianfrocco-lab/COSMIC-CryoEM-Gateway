@@ -4,7 +4,7 @@
 #export ANT_HOME=/users/u4/nsgdevuser/apache-ant-1.8.3
 #export JAVA_HOME=/users/u4/nsgdevuser/kennethtest/java/jdk1.8.0_111
 #export SDK_VERSIONS=/users/u4/nsgproduser/nsg_data/sdk_versions
-export SDK_VERSIONS=/projects/cosmic2/gateway/scripts
+#export SDK_VERSIONS=/projects/cosmic2/gateway/scripts
 which piseEval
 export PATH=$PATH:$SDK_VERSIONS:/bin:/usr/bin:/usr/local/bin
 which piseEval
