@@ -17,6 +17,7 @@ public enum DataType {
 	FASTA_OUTPUT,
     IMAGE,
 	MATRIX,
+    MRC,
     PDF,
 	PHYLOGENETIC_TREE,
 	SEQUENCE,

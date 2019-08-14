@@ -1,11 +1,19 @@
 package edu.sdsc.globusauth.action;
 /**
  * Created by cyoun on 10/6/16.
+ * Updated by Mona Wong 6/7/19
  */
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.SecureRandom;
 import java.util.*;
 import com.google.api.client.auth.oauth2.*;
@@ -21,7 +29,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ArrayMap;
 import com.opensymphony.xwork2.inject.Inject;
 import edu.sdsc.globusauth.controller.ProfileManager;
-//import edu.sdsc.globusauth.model.OauthProfile;
 import org.ngbw.sdk.database.OauthProfile;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
@@ -30,6 +37,7 @@ import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.struts2.dispatcher.mapper.ActionMapper;
 import org.apache.struts2.views.util.UrlHelper;
 import org.ngbw.sdk.UserAuthenticationException;
+import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.sdk.common.util.ValidationResult;
 import org.ngbw.sdk.database.TransferRecord;
@@ -392,20 +400,30 @@ public class AuthCallbackAction extends FolderManager {
     }
 
     public long registerUser() {
+        //logger.debug ( "MONA: entered AuthCallbackAction.registerUser()" );
         long userid = -1L;
         SessionController controller = getController();
         //checking existing user
         User existing_user = controller.getUserByEmail(profile.getEmail());
+        //logger.debug ( "MONA: existing_user = " + existing_user );
         if (existing_user != null) {
+            /*
+            logger.debug ( "MONA: existing_user.getUsername() = " +
+                existing_user.getUsername() );
+            */
             profile.setLinkUsername(existing_user.getUsername());
             if (!activateLogin(controller,existing_user.getUsername())) {
                 return userid;
             }
-        } else {
+        }
+        
+        // Here is where new user accounts are created
+        else {
             String password = "Globus" + profile.getUsername() + Calendar.getInstance().getTimeInMillis();
             ValidationResult result = controller.registerUser(profile.getUsername(), password,
                     profile.getEmail(), profile.getFirstname(), profile.getLastname(),
                     profile.getInstitution(), null);
+            //logger.debug ( "MONA: result = " + result );
             if (result == null) {
                 addActionError("Sorry, there was an error creating your account.");
                 return userid;
@@ -416,8 +434,63 @@ public class AuthCallbackAction extends FolderManager {
                     reportUserError(error);
                 return userid;
             } else {
-                addActionMessage("User account \"" + getUsername() + "\" successfully created.");
+                String username = profile.getUsername();
+                //logger.debug ( "MONA: username = " + username );
+                addActionMessage ( "User account \"" + username +
+                    "\" successfully created." );
+
+                // Now create user's toplevel data directory
+                String globusRoot =
+                    Workbench.getInstance().getProperties().getProperty
+                    ( "database.globusRoot" );
+                //logger.debug ( "MONA: globusRoot = " + globusRoot );
+
+                /* Following code used java.io.File which did not allow group
+                 * write permission which we need...
+                File dir = new File ( globusRoot + "/" + username );
+                //logger.debug ( "MONA: dir = " + dir );
+                dir.mkdir();
+                */
+
+                // Create the user's top-level Globus data directory with
+                // no access for world.  If there is a problem creating the
+                // directory, will display message to user AND email adminAddr
+                try
+                {
+                    Set<PosixFilePermission> perms =
+                        PosixFilePermissions.fromString ( "rwxrwx---" );
+                    //logger.debug ( "MONA: perms = " + perms );
+                    FileAttribute<Set<PosixFilePermission>> fileAttributes =
+                        PosixFilePermissions.asFileAttribute ( perms );
+                    //logger.debug ( "MONA: fileAttributes = " + fileAttributes );
+                    //logger.debug ( "MONA: fileAttributes.name = " + fileAttributes.name() );
+                    Path path = Paths.get ( globusRoot + "/" + username );
+                    //logger.debug ( "MONA: path = " + path );
+                    Files.createDirectory ( path, fileAttributes );
+                    //logger.debug ( "MONA: mkdir done!" );
+                    Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
+                    //logger.debug ( "MONA: tmpperms = " + tmpperms );
+                } 
+                catch ( IOException e )
+                {
+                    //logger.debug ( "MONA: catch exception: " + e );
+                    Properties wbProperties =
+                        Workbench.getInstance().getProperties();
+                    String admin = wbProperties.getProperty
+                        ( "email.adminAddr");
+                    //logger.debug ( "MONA: admin = " + admin );
+                    sendEmail ( admin,
+                        "Gateway error requiring admin attenion!",
+                        "Unable to create new user " + username +
+                        " Globus top-level data directory at " + globusRoot + 
+                        "/" + username +
+                        " (AuthCallbackAction.registerUser)" );
+                    addActionMessage
+                        ( "Sorry, unable to create your data directory! Admin has been notified." ); 
+                }
+                
                 if (finalizeLogin() != true) {
+                    //logger.debug ( "MONA: finalizeLogin..." );
                     return userid;
                 }
             }

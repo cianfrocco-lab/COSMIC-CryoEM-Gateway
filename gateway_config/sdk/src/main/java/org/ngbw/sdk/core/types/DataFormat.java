@@ -23,6 +23,7 @@ public enum DataFormat {
 	HENNIG86,
 	HTML,
 	MMCIF,
+	MRC,
 	MSF,
 	NEEDLE,
 	NEWICK,

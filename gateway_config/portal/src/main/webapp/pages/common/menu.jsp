@@ -38,7 +38,7 @@
           <a href="javascript:window.open('${staticSite}/docs/', 'cosmic2_help')"><span>Help</span></a>
         </li>
         <li>
-          <a href="javascript:window.open('https://github.com/cianfrocco-lab/COSMIC-CryoEM-Gateway/issues?q=is%3Aopen+is%3Aissue+milestone%3A%22COSMIC2+beta+release%22+label%3Abug', 'issues')"><span>Known Issues</span></a>
+          <a href="javascript:window.open('https://cosmic-cryoem.org/known-issues/', 'issues')"><span>Known Issues</span></a>
         </li>
 		<li>
           <a href="javascript:popitup('${staticSite}/portal/cite_us')"><span>How to Cite Us</span></a>

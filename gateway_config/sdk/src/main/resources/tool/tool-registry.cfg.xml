@@ -112,7 +112,7 @@
 				</OutputParameters>
 			</Tool>
 			<Tool id="RELION_3D_INITIAL_MODEL_COMET" name="Relion 3D initial model calculation on Comet"
-                toolresource="COMET"
+                toolresource="comet-gpu"
                 configfile="pisexml/relion_3d_initial_model_comet.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
@@ -123,7 +123,7 @@
                 </OutputParameters>
             </Tool>
 			<Tool id="RELION_3D_CLASS_COMET" name="Relion 3D classification on Comet"
-				toolresource="COMET"
+				toolresource="comet-gpu"
 				configfile="pisexml/relion_3d_class_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
 				<InputParameters>
@@ -135,7 +135,7 @@
 			</Tool>
             <Tool id="RELION_3D_REFINE_COMET"
                 name="Relion 3D refinement on Comet"
-				toolresource="COMET"
+				toolresource="comet-gpu"
 				configfile="pisexml/relion_3d_refine_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
 				<InputParameters>
