@@ -10,6 +10,9 @@ import sys
 import subprocess
 import re
 import os
+# https://www.a2hosting.com/kb/developer-corner/mysql/connecting-to-mysql-using-python
+import pymysql
+import os.path
 
 # Maven subs:
 xsede_us_su_limit = "${xsede_us_su_limit}"
@@ -20,7 +23,14 @@ email = "${email.serviceAddr}"
 cra = "${portal.name}"
 # end Maven subs:
 
-LOWSA = 200000
+CPURESOURCE = 'COMET'
+GPURESOURCE = 'comet-gpu'
+CPULIMIT = 10000
+#CPULIMIT = 1
+GPULIMIT = 1000
+#GPULIMIT = 1
+lowsa_dict = {'CPULOWSA' : 400000, 'GPULOWSA' : 40000}
+#lowsa_dict = {'CPULOWSA' : 500000, 'GPULOWSA' : 50000}
 #./usage.py -t
 #Su per user total query:
 #
@@ -53,23 +63,89 @@ for t_tuple in utotal_list:
         limit_exceeded = True
         print(f'user {t_tuple[0]} has exceeded xsede_us_su_limit {xsede_us_su_limit} with total usage of {t_tuple[4]}!\n')
 
-sa_pat = r'^cosmic2\s+(?P<project>\S+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s+(?P<usedbyproj>\d+)\s*$'
-sa_reo = re.compile(sa_pat, flags=re.MULTILINE)
-try:
-    cp = subprocess.run(["ssh", "-l", "cosmic2", "comet-ln2.sdsc.edu", "show_accounts"], capture_output=True, text=True, timeout=30)
-except subprocess.TimeoutExpired:
-    print('TimeoutExpired for ssh show_accounts')
-    sys.exit(1)
-sa_list = sa_reo.findall(cp.stdout)
-if len(sa_list) > 0:
-    sa_out = cp.stdout
-    warnsa = False
-    for t_tuple in sa_list:
-        if int(t_tuple[2]) < LOWSA:
-            warnsa = True
-else:
-    print('ssh show_accounts failed!')
-    sys.exit(1)
+# check the databse for cpu and gpu usage.  Do not use the 14 conversion
+# for gpu, since we are looking at resource-specific SUs.  These have
+# already been converted into appropriate values for the resource,
+# so we should compare show_accounts --gpu values and charged SU values
+# before 14 conversion factor?
+# from usage.py
+passwordFile = os.path.expandvars("${SDK_VERSIONS}/db_password.txt")
+#print('passwordFile ({})'.format([passwordFile,]))
+# Get the database name and password
+properties = {}
+pf = open(passwordFile, "r");
+for line in iter(pf):
+    s = line.split('=')
+    properties[s[0].strip()] = s[1].strip()
+
+conn = pymysql.connect(host=properties["host"], port=int(properties["port"]), user=properties["username"],
+    passwd=properties["password"], db=properties["db"])
+
+query = """\
+SELECT EMAIL, SUM(COALESCE(SU_OVERRIDE, COALESCE(SU_CHARGED, COALESCE(SU_COMPUTED, COALESCE(SU_PREDICTED, 0)))) ) FROM job_stats LEFT JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID  WHERE job_stats.RESOURCE = \"{}\" and job_stats.TG_CHARGE_NUMBER = \"TG-MCB170058\" GROUP BY job_stats.USER_ID
+""".format(CPURESOURCE)
+#print(query)
+cur = conn.cursor()
+numrows = cur.execute(query)
+#print('numrows ({})'.format(numrows))
+for row in cur.fetchall():
+    line = " ".join([str(field) for field in row])
+    #print('line ({})'.format(line))
+    for fieldindex in range(len(row)):
+        #print('field ({})'.format(row[fieldindex]))
+        if fieldindex == 1  and int(row[fieldindex]) > CPULIMIT:
+            print('email ({}) has exceeded cpu SU limit ({})'.format(row[0], row[1]))
+cur.close()
+
+query = """\
+SELECT EMAIL, SUM(COALESCE(SU_OVERRIDE, COALESCE(SU_CHARGED, COALESCE(SU_COMPUTED, COALESCE(SU_PREDICTED, 0)))) ) FROM job_stats LEFT JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID  WHERE job_stats.RESOURCE = \"{}\" and job_stats.TG_CHARGE_NUMBER = \"TG-MCB170058\" GROUP BY job_stats.USER_ID
+""".format(GPURESOURCE)
+#print(query)
+cur = conn.cursor()
+numrows = cur.execute(query)
+#print('numrows ({})'.format(numrows))
+for row in cur.fetchall():
+    #line = " ".join([str(field) for field in row])
+    #print('line ({})'.format(line))
+    for fieldindex in range(len(row)):
+        #print('field ({})'.format(row[fieldindex]))
+        if fieldindex == 1  and int(row[fieldindex]) > GPULIMIT:
+            print('email ({}) has exceeded gpu SU limit ({})'.format(row[0], row[1]))
+cur.close()
+
+conn.close()
+
+warnsa = False
+for saname in lowsa_dict.keys():
+    if saname == 'CPULOWSA':
+        salimit = lowsa_dict[saname]
+        saoption = ''
+    elif saname == 'GPULOWSA':
+        salimit = lowsa_dict[saname]
+        saoption = '--gpu'
+    else:
+        print('failed to find expected saname in ({})'.format(saname))
+        sys.exit(1)
+    sa_pat = r'^cosmic2\s+(?P<project>\S+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s+(?P<usedbyproj>\d+)\s*$'
+    sa_reo = re.compile(sa_pat, flags=re.MULTILINE)
+    try:
+        cp = subprocess.run(["ssh", "-l", "cosmic2", "comet-ln2.sdsc.edu", "show_accounts", saoption], capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        print('TimeoutExpired for ssh show_accounts')
+        sys.exit(1)
+    sa_list = sa_reo.findall(cp.stdout)
+    #print(sa_list)
+    if len(sa_list) > 0:
+        sa_out = cp.stdout
+        for t_tuple in sa_list:
+            #print('t_tuple[2] ({}) salimit ({})'.format(t_tuple[2], salimit))
+            if int(t_tuple[2]) <= int(salimit):
+                warnsa = True
+                print('Low allocation available detected!')
+                print(sa_out)
+    else:
+        print('ssh show_accounts failed!')
+        sys.exit(1)
 
 if limit_exceeded == True or warnsa == True:
     try:
@@ -79,7 +155,7 @@ if limit_exceeded == True or warnsa == True:
         sys.exit(1)
     
     print(cp.stdout)
-    print(sa_out)
+    #print(sa_out)
     # could check cp.returncode here
     
     #YEAR(tgusage.END_TIME)  MONTHNAME(tgusage.END_TIME)     USER_ID USERNAME       EMAIL    SUM(tgusage.SU * resource_conversion.CONVERSION)

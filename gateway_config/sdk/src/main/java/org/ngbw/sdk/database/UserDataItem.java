@@ -265,6 +265,11 @@ public class UserDataItem extends FolderItem implements SourceDocument, Comparab
 		m_sourceDocument = new SourceDocumentRow(document);
 	}
 
+	public UserDataItem(UserDataItem otherItem) throws IOException, SQLException
+	{
+		this(otherItem, otherItem.getEnclosingFolder());
+	}
+
 	public UserDataItem(UserDataItem otherItem, Folder enclosingFolder) throws IOException, SQLException
 	{
 		this((SourceDocument) otherItem, enclosingFolder);

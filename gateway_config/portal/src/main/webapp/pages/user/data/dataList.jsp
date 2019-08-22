@@ -64,6 +64,13 @@
       onchange="reload(this.form)" value="pageSizeString"/>
     records on each page
   </s:form>
+<!--
+        <s:form action="paginateData" theme="simple">
+            <s:select name="pageSize" list="#{ 20:'20', 40:'40', 100:'100', 200:'200' }"
+                      onchange="reload(this.form)" value="pageSizeString"/>
+            records on each page
+        </s:form>
+ -->
   <s:form name="selectData" action="data" theme="simple">
     <h4>Data</h4>
     <table class="table table-striped">

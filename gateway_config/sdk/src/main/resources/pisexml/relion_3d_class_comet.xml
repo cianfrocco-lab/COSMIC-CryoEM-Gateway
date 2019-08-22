@@ -71,6 +71,7 @@ Mike -->
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
                  "gpu=4\\n" .
+                 "runhours=12\\n" .
                  "ChargeFactor=1.0\\n" .
 				 "ntasks-per-node=15\\n" .
 				 "node_exclusive=1\\n" .
