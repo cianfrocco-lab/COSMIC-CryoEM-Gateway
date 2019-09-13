@@ -7,7 +7,6 @@ package edu.sdsc.globusauth.action;
 
 import com.google.api.client.auth.oauth2.Credential;
 import edu.sdsc.globusauth.controller.ProfileManager;
-import org.ngbw.sdk.database.TransferRecord;
 import edu.sdsc.globusauth.util.OauthConstants;
 import edu.sdsc.globusauth.util.OauthUtils;
 import org.apache.log4j.Logger;
@@ -17,8 +16,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.ngbw.sdk.Workbench;
+import org.ngbw.sdk.WorkbenchSession;
 import org.ngbw.web.actions.NgbwSupport;
 import org.ngbw.sdk.database.Folder;
+import org.ngbw.sdk.database.TransferRecord;
+import org.ngbw.sdk.database.User;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -283,7 +285,7 @@ public class TransferAction extends NgbwSupport {
         //setBookmarklist(iplistaction.getBookmarklist());
         setBookmarklist(iplistaction.my_bookmark_list());
 
-	getSourceInfo();
+        getSourceInfo();
         //logger.info("SRC Bookmark ID: "+s_epbmid);
         //logger.info("SRC Endpoint ID: "+s_epid);
         //logger.info("SRC Path: "+s_eppath);
@@ -762,6 +764,46 @@ public class TransferAction extends NgbwSupport {
         item.put("recursive",flag);
         items.append("DATA", item);
     }
+
+	public boolean userCanTransfer()
+	{
+		//logger.debug ( "MONA : entered TransferAction.userCanTransfer()" );
+		
+		boolean answer = false;
+		getDestinationInfo();
+		
+        if ( d_epbmid.equals ( "XSERVER" ) )
+        {
+			try
+			{
+				WorkbenchSession session = getWorkbenchSession();
+				User user = session.getUser();
+				//logger.debug ( "MONA: user = " + user.getUsername() );
+				Long user_current_size_gb = getUserDataSize ( "gb" );
+				//logger.debug ( "MONA: current size (GB) = " + user_current_size_gb );
+				int user_max_size_gb = user.getMaxUploadSizeGB();
+				//logger.debug ( "MONA: max size (GB) = " + user_max_size_gb );
+				
+				if ( user_max_size_gb <= 0 )
+					reportUserMessage (
+						"Sorry, you do not have permission to upload data through Globus.  To get permission, please click on 'Help' above.  Note, you can still download data if you click on the 'Switch Source and Destination' button below." );
+				else if ( user_current_size_gb.longValue() >=
+					( long ) user_max_size_gb )
+					reportUserError (
+						"You have exceeded your upload limit of " +
+						user_max_size_gb +
+						" GB.  You must delete some data before you can upload.  Note, you can still download data if you click on the 'Switch Source and Destination' button below." );				
+				else
+					answer = true;
+			}
+			catch ( Exception e ) {}
+        }
+        else
+        	answer = true;
+
+		//logger.debug ( "MONA: answer = " + answer );
+		return ( answer );
+	}
 
     public boolean displayLs(String endpointId, String path) {
             //throws IOException, JSONException, GeneralSecurityException, APIError {

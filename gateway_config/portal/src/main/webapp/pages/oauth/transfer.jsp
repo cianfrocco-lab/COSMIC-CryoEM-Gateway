@@ -275,6 +275,8 @@
 </head>
 <body>
 
+<%@ include file="/pages/common/messages.jsp" %>
+
 <div class="container">
     <div class="row">
         <s:form id="endpoint-search-form" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
@@ -389,11 +391,13 @@
             <s:hidden id="selectedFiles" name="selectedFiles" value=""/>
             <div id="user-file-tree-container" class="demo" style="margin-top:2em;"></div>
             <p></p>
-            <div class="form-group form-buttons">
-                <div class="col-md-10 pull-right">
-                    <s:submit name="transfer" value="Transfer" cssClass="btn btn-primary"/>
-                </div>
-            </div>
+            <s:if test="%{userCanTransfer()}">
+            	<div class="form-group form-buttons">
+	                <div class="col-md-10 pull-right">
+	                    <s:submit name="transfer" value="Transfer" cssClass="btn btn-primary"/>
+	                </div>
+            	</div>
+            </s:if>
         </s:form>
     </s:if>
     <s:else>

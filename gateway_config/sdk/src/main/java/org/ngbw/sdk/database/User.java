@@ -266,6 +266,7 @@ public class User extends VersionedRow implements Comparable<User> {
 	private final Column<String>  m_activationCode  = new StringColumn("ACTIVATION_CODE", true, 50);
 	private final Column<Date>  m_activationSent  = new DateColumn("ACTIVATION_SENT", true);
 	private final Column<Date>  m_dateCreated  = new DateColumn("DATE_CREATED", false);
+	private final Column<Integer> m_maxUploadSizeGB = new IntegerColumn ( "MAX_UPLOAD_SIZE_GB", true, 0 );
 	private MembershipSet m_memberships;
 	private PreferenceMap m_preferences;
 	private long m_dataSize = -1;
@@ -309,7 +310,7 @@ public class User extends VersionedRow implements Comparable<User> {
 		construct(m_firstName, m_lastName, m_username, m_password, m_institution, m_role,
 			m_streetAddress, m_city, m_state, m_country, m_mailCode, m_zipCode, m_areaCode, m_phoneNumber,
 			m_email,  m_websiteUrl, m_comment, m_defaultGroupId, m_active, m_canSubmit, m_lastLogin,
-			m_umbrellaAppname, m_activationCode, m_activationSent, m_dateCreated);
+			m_umbrellaAppname, m_activationCode, m_activationSent, m_dateCreated, m_maxUploadSizeGB );
 	}
 
 
@@ -753,8 +754,7 @@ public class User extends VersionedRow implements Comparable<User> {
 
 		return ( false );
 	}
-
-
+	
 	public void setCanSubmit(Boolean canSubmit)
 	{
 		m_canSubmit.setValue(canSubmit);
@@ -768,6 +768,21 @@ public class User extends VersionedRow implements Comparable<User> {
 
 	public String getActivationCode() { return m_activationCode.getValue(); }
 	public void setActivationCode(String code) { m_activationCode.setValue(code); }
+	
+	/**
+	 * @return -1 if the user doesn't have a max size; 0 means the user is
+	 * not allow to upload; otherwise returns the maximum upload size for
+	 * the user in GB
+	 */
+	public int getMaxUploadSizeGB()
+	{
+		int answer = -1;
+		
+		if ( m_maxUploadSizeGB != null )
+			answer = m_maxUploadSizeGB.getValue();
+		
+		return ( answer );
+	}
 
 	public Folder getHomeFolder() throws IOException, SQLException
 	{
