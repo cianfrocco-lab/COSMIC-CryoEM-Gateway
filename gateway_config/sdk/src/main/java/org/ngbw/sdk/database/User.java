@@ -266,7 +266,8 @@ public class User extends VersionedRow implements Comparable<User> {
 	private final Column<String>  m_activationCode  = new StringColumn("ACTIVATION_CODE", true, 50);
 	private final Column<Date>  m_activationSent  = new DateColumn("ACTIVATION_SENT", true);
 	private final Column<Date>  m_dateCreated  = new DateColumn("DATE_CREATED", false);
-	private final Column<Integer> m_maxUploadSizeGB = new IntegerColumn ( "MAX_UPLOAD_SIZE_GB", true, 0 );
+	private final Column<Integer> m_maxUploadSizeGB = new IntegerColumn
+		( "MAX_UPLOAD_SIZE_GB", true, 10 );
 	private MembershipSet m_memberships;
 	private PreferenceMap m_preferences;
 	private long m_dataSize = -1;
