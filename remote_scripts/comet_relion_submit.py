@@ -839,6 +839,7 @@ echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
 	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
@@ -855,15 +856,15 @@ mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 	# Following output to done.txt is needed by the gateway framework
 	#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
 	#echo "retval=$rc">> done.txt
-	donefile = "done.txt"
+	#donefile = "done.txt"
 	#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
-	d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-	FO = open(donefile, mode='a')
-	FO.write(d+"\n")
-	FO.write("retval=" + str(rc) + "\n")
-	FO.flush()
-	os.fsync(FO.fileno())
-	FO.close()
+	#d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	#FO = open(donefile, mode='a')
+	#FO.write(d+"\n")
+	#FO.write("retval=" + str(rc) + "\n")
+	#FO.flush()
+	#os.fsync(FO.fileno())
+	#FO.close()
 
 if jobtype == 'pipeline':
         #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
