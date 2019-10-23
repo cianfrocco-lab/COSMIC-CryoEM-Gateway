@@ -1,0 +1,275 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>Efficiency (cryoEF)</title>
+    <version>1.1.1</version>
+    <description>Calculate efficiency for 3D reconstruction to determine if Euler angle coverage is evenly distributed</description>
+    <authors>Naydenova and Russo</authors>
+    <reference>Naydenova, K and Russo, CJ "Measuring the effects of particle orientation to improve the efficiency of electron cryomicroscopy" Nature Communications (2017)</reference>
+    <category>Validation and Analysis</category>
+    <doclink>https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF/index.html</doclink>
+  </head>
+
+  <command>cryo_efficiency</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"cryoef"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "ntasks-per-node=15\\n" .
+				 "node_exclusive=1\\n" .
+				 "nodes=10\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>STAR file</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"-f \"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+	
+<!-- Files to transfer back -->
+	<parameter type="Results">
+	  <name>stderr.txt</name>
+	  <attributes>
+	    <filenames>stderr</filenames>
+	  </attributes>
+	</parameter>
+
+<!-- visible input parameters -->	
+
+	<parameter type="Excl" issimple="1" ismandatory="1">
+	    <name>sym</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Symmetry of sample (sym)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"-g $value"</code>
+		    </format>
+            <vdef>
+                <value>C1</value>
+            </vdef>
+            <vlist>
+                <value>C1</value>
+                <label>C1</label>
+                <value>Ci</value>
+                <label>Ci</label>
+                <value>Cs</value>
+                <label>Cs</label>
+                <value>C2</value>
+                <label>C2</label>
+                <value>C2v</value>
+                <label>C2v</label>
+                <value>C2h</value>
+                <label>C2h</label>
+                <value>C3</value>
+                <label>C3</label>
+                <value>C3v</value>
+                <label>C3v</label>
+                <value>C3h</value>
+                <label>C3h</label>
+                <value>C4</value>
+                <label>C4</label>
+                <value>C4v</value>
+                <label>C4v</label>
+                <value>C4h</value>
+                <label>C4h</label>
+                <value>C5</value>
+                <label>C5</label>
+                <value>C5v</value>
+                <label>C5v</label>
+                <value>C5h</value>
+                <label>C5h</label>
+                <value>C6</value>
+                <label>C6</label>
+                <value>C6v</value>
+                <label>C6v</label>
+                <value>C6h</value>
+                <label>C6h</label>
+                <value>C7</value>
+                <label>C7</label>
+                <value>C7v</value>
+                <label>C7v</label>
+                <value>C7h</value>
+                <label>C7h</label>
+                <value>C8</value>
+                <label>C8</label>
+                <value>C8v</value>
+                <label>C8v</label>
+                <value>C8h</value>
+                <label>C8h</label>
+                <value>C9</value>
+                <label>C9</label>
+                <value>C9v</value>
+                <label>C9v</label>
+                <value>C9h</value>
+                <label>C9h</label>
+                <value>C10</value>
+                <label>C10</label>
+                <value>C10v</value>
+                <label>C10v</label>
+                <value>C10h</value>
+                <label>C10h</label>
+                <value>S1</value>
+                <label>S1</label>
+                <value>S2</value>
+                <label>S2</label>
+                <value>S3</value>
+                <label>S3</label>
+                <value>S4</value>
+                <label>S4</label>
+                <value>S5</value>
+                <label>S5</label>
+                <value>S6</value>
+                <label>S6</label>
+                <value>S7</value>
+                <label>S7</label>
+                <value>S8</value>
+                <label>S8</label>
+                <value>S9</value>
+                <label>S9</label>
+                <value>S10</value>
+                <label>S10</label>
+                <value>D1</value>
+                <label>D1</label>
+                <value>D2</value>
+                <label>D2</label>
+                <value>D3</value>
+                <label>D3</label>
+                <value>D4</value>
+                <label>D4</label>
+                <value>D5</value>
+                <label>D5</label>
+                <value>D6</value>
+                <label>D6</label>
+                <value>D7</value>
+                <label>D7</label>
+                <value>D8</value>
+                <label>D8</label>
+                <value>D9</value>
+                <label>D9</label>
+                <value>D10</value>
+                <label>D10</label>
+                <value>D11</value>
+                <label>D11</label>
+                <value>D12</value>
+                <label>D12</label>
+                <value>D1v</value>
+                <value>D1v</value>
+                <label>D2v</label>
+                <label>D2v</label>
+                <value>D3v</value>
+                <label>D3v</label>
+                <value>D4v</value>
+                <label>D4v</label>
+                <value>D5v</value>
+                <label>D5v</label>
+                <value>D6v</value>
+                <label>D6v</label>
+                <value>D7v</value>
+                <label>D7v</label>
+                <value>D8v</value>
+                <label>D8v</label>
+                <value>D9v</value>
+                <label>D9v</label>
+                <value>D10v</value>
+                <label>D10v</label>
+                <value>D11v</value>
+                <label>D11v</label>
+                <value>D12v</value>
+                <label>D12v</label>
+                <value>D1h</value>
+                <label>D1h</label>
+                <value>D2h</value>
+                <label>D2h</label>
+                <value>D3h</value>
+                <label>D3h</label>
+                <value>D4h</value>
+                <label>D4h</label>
+                <value>D5h</value>
+                <label>D5h</label>
+                <value>D6h</value>
+                <label>D6h</label>
+                <value>D7h</value>
+                <label>D7h</label>
+                <value>D8h</value>
+                <label>D8h</label>
+                <value>D9h</value>
+                <label>D9h</label>
+                <value>D10h</value>
+                <label>D10h</label>
+                <value>D11h</value>
+                <label>D11h</label>
+                <value>D12h</value>
+                <label>D12h</label>
+                <value>T</value>
+                <label>T</label>
+                <value>Td</value>
+                <label>Td</label>
+                <value>Th</value>
+                <label>Th</label>
+                <value>O</value>
+                <label>O</label>
+                <value>Oh</value>
+                <label>Oh</label>
+                <value>I1</value>
+                <label>I1</label>
+                <value>I2</value>
+                <label>I2</label>
+                <value>I3</value>
+                <label>I3</label>
+                <value>I4</value>
+                <label>I4</label>
+                <value>I5</value>
+                <label>I5</label>
+                <value>Ih</value>
+                <label>Ih</label>
+            </vlist>
+	    </attributes>
+    </parameter>
+
+</parameters>
+
+</pise>
