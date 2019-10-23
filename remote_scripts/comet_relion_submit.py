@@ -783,6 +783,9 @@ if 'pipeline' in args['commandline']:
 if 'relion_refine_mpi' in args['commandline']: 
 	jobtype='relion'
 
+if 'cryoef' in args['commandline']:
+        jobtype='cryoef'
+
 if jobtype == 'relion': 
 	relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname=prepareRelionRun(args)
 	runminutes = math.ceil(60 * runhours)
