@@ -27,6 +27,7 @@ public enum DataType {
 	SIMILARITY_SEARCH_RESULT,
 	STRUCTURE,
     TEXT,
+    STAR,
 	UNKNOWN,
     ZIP
 }

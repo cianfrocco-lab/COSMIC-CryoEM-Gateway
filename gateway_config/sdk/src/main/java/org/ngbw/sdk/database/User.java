@@ -495,6 +495,7 @@ public class User extends VersionedRow implements Comparable<User> {
 		m_username.setValue(username);
 	}
 
+
 	/*
 		Higher level code (see sdk.clients) ensures that REST_END_USER_UMBRELLA
 		have usernames of the form <appname>.<end_username> where appname
@@ -783,6 +784,11 @@ public class User extends VersionedRow implements Comparable<User> {
 			answer = m_maxUploadSizeGB.getValue();
 		
 		return ( answer );
+	}
+
+	public void setMaxUploadSizeGB(int maxuploadsizegb)
+	{
+		m_maxUploadSizeGB.setValue(maxuploadsizegb);
 	}
 
 	public Folder getHomeFolder() throws IOException, SQLException

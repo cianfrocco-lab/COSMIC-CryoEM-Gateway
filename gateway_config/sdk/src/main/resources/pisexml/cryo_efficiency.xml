@@ -23,7 +23,7 @@
 	  <attributes>
 	    <format>
 		  <language>perl</language>
-		  <code>"cryoef"</code>
+		  <code>"/home/cosmic2/software_dependencies/cryoEF/cryoEF_v1.1.0/PreCompiled/centos5.11/cryoEF"</code>
 		</format>
 		<group>0</group>
 	  </attributes>
@@ -38,9 +38,10 @@
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
-				 "ntasks-per-node=15\\n" .
+				 "runhours=12\\n" . 
+			     "ntasks-per-node=1\\n" .
 				 "node_exclusive=1\\n" .
-				 "nodes=10\\n"
+				 "nodes=1\\n"
 				</code>
 			</format>
 			<group>1</group>

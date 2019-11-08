@@ -6,6 +6,7 @@ package org.ngbw.sdk.tool;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.file.Path;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -313,7 +314,7 @@ public class DefaultToolResource implements ToolResource {
 	public void stageInput(String workingDirectory, Map<String, String> inputData)
 		throws IOException, Exception
 	{
-        //log.debug ( "MONA: entered DefaultToolResource.stageInput()" );
+        log.debug ( "MONA: entered DefaultToolResource.stageInput()" );
 		FileHandler fileHandler = null;
 
 		try
@@ -324,6 +325,7 @@ public class DefaultToolResource implements ToolResource {
 			for (String fileName : inputData.keySet())
 			{
 				String content = inputData.get(fileName);
+				log.debug("content (" + content + ")");
 				if (content == null)
 				{
 					throw new NullPointerException("No data for input file " + fileName);
@@ -338,25 +340,45 @@ public class DefaultToolResource implements ToolResource {
 						int secondSpace = contentAsString.indexOf(' ', firstSpace + 1);
 
 						documentID = Long.parseLong(contentAsString.substring(firstSpace + 1, secondSpace));
-                        //log.debug ( "MONA: documenID = " + documentID );
+                        log.debug ( "MONA: documenID = " + documentID );
 					}
 					catch(Exception e)
 					{
 						log.warn("Error parsing TaskInputSourceDocument id: " + e.getMessage());
 						throw e;
 					}
+					log.debug("getting new TaskInputSourceDocument with documentID (" + documentID + ")");
 					TaskInputSourceDocument document = new TaskInputSourceDocument(documentID);
-                    //log.debug ( "MONA: document = " + document );
-                    //log.debug ( "MONA: datatype = " + document.getDataType() );
+                    log.debug ( "MONA: document = " + document );
+                    log.debug ( "MONA: datatype = " + document.getDataType() );
 
                     if ( document.getDataType() != DataType.DIRECTORY )
                     {
+						//for single files uploaded through globus,
+						//DataType will not be DIRECTORY, but there
+						//may be directories in a path in fileName.
+						//Maybe easiest thing would be to creat the
+						//directories here...
+						File fnfile = new File(fileName);
+						Path fndirpath = fnfile.toPath();
+						if (fndirpath.getNameCount() > 1) {
+							log.debug("createDirectory: fndirpath.getNameCount (" + fndirpath.getNameCount() + ")");
+							Path fndir = fndirpath.subpath(0, fndirpath.getNameCount()-1);
+							//Path fndir = fndirpath.subpath(0, 1);
+							log.debug("fndir (" + fndir.toString() + ")");
+							fileHandler.createDirectory(workingDirectory + fndir.toString());
+						} else {
+							log.debug("not createDirectory: fndirpath.getNameCount (" + fndirpath.getNameCount() + ")");
+						}
 					    InputStream is = document.getDataAsStream();
-                        //log.debug ( "MONA: document = " + document );
-                        //log.debug ( "MONA: is = " + is );
+						if (is == null){
+							log.debug("is is null!");
+						}
+                        log.debug ( "MONA: document = " + document );
+                        log.debug ( "MONA: is = " + is );
 					    try
 					    {
-						    log.debug("Staging from db: " + fileName);
+						    log.debug("Staging from db: workingDirectory (" + workingDirectory + ") fileName (" + fileName + ")");
 						    fileHandler.writeFile(workingDirectory + fileName, is);
 						    log.debug("Finished staging " + fileName);
 					    }

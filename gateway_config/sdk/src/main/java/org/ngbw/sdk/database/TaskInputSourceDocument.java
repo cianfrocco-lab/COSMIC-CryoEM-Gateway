@@ -75,20 +75,32 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 		setEntityType(EntityType.UNKNOWN);
 		setValidated(false);
 
-		//m_sourceDocument = new SourceDocumentRow();
+		m_sourceDocument = new SourceDocumentRow();
 	}
 
 	public TaskInputSourceDocument(long inputDocumentId) throws IOException, SQLException
 	{
 		this(TABLE_NAME, KEY_NAME);
 
-        //log.debug ( "MONA : entered TaskInputSourceDocument(2)" );
+        //log.debug ( "MONA : back in TaskInputSourceDocument(2)" );
         //log.debug ( "MONA : inputDocumentId = " + inputDocumentId );
+        //log.debug ( "MONA : m_sourceDocument = " + m_sourceDocument );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
 
 		m_key.assignValue(inputDocumentId);
+		//log.debug("m_key (" + m_key + ") getValue() (" + m_key.getValue() + ")");
 
+		//log.debug("beore load(), m_sourceDocumentId (" + m_sourceDocumentId + ")");
 		load();
+		//if (m_sourceDocumentId == null) {
+	//		log.debug("after load(), m_sourceDocumentId == null!");
+	//	} else {
+	//		log.debug("after load(), m_sourceDocumentId != null");
+	//		//https://coderanch.com/t/404450/java/type-object
+	//		Class cls = m_sourceDocumentId.getClass();
+	//		log.debug("m_sourceDocumentId type (" + cls.getName() + ")");
+	//		log.debug("m_sourceDocumentId.getValue() (" + m_sourceDocumentId.getValue() + ")");
+	//	}
 	}
 
 	public TaskInputSourceDocument(SourceDocument document) throws IOException, SQLException
@@ -99,21 +111,54 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
         //log.debug ( "MONA : document = " + document );
         //log.debug ( "MONA : document class name = " + document.getClass().getName() );
         //log.debug ( "MONA : document.getName() = " + document.getName() );
+        //log.debug ( "MONA : document.getSourceDocumentId() = " + document.getSourceDocumentId() );
         long sourceDocumentId = document.getSourceDocumentId();
         //log.debug ( "MONA : sourceDocumentId = " + sourceDocumentId );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
         //log.debug ( "MONA : m_columns.size 1 = " + m_columns.size() );
 
         //if ( document instanceof UserDataItem &&m_sourceDocumentId == null )
-        if ( sourceDocumentId != 0 && document instanceof UserDataItem &&
+        //if ( sourceDocumentId != 0 && document instanceof UserDataItem &&
+         //   m_sourceDocumentId == null )
+        if ( sourceDocumentId != 0 && (document instanceof UserDataItem || document instanceof TaskInputSourceDocument) &&
             m_sourceDocumentId == null )
         {
             //log.debug ( "MONA: adding!" );
 	        m_sourceDocumentId = new LongColumn ( "SOURCE_DOCUMENT_ID", false );
             //m_sourceDocumentId.setValue ( document.getSourceDocumentId() );
             m_sourceDocumentId.setValue ( sourceDocumentId );
+			//log.debug("after m_sourceDocumentId.setValue with sourceDocumentId (" + sourceDocumentId + ")");
+			//log.debug("after m_sourceDocumentId.setValue with m_sourceDocumentId.getValue() (" + m_sourceDocumentId.getValue() + ")");
             m_columns.add ( m_sourceDocumentId );
-        }
+        } else {
+			//log.debug("not running m_sourceDocumentId.setValue(). sourceDocumentId (" + sourceDocumentId + ") document (should be UserDataItem) (" + document +") m_sourceDocumentId (" + m_sourceDocumentId +")");
+			/*
+			if ((document instanceof UserDataItem) || (document instanceof TaskInputSourceDocument)){
+				log.debug("document is one of UserDataItem nor TaskInputSourceDocument");
+				if (document instanceof UserDataItem) {
+					log.debug("document instancef UserDataItem");
+				} else if (document instanceof TaskInputSourceDocument){
+					log.debug("document instancef TaskInputSourceDocument");
+				} else {
+					log.debug("document of other type (" + document.getClass().getName() + ")");
+				}
+			} else {
+				log.debug("document is neither UserDataItem nor TaskInputSourceDocument");
+				log.debug("document of other type (" + document.getClass().getName() + ")");
+			}
+			if (document instanceof UserDataItem) {
+				log.debug("document instanceof UserDataItem");
+			} else{
+				Class cls = document.getClass();
+				log.debug("document not instanceof UserDataItem (" + cls.getName() + ")");
+				if (document instanceof TaskInputSourceDocument) {
+					log.debug("instanceof TaskInputSourceDocument");
+				} else {
+					log.debug("not instanceof TaskInputSourceDocument");
+				}
+			}
+			*/
+		}
         //log.debug ( "MONA : m_columns.size 2 = " + m_columns.size() );
 
 		setDataFormat(document.getDataFormat());
@@ -122,8 +167,15 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 		setName(document.getName());
 		setValidated(document.isValidated());
 
-        if ( sourceDocumentId != 0 )
+        if ( sourceDocumentId != 0 ){
+			//log.debug("sourceDocumentId (" + sourceDocumentId + ") !=0, setting m_sourceDocument");
 		    m_sourceDocument = new SourceDocumentRow(document);
+		} else {
+			//log.debug("sourceDocumentId (" + sourceDocumentId + ") ==0, not setting m_sourceDocument");
+		}
+
+		//log.debug("m_sourceDocumentId (" + m_sourceDocumentId + ")");
+		//log.debug("m_sourceDocument.getSourceDocumentId() (" + m_sourceDocument.getSourceDocumentId() + ")");
 	}
 
 	public TaskInputSourceDocument(String name, byte[] data)
@@ -187,8 +239,8 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 	TaskInputSourceDocument(Connection dbConn, long inputDocumentId) throws IOException, SQLException
 	{
 		this(TABLE_NAME, KEY_NAME);
+        //log.debug ( "MONA : back in TaskInputSourceDocument(8)" );
 
-        //log.debug ( "MONA : entered TaskInputSourceDocument(8)" );
         //log.debug ( "MONA : inputDocumentId = " + inputDocumentId );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
 
@@ -201,19 +253,22 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 	{
 		super(TABLE_NAME, KEY_NAME);
 
-        //log.debug ( "MONA : entered TaskInputSourceDocument(9)" );
+        //log.debug ( "MONA : after super(), back in TaskInputSourceDocument(9)" );
         //log.debug ( "MONA : tableName = " + tableName );
         //log.debug ( "MONA : keyName = " + keyName );
         //log.debug ( "MONA : m_inputId.getValue() 1 = " + m_inputId.getValue() );
         //log.debug ( "MONA : m_name.getValue() 1 = " + m_name.getValue() );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
 
-        if ( m_sourceDocumentId == null )
+        if ( m_sourceDocumentId == null ) {
+			//log.debug("running construct() without m_sourceDocumentId");
 		    construct ( m_inputId, m_dataFormat, m_dataType, m_entityType,
                 m_name, m_validated );
-        else
+			//log.debug("after running construct()");
+        } else {
 		    construct ( m_inputId, m_dataFormat, m_dataType, m_entityType,
                 m_name, m_validated, m_sourceDocumentId );
+		}
         //log.debug ( "MONA : m_columns.size() = " + m_columns.size() );
 	}
 
@@ -313,6 +368,7 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
         if ( m_sourceDocument != null )
 		    return m_sourceDocument.getDataAsStream();
         else
+			log.debug("m_sourceDocument is null, retrning null as input stream!");
             return ( null );
 	}
 
@@ -356,10 +412,13 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 	{
         //log.debug ( "MONA : entered getSourceDocumentId()" );
         //log.debug ( "MONA : m_sourceDocumentId = " + m_sourceDocumentId );
-        if ( m_sourceDocument != null )
+        if ( m_sourceDocument != null ) {
+        	//log.debug ( "MONA : m_sourceDocument.getSourceDocumentId() = " + m_sourceDocument.getSourceDocumentId() );
 		    return m_sourceDocument.getSourceDocumentId();
-        else
+        } else {
+			//log.debug("m_sourceDocument is null");
             return ( 0L );
+		}
 	}
 
 	public Task getTask() throws IOException, SQLException
@@ -474,14 +533,19 @@ public class TaskInputSourceDocument extends GeneratedKeyRow implements SourceDo
 
 	    m_sourceDocumentId = new LongColumn ( "SOURCE_DOCUMENT_ID", false );
         m_columns.add ( m_sourceDocumentId );
+        //log.debug("m_columns (" + m_columns + ")");
         //log.debug ( "MONA : m_columns.size 2 = " + m_columns.size() );
 		super.load(dbConn);
         //log.debug ( "MONA : m_columns.size 3 = " + m_columns.size() );
         //log.debug ( "MONA : m_sourceDocumentId 2 = " + m_sourceDocumentId.getValue() );
 
-        if ( m_sourceDocumentId.getValue() != 0 )
+        if ( m_sourceDocumentId.getValue() != 0 ) {
+			//log.debug("m_sourceDocumentId.getValue() (" + m_sourceDocumentId.getValue() + ")");
 		    m_sourceDocument = new SourceDocumentRow ( dbConn,
                 m_sourceDocumentId.getValue() );
+		} else {
+			//log.debug("m_sourceDocumentId.getValue() == 0!");
+		}
         //log.debug ( "MONA : m_sourceDocument = " + m_sourceDocument );
 	}
 

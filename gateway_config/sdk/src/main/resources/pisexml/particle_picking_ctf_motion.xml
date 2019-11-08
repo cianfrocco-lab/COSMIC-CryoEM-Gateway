@@ -10,7 +10,7 @@
     <description>Perform pre-processing for movie alignment (RELION), particle picking (crYOLO), CTF estimation (CTFFIND4), and particle extraction (RELION).</description>
     <authors>RELION, CTFFIND4, crYOLO</authors>
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530; Rohou A and Grigorieff. (2015) CTFFIND4: Fast and accurate defocus estimation from electron micrographs. Journal of Structural Biology 192, 216-221; Wagner et al. (2018) SPHIRE-crYOLO: A fast and well-centering automated particle picker for cryo-EM. bioRxiv-356584</reference>
-    <category>Testing</category>
+    <category>Preprocessing</category>
     <doclink>http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Main_Page</doclink>
   </head>
 
