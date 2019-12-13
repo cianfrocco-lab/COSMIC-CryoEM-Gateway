@@ -12,6 +12,10 @@ import math
 import zipfile 
 import linecache 
 
+GLOBUSTRANSFERSDIR = '/projects/cosmic2/gatewaydev/globus_transfers'
+REMOTESCRIPTSDIR = '/home/cosmic2/gatewaydev/remote_scripts'
+
+#==========================
 def preparePreprocessingRun(inputline,jobdir):
 
 	#Get information from commandline:
@@ -45,7 +49,7 @@ def preparePreprocessingRun(inputline,jobdir):
         ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
 
         #Get userdirectory data and write to log file
-        userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
+        userdir=GLOBUSTRANSFERSDIR+'/'+usernamedir
 
         #Get full path to starfile on cosmic
         starfilename=userdir+'/'+'%s' %(input_starfile)
@@ -414,7 +418,7 @@ def prepareRelionRun(args):
 
 	#Get userdirectory data and write to log file
 	tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
-	userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
+	userdir='/projects/cosmic2/gatewaydev/globus_transfers/'+usernamedir
 	tmplog.write('\n'+userdir)
 
 	#Get full path to starfile on cosmic
@@ -782,10 +786,95 @@ if 'pipeline' in args['commandline']:
 
 if 'relion_refine_mpi' in args['commandline']: 
 	jobtype='relion'
-
-if 'cryoef' in args['commandline']:
+if 'cryoEF' in args['commandline']:
         jobtype='cryoef'
 
+if jobtype == 'cryoef': 
+	#relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname=prepareRelionRun(args)
+	command=args['commandline']
+	infile=command.split()[-1].split('"')[1]
+	csparc2star=''
+	if '.cs' in infile: 
+		originfile=infile
+		infile=infile.split('.')        
+                del infile[-1]
+                infile=''.join(infile)
+                outfile='%s.star' %(infile)
+		csparc2star='''module load singularity
+singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s''' %(originfile,outfile)
+		infile=outfile
+
+	if '.star' in command: 
+		command=command.replace('.star','.dat')	
+		datfile=infile.replace('.star','.dat')
+	if '.cs' in command: 
+		command=command.replace('.cs','.dat')
+		datfile=infile.replace('.star','.dat')
+	runhours=8
+	runminutes = math.ceil(60 * runhours)
+	partition='shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+	ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line: 
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+	text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=1
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+/home/cosmic2/gatewaydev/remote_scripts/cryoef_star_csv_2_dat.py %s >> stdout.txt 2>>stderr.txt
+if test -f %s; then
+	%s >>stdout.txt 2>>stderr.txt
+fi
+cat %s.log >> stdout.txt
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,csparc2star,infile,datfile,command,infile.split('.')[0])
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 if jobtype == 'relion': 
 	relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname=prepareRelionRun(args)
 	runminutes = math.ceil(60 * runhours)
@@ -824,15 +913,10 @@ if jobtype == 'relion':
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
 #SBATCH --no-requeue
-%s
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
-module purge
+#SBATCH --gres=gpu:4
 module load cuda/9.2
-module load gnutools
-module load intel/2015.6.233
-module load intelmpi/2015.6.233
-module load %s
+module load intelmpi/2018.1.163
+source /home/cosmic2/software_dependencies/relion/relion-3.1-gpu.sh
 date 
 export OMP_NUM_THREADS=5
 cd '%s/'
@@ -842,9 +926,8 @@ echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
-date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
@@ -859,15 +942,15 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 	# Following output to done.txt is needed by the gateway framework
 	#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
 	#echo "retval=$rc">> done.txt
-	#donefile = "done.txt"
+	donefile = "done.txt"
 	#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
-	#d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-	#FO = open(donefile, mode='a')
-	#FO.write(d+"\n")
-	#FO.write("retval=" + str(rc) + "\n")
-	#FO.flush()
-	#os.fsync(FO.fileno())
-	#FO.close()
+	d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	FO = open(donefile, mode='a')
+	FO.write(d+"\n")
+	FO.write("retval=" + str(rc) + "\n")
+	FO.flush()
+	os.fsync(FO.fileno())
+	FO.close()
 
 if jobtype == 'pipeline':
         #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
