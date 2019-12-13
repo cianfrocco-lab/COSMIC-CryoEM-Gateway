@@ -17,7 +17,7 @@
   <div class="col-xs-10">
       <h2>Welcome to COSMIC<sup>2</sup>!</h2> 
 
-      This is a <i>freely available</i>, science gateway for cryo-EM structure determination.<br><br>
+      This is a science gateway for cryo-EM structure determination.<br><br>
 
       Please login below with your university credentials and then you are ready to go!<br><br> 
 
@@ -26,6 +26,8 @@
 
       Questions about this login process?
       <a href="https://cosmic-cryoem.org/user-authentication/">Please read more here.</a><br><br>
+
+	  By logging into COSMIC<sup>2</sup>, you have agreed with the <a href="https://cosmic-cryoem.org/terms-of-use/">Terms of Use</a>.<br><br>
 </div>
 
 <%-- previous CIPRES user login... --%>
