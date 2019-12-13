@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D classification</title>
-    <version>3.0-beta</version>
+    <version>3.1</version>
     <description>Perform 3D classification of single particles with 3D model using Relion</description>
     <authors>S. H. W. Scheres</authors>
 <!--
