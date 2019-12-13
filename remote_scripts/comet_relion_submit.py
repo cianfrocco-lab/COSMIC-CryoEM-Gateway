@@ -913,15 +913,10 @@ if jobtype == 'relion':
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
 #SBATCH --no-requeue
-%s
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
-module purge
+#SBATCH --gres=gpu:4
 module load cuda/9.2
-module load gnutools
-module load intel/2015.6.233
-module load intelmpi/2015.6.233
-module load %s
+module load intelmpi/2018.1.163
+source /home/cosmic2/software_dependencies/relion/relion-3.1-gpu.sh
 date 
 export OMP_NUM_THREADS=5
 cd '%s/'
@@ -932,7 +927,7 @@ pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 """ \
-	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,gpuextra1,gpuextra3,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
