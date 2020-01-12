@@ -782,7 +782,7 @@ public class TransferAction extends NgbwSupport {
 				Long user_current_size_gb = getUserDataSize ( "gb" );
 				//logger.debug ( "MONA: current size (GB) = " + user_current_size_gb );
 				int user_max_size_gb = user.getMaxUploadSizeGB();
-				//logger.debug ( "MONA: max size (GB) = " + user_max_size_gb );
+				logger.debug ( "MONA: max size (GB) = " + user_max_size_gb );
 				
 				if ( user_max_size_gb <= 0 )
 					reportUserMessage (
