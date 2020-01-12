@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D initial model calculation</title>
-    <version>3.0-beta</version>
+    <version>3.1</version>
     <description>Calculate initial 3D models using Relion</description>
     <authors>S. H. W. Scheres</authors>
 <!--

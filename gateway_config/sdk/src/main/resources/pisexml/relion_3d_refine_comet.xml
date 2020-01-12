@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>Relion 3D refinement</title>
-    <version>3.0-beta</version>
+    <version>3.1</version>
     <description>Iteratively refine 3D volume against single particles using Relion</description>
     <authors>S. H. W. Scheres</authors>
 <!--
