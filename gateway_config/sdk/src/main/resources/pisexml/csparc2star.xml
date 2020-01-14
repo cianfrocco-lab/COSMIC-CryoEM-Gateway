@@ -39,8 +39,10 @@
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
 				 "runhours=1\\n" . 
+                 "ChargeFactor=1.0\\n" .
 			     "ntasks-per-node=1\\n" .
 				 "node_exclusive=1\\n" .
+                 "cores_per_node=1\\n" .
 				 "nodes=1\\n"
 				</code>
 			</format>
@@ -93,7 +95,7 @@
             <prompt>(Optional) Additional file (e.g. passthrough.cs)</prompt>
             <format>
                 <language>perl</language>
-                <code>"--passthrough $value"</code>
+                <code>"$value"</code>
             </format>
         </attributes>
     </parameter>
@@ -128,20 +130,6 @@
                 <language>perl</language>
                 <code>"--stack-path $value"</code>
             </format>
-        </attributes>
-    </parameter>
-	<parameter type="Switch">
-        <name>skip_align</name>
-        <attributes>
-            <group>1</group>
-            <prompt>Skip image alignment (skip_align)</prompt>
-            <format>
-                <language>perl</language>
-                <code>($value) ? " --skip_align" : ""</code>
-            </format>
-            <vdef>
-                <value>0</value>
-            </vdef>
         </attributes>
     </parameter>
 </parameters>
