@@ -119,13 +119,6 @@ Mike -->
 	  </attributes>
 	</parameter>
 
-         <parameter type="Results">
-            <name>all_files</name>
-            <attributes>
-                <filenames>*.txt</filenames>
-            </attributes>
-        </parameter>
-
 <!-- visible input parameters -->	
 
     <parameter type="Integer" issimple="1" ismandatory="1">
