@@ -99,6 +99,17 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
+                toolresource="COMET"
+                configfile="pisexml/auto_micassess.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
                 toolresource="COMET"
                 configfile="pisexml/csparc2star.xml"
