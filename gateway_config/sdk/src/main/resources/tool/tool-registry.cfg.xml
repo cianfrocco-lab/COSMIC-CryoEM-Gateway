@@ -110,17 +110,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Preprocessing: motion correction, CTF estimation, particle picking on Comet"
-                toolresource="COMET"
-                configfile="pisexml/particle_picking_ctf_motion.xml"
-                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
-                <InputParameters>
-                    <InputParameter id="infile_" entityType="UNKNOWN"
-                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
-                </InputParameters>
-                <OutputParameters>
-                </OutputParameters>
-            </Tool>
 
 			<Tool id="RELION_2D_CLASS_COMET" name="Relion 2D classification on Comet"
 				toolresource="comet-gpu"
