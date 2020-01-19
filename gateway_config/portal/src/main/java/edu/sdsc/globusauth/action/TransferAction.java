@@ -786,7 +786,7 @@ public class TransferAction extends NgbwSupport {
 				
 				if ( user_max_size_gb <= 0 )
 					reportUserMessage (
-						"Sorry, you do not have permission to upload data through Globus.  To get permission, please click on 'Help' above.  Note, you can still download data if you click on the 'Switch Source and Destination' button below." );
+						"Sorry, you do not have permission to upload data through Globus.  To get permission, please request access by emailing cosmic2support@umich.edu.  Note, you can still download data if you click on the 'Switch Source and Destination' button below." );
 				else if ( user_current_size_gb.longValue() >=
 					( long ) user_max_size_gb )
 					reportUserError (
