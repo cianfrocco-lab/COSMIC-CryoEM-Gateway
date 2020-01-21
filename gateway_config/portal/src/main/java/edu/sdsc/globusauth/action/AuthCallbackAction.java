@@ -459,17 +459,23 @@ public class AuthCallbackAction extends FolderManager {
                 {
                     Set<PosixFilePermission> perms =
                         PosixFilePermissions.fromString ( "rwxrwx---" );
-                    //logger.debug ( "MONA: perms = " + perms );
+                    logger.debug ( "MONA: perms = " + perms );
                     FileAttribute<Set<PosixFilePermission>> fileAttributes =
                         PosixFilePermissions.asFileAttribute ( perms );
                     //logger.debug ( "MONA: fileAttributes = " + fileAttributes );
                     //logger.debug ( "MONA: fileAttributes.name = " + fileAttributes.name() );
                     Path path = Paths.get ( globusRoot + "/" + username );
-                    //logger.debug ( "MONA: path = " + path );
+                    logger.debug ( "MONA: path = " + path );
                     Files.createDirectory ( path, fileAttributes );
-                    //logger.debug ( "MONA: mkdir done!" );
+                    logger.debug ( "MONA: mkdir done!" );
                     Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
-                    //logger.debug ( "MONA: tmpperms = " + tmpperms );
+                    logger.debug ( "MONA: tmpperms 1 = " + tmpperms );
+                    Path tmppath = Files.setPosixFilePermissions ( path, perms );
+                    logger.debug ( "MONA: tmppath = " + tmppath );
+                    tmpperms = Files.getPosixFilePermissions ( tmppath, LinkOption.NOFOLLOW_LINKS );
+                    logger.debug ( "MONA: tmpperms 2 = " + tmpperms );
+                    tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
+                    logger.debug ( "MONA: tmpperms 3 = " + tmpperms );
                 } 
                 catch ( IOException e )
                 {
