@@ -472,9 +472,9 @@ public class AuthCallbackAction extends FolderManager {
                     logger.debug ( "MONA: tmpperms 1 = " + tmpperms );
                     Path tmppath = Files.setPosixFilePermissions ( path, perms );
                     logger.debug ( "MONA: tmppath = " + tmppath );
-                    Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( tmppath, LinkOption.NOFOLLOW_LINKS );
+                    tmpperms = Files.getPosixFilePermissions ( tmppath, LinkOption.NOFOLLOW_LINKS );
                     logger.debug ( "MONA: tmpperms 2 = " + tmpperms );
-                    Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
+                    tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
                     logger.debug ( "MONA: tmpperms 3 = " + tmpperms );
                 } 
                 catch ( IOException e )
