@@ -61,7 +61,7 @@ def warn(message, subject, recipient) :
 #
 
 #    Disk space usage (cumulative)
-globususage_raw = os.popen("du -sb %s" % GTD).read()
+globususage_raw = os.popen("du --block-size=1G -s %s" % GTD).read()
 globususage_bytes = int(globususage_raw.split()[0])
 #print('globususage_bytes ({})\n'.format(globususage_bytes))
 #    Disk space per user (cumultative)
@@ -73,12 +73,12 @@ for entry_item in entry_list:
     fullpath = GTD + '/' + entry_item
     if os.path.isdir(fullpath):
         dir_list.append(fullpath)
-        usage_raw = os.popen("du -sb %s" % fullpath).read()
+        usage_raw = os.popen("du --block-size=1G -s %s" % fullpath).read()
         #usage_bytes = int(string.split(usage_raw)[0])
         usage_bytes = int(usage_raw.split()[0])
         userusage_dict[fullpath] = usage_bytes
         #print "usage_raw (%s) usage_bytes (%s)" % (usage_raw, usage_bytes)
-        if usage_bytes > WARNBYTES:
+        if usage_bytes * 1024 * 1024 * 1024 > WARNBYTES:
             warn_list.append(
                 "high disk usage (%s) for (%s)\n" %
                    (usage_bytes, fullpath)) 
@@ -257,7 +257,7 @@ if time.localtime()[3] == 9:
         message = message + '    {} {}\n'.format(item[0], item[1])
     message = message + 'Number of new users (cumulative) {}\n'.format(usercountcum)
     message = message + 'Number of new users (last 24 hours) {}\n'.format(usercount24h)
-    message = message + 'Disk space usage (cumulative) {} bytes of globus transfer dir usage\n'.format(globususage_bytes)
+    message = message + 'Disk space usage (cumulative) {} GB of globus transfer dir usage\n'.format(globususage_bytes)
     message = message + 'Disk space per user (cumulative)\n'
     for item in userusage_dict.items():
         message = message + '    {} {}\n'.format(item[0], item[1])
