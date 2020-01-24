@@ -609,7 +609,7 @@ public class TaskInitiate
 	{
 		String uuid = UUID.randomUUID().toString().toUpperCase().replaceAll("-", "");
 
-		return "NGBW-JOB-" + toolId + "-" + uuid;
+		return "COSMIC2-JOB-" + toolId + "-" + uuid;
 	}
     public boolean isJobRunningOnGPU ( Properties p )
     {
