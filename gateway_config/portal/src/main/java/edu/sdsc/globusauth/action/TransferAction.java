@@ -768,7 +768,6 @@ public class TransferAction extends NgbwSupport {
 	public boolean userCanTransfer()
 	{
 		//logger.debug ( "MONA : entered TransferAction.userCanTransfer()" );
-		
 		boolean answer = false;
 		getDestinationInfo();
 		
@@ -782,11 +781,15 @@ public class TransferAction extends NgbwSupport {
 				Long user_current_size_gb = getUserDataSize ( "gb" );
 				//logger.debug ( "MONA: current size (GB) = " + user_current_size_gb );
 				int user_max_size_gb = user.getMaxUploadSizeGB();
-				logger.debug ( "MONA: max size (GB) = " + user_max_size_gb );
+				//logger.debug ( "MONA: max size (GB) = " + user_max_size_gb );
 				
 				if ( user_max_size_gb <= 0 )
+				{
 					reportUserMessage (
-						"Sorry, you do not have permission to upload data via Globus at this time. If you are a new user, we will update your limits within one business day. For more questions, please email us at cosmic2support@umich.edu." );
+						"Sorry, you do not have permission to upload data via Globus at this time. If you are a new user, we will update your limits within one business day. For more questions, please email us at " + 
+						Workbench.getInstance().getProperties().getProperty
+						( "email.adminAddr" ) );
+				}
 				else if ( user_current_size_gb.longValue() >=
 					( long ) user_max_size_gb )
 					reportUserError (
