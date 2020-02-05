@@ -1342,6 +1342,17 @@ public class DataManager extends FolderManager
 		return getCurrentPage().getThisPageNumberOfElements();
 	}
 
+
+	/*================================================================
+	 * Misc property accessor methods
+	 *================================================================*/
+
+	public String getAdminEmail() {
+		return
+			( Workbench.getInstance().getProperties().getProperty ( "email.adminAddr" ) );
+	}
+
+
 	/*================================================================
 	 * Internal property accessor methods
 	 *================================================================*/
