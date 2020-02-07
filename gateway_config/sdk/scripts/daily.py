@@ -30,6 +30,7 @@ import os
 import string
 import time
 import datetime
+import sys
 
 GTD = "${database.globusRoot}"
 WARNBYTES = ${user.data.size.warn}
@@ -38,6 +39,9 @@ MAILX = os.popen('which mailx').read().strip()
 ECHO = os.popen('which echo').read().strip()
 DU = os.popen('which du').read().strip()
 # check to see if MAILX, ECHO and DU got populated.
+if MAILX == '' or ECHO == '' or DU == '':
+    print('couldn\'t find echo, du or mailx')
+    sys.exit(1)
 # would like to check to see if they are valid commands.
 # how to deal with shell aliases? aliases seem to not get
 # picked up by which...
@@ -61,8 +65,9 @@ def warn(message, subject, recipient) :
 #
 
 #    Disk space usage (cumulative)
-globususage_raw = os.popen("du --block-size=1G -s %s" % GTD).read()
+globususage_raw = os.popen("du --block-size=1 -s %s" % GTD).read()
 globususage_bytes = int(globususage_raw.split()[0])
+globususage_gb = globususage_bytes // (1024 * 1024 *1024)
 #print('globususage_bytes ({})\n'.format(globususage_bytes))
 #    Disk space per user (cumultative)
 entry_list = os.listdir(GTD)
@@ -73,14 +78,15 @@ for entry_item in entry_list:
     fullpath = GTD + '/' + entry_item
     if os.path.isdir(fullpath):
         dir_list.append(fullpath)
-        usage_raw = os.popen("du --block-size=1G -s %s" % fullpath).read()
+        usage_raw = os.popen("du --block-size=1 -s %s" % fullpath).read()
         #usage_bytes = int(string.split(usage_raw)[0])
         usage_bytes = int(usage_raw.split()[0])
-        userusage_dict[fullpath] = usage_bytes
+        usage_gb = usage_bytes // (1024 * 1024 *1024)
+        userusage_dict[fullpath] = usage_gb
         #print "usage_raw (%s) usage_bytes (%s)" % (usage_raw, usage_bytes)
-        if usage_bytes * 1024 * 1024 * 1024 > WARNBYTES:
+        if usage_bytes > WARNBYTES:
             warn_list.append(
-                "high disk usage (%s) for (%s)\n" %
+                "high disk usage (%sGB) for (%s)\n" %
                    (usage_bytes, fullpath)) 
 #print(userusage_dict)
 
@@ -253,15 +259,15 @@ if time.localtime()[3] == 9:
     message = message + 'SU usage (cumulative) {}\n'.format(SUcum)
     message = message + 'SU usage (last 24 hours) {}\n'.format(SU24h)
     message = message + 'SU per user (last 24 hours)\n'
-    for item in SUuser24h_dict.items():
-        message = message + '    {} {}\n'.format(item[0], item[1])
-    message = message + 'Number of new users (cumulative) {}\n'.format(usercountcum)
-    message = message + 'Number of new users (last 24 hours) {}\n'.format(usercount24h)
-    message = message + 'Disk space usage (cumulative) {} GB of globus transfer dir usage\n'.format(globususage_bytes)
-    message = message + 'Disk space per user (cumulative)\n'
-    for item in userusage_dict.items():
-        message = message + '    {} {}\n'.format(item[0], item[1])
     message = message + 'Number of jobs submitted (cumulative) {}\n'.format(jobcountcum)
     message = message + 'Number of jobs submitted (last 24 hours) {}\n'.format(jobcount24h)
+    for item in SUuser24h_dict.items():
+        message = message + '    {} {}\n'.format(item[0], item[1])
+    message = message + 'Number of users (cumulative) {}\n'.format(usercountcum)
+    message = message + 'Number of new users (last 24 hours) {}\n'.format(usercount24h)
+    message = message + 'Disk space usage (cumulative) {} GB of globus transfer dir usage\n'.format(globususage_gb)
+    message = message + 'Disk space per user (cumulative) GB\n'
+    for item in userusage_dict.items():
+        message = message + '    {} {}\n'.format(item[0], item[1])
     #print(message)
     warn(message, subject, MAILLIST)
