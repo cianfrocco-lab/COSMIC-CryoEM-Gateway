@@ -12,8 +12,11 @@ import math
 import zipfile 
 import linecache 
 
-GLOBUSTRANSFERSDIR = '/projects/cosmic2/gateway/globus_transfers'
-REMOTESCRIPTSDIR = '/home/cosmic2/gateway/remote_scripts'
+#GLOBUSTRANSFERSDIR = '/projects/cosmic2/gateway/globus_transfers'
+#REMOTESCRIPTSDIR = '/home/cosmic2/gateway/remote_scripts'
+GLOBUSTRANSFERSDIR = os.environ['GLOBUSTRANSFERSDIR']
+REMOTESCRIPTSDIR = os.environ['REMOTESCRIPTSDIR']
+TGUSAGEDIR = os.environ['TGUSAGEDIR']
 
 #==========================
 def preparePreprocessingRun(inputline,jobdir):
@@ -418,7 +421,7 @@ def prepareRelionRun(args):
 
 	#Get userdirectory data and write to log file
 	tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
-	userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
+	userdir=GLOBUSTRANSFERSDIR + '/'+usernamedir
 	tmplog.write('\n'+userdir)
 
 	#Get full path to starfile on cosmic
@@ -684,7 +687,7 @@ def createEpilog(self):
 def runGSA ( gateway_user, jobid, resource ):
         #cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -resource %s.sdsc.xsede -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % (resource, "%s@cosmic2.sdsc.edu" % gateway_user, jobid)
         timestring = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime())
-	cmd = "/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir=/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede' --jobid='{}' --submittime='{}'".format('{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+	cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
 
         log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -944,14 +947,14 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 %s
-/home/cosmic2/gateway/remote_scripts/cryoef_star_csv_2_dat.py %s >> stdout.txt 2>>stderr.txt
+%s/cryoef_star_csv_2_dat.py %s >> stdout.txt 2>>stderr.txt
 if test -f %s; then
 	%s >>stdout.txt 2>>stderr.txt
 fi
 cat %s.log >> stdout.txt
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,csparc2star,infile,datfile,command,infile.split('.')[0])
+        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,csparc2star,REMOTESCRIPTSDIR,infile,datfile,command,infile.split('.')[0])
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -1013,9 +1016,9 @@ echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
-/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
+%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 """ \
-	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
+	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,REMOTESCRIPTSDIR,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
@@ -1076,7 +1079,7 @@ if jobtype == 'pipeline':
                         if 'MotionCorr_cosmic' in entry:
                                 job=entry.split('/')[1]
 		motiondirname='MotionCorr_cosmic/%s' %(job)		
-		transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,motiondirname,movie_align_cmd)
+		transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,motiondirname,movie_align_cmd)
 
 	if len(ctf_cmd) >0: 
 		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,ctf_cmd)
@@ -1085,7 +1088,7 @@ if jobtype == 'pipeline':
         	        if 'CtfFind_cosmic' in entry:
                 	        job=entry.split('/')[1]
 	        ctfdirname='CtfFind_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,ctfdirname,ctf_cmd)
+        	transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,ctfdirname,ctf_cmd)
 
 	if len(picking_cmd)>0:
 		runcmd=runcmd+'%s\n' %(mics_for_picking_symlink)
@@ -1095,7 +1098,7 @@ if jobtype == 'pipeline':
                 	if 'crYOLO_cosmic' in entry:
                         	job=entry.split('/')[1]
         	pickdirname='crYOLO_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,pickdirname,picking_cmd)
+        	transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,pickdirname,picking_cmd)
 
 	if len(extraction_cmd)>0:
 		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,extraction_cmd)
@@ -1103,7 +1106,7 @@ if jobtype == 'pipeline':
                 	if 'Extract_cosmic' in entry:
                         	job=entry.split('/')[1]
         	extractdirname='Extract_cosmic/%s' %(job)
-	        transfercmd=transfercmd+"/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(username,DirToSymLink,extractdirname,extraction_cmd)
+	        transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,extractdirname,extraction_cmd)
 
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)

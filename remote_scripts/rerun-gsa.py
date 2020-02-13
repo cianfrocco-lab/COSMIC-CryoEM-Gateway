@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-#!/opt/python/bin/python3
-=======
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 # works with python 3.6.9
->>>>>>> d5b252631d0cca9dc1e3f9d1905b61e4781907f6
 # script to rerun or run gateway-submit-attributes
 # https://xsede-xdcdb-api.xsede.org/api/gateways
 
