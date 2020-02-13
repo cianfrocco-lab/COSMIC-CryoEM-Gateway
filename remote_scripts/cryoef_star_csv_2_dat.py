@@ -4,12 +4,10 @@ import os
 
 def star2dat(instar,outdat): 
 
-	#Outdat file
-	outfile=open(outdat,'w')
-
 	#Determine if relion-3.1+ or before relion-3.1: if data_optics present?
 	readstar=open(instar,'r')
 	relion31=False
+	TiltColNum=-1
 	for line in readstar:
 		if 'data_optics' in line: 
 			relion31=True
@@ -19,14 +17,26 @@ def star2dat(instar,outdat):
                         RotColNum=line.split()[-1].split('#')[-1]
 	readstar.close()
 
+	if float(TiltColNum)<0:
+		print 'Error: _rlnAngleTilt not found'
+		sys.exit()
+	
+	outfile=open(outdat,'w')
 	#Parse star file
 	readstar=open(instar,'r')
 	for line in readstar: 
-		if len(line.split())<20: 
-			continue
-		angletilt=line.split()[int(TiltColNum)-1]
-		anglerot=line.split()[int(RotColNum)-1]
-		outfile.write('%s\t%s\n' %(anglerot,angletilt))
+		if relion31 is True:
+			if len(line.split())<20: 
+				continue
+			angletilt=line.split()[int(TiltColNum)-1]
+			anglerot=line.split()[int(RotColNum)-1]
+			outfile.write('%s\t%s\n' %(anglerot,angletilt))
+		if relion31 is False:
+			if len(line)<30:
+				continue
+			angletilt=line.split()[int(TiltColNum)-1]
+                        anglerot=line.split()[int(RotColNum)-1]
+                        outfile.write('%s\t%s\n' %(anglerot,angletilt))
 	readstar.close()
 
 infile=sys.argv[1]

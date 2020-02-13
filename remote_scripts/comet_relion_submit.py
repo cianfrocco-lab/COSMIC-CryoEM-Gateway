@@ -11,9 +11,120 @@ import shutil
 import math
 import zipfile 
 import linecache 
+import random 
 
 GLOBUSTRANSFERSDIR = '/projects/cosmic2/gateway/globus_transfers'
-REMOTESCRIPTSDIR = '/home/cosmic2/gateway/remote_scripts'
+REMOTESCRIPTSDIR = '/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts'
+
+#==========================
+def randomString(stringLength=40):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
+
+#==========================
+def prepareMicassess(inputline,jobdir):
+	tmplog=open('_tmplog','w')
+        tmplog.write("start of tmplog\n")
+        tmplog.write(inputline + "\n")
+        tmplog.write("inputline (%s)\n" % inputline)
+	elements = string.split(inputline, '"')
+        testargs = []
+        for eindex in range(len(elements)):
+            if eindex % 2 == 0:
+                # eindex is even, so not double quoted, so split on whitespace
+                testargs = testargs + elements[eindex].strip().split()
+            else:
+                # eindex is odd, so don't split on whitespace
+                testargs.append(elements[eindex])
+	inputZipFile = None
+        for eindex in range(len(testargs)):
+            if testargs[eindex] == '-i':
+                inputZipFile = '%s' %(testargs[eindex + 1])
+        if inputZipFile == None:
+            print "Error, could not parse inputZipFile in (%s)" % inputline
+            log(statusfile, "can't get inputZipFile, submit_job is returning 1\n")
+            return 1
+
+        tmplog.write("inputZipFile (%s)\n" % inputZipFile)
+        #outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
+
+        #Get current working directory on comet
+        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+
+        #Get username
+        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+        ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
+
+        #Get userdirectory data and write to log file
+        tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
+        userdir='%s/'%(GLOBUSTRANSFERSDIR)+usernamedir
+        tmplog.write('\n'+userdir)
+
+        #Get full path to starfile on cosmic
+        starfilename=userdir+'/'+'%s' %(inputZipFile)
+        tmplog.write('\n'+'starfilename:   '+starfilename)
+
+	#starfilename=userdir+'/'+'%s' %(input_starfile)
+        foldername='%s' %(inputZipFile.split('/')[0])
+
+        tmplog.write('starfilename=%s\n' %(starfilename))
+        tmplog.write('userdir=%s\n' %(userdir))
+
+	rlno1=open(starfilename,'r')
+        colnum=-1
+        for rln_line in rlno1:
+ 	       if '_rlnMicrographName' in rln_line:
+        	       if len(rln_line.split()) == 2:
+                	       colnum=int(rln_line.split()[-1].split('#')[-1])-1
+                       if len(rln_line.split()) == 1:
+                               colnum=0
+        rlno1.close()
+        tmplog.write('reading rln col=%i' %(colnum))
+
+        if colnum<0:
+                print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
+	        return 1
+	rlno1=open(starfilename,'r')
+        for rln_line in rlno1:
+                if len(rln_line) >= 40:
+                        starfiledirname=rln_line.split()[colnum]
+                        starfiledirname=starfiledirname.split('/')
+                        del starfiledirname[-1]
+                        starfiledirname='/'.join(starfiledirname)
+        rlno1.close()
+        #newstarname='%s'%(starfiledirname)+'/'+'%s'%(inputZipFile.split('/')[-1])
+        newstarname='%s'%(inputZipFile.split('/')[-1])
+	tmplog.write('\nnewstarname='+newstarname+'\n')
+
+        workingStarDirName=starfilename
+        fullStarDir=starfilename.split('/')
+        del fullStarDir[-1]
+        fullStarDir='/'.join(fullStarDir)
+        counter=1
+
+	workingStarDirName=starfilename
+        fullStarDir=starfilename.split('/')
+        del fullStarDir[-1]
+        fullStarDir='/'.join(fullStarDir)
+        counter=1
+        while counter<=len(starfiledirname.split('/')):
+                checkDir=starfiledirname.split('/')[-counter]
+                if fullStarDir.split('/')[-1] == checkDir:
+                        fullStarDir=fullStarDir.split('/')
+                        del fullStarDir[-1]
+                        fullStarDir='/'.join(fullStarDir)
+                counter=counter+1
+
+        #Symlink directory: 
+        DirToSymLink=fullStarDir
+        tmplog.write('\n'+'symlink'+DirToSymLink)
+        cmd="ln -s '%s/'* ." %(DirToSymLink)
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
+	if newstarname[0] == '/':
+		newstarname=newstarname[1:] 
+
+	return newstarname
 
 #==========================
 def preparePreprocessingRun(inputline,jobdir):
@@ -418,7 +529,7 @@ def prepareRelionRun(args):
 
 	#Get userdirectory data and write to log file
 	tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
-	userdir='/projects/cosmic2/gateway/globus_transfers/'+usernamedir
+	userdir='%s/' %(GLOBUSTRANSFERSDIR)+usernamedir
 	tmplog.write('\n'+userdir)
 
 	#Get full path to starfile on cosmic
@@ -684,7 +795,8 @@ def createEpilog(self):
 def runGSA ( gateway_user, jobid, resource ):
         #cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -resource %s.sdsc.xsede -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % (resource, "%s@cosmic2.sdsc.edu" % gateway_user, jobid)
         timestring = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime())
-	cmd = "/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir=/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede' --jobid='{}' --submittime='{}'".format('{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+        #cmd = "%s/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir=%s/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede' --jobid='{}' --submittime='{}'" %(REMOTESCRIPTSDIR,REMOTESCRIPTSDIR).format('{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR,'{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
 
         log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -786,32 +898,98 @@ jobdir = os.getcwd()
 
 if 'pipeline' in args['commandline']: 
 	jobtype='pipeline'
-
 if 'relion_refine_mpi' in args['commandline']: 
 	jobtype='relion'
 if 'cryoEF' in args['commandline']:
         jobtype='cryoef'
 if 'csparc2star.py' in args['commandline']:
 	jobtype='csparc2star'
+if 'micassess' in args['commandline']:
+	jobtype='micassess'
+
+if jobtype == 'micassess':
+	formatted_starname=prepareMicassess(args['commandline'],jobdir)
+	runhours=1
+	runminutes = math.ceil(60 * runhours)
+	partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=4\n')
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')    
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+	text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
+#SBATCH --gres=gpu:1
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+module purge
+module load anaconda/4.7.12
+__conda_setup="$('/share/apps/compute/anaconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/share/apps/compute/anaconda/etc/profile.d/conda.sh" ]; then
+        . "/share/apps/compute/anaconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/share/apps/compute/anaconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+conda activate cryoassess 
+python /home/cosmic2/software_dependencies/Automatic-cryoEM-preprocessing/micassess.py -i %s -m ~/software_dependencies/model_files/micassess_051419.h5 -o %s_micassess_good.star 
+zip -r MicAssess.zip MicAssess/
+zip -r /projects/cosmic2/meta-data/%s-micassess.zip MicAssess/
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,formatted_starname,formatted_starname[:-5],randomString(40))
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
 if jobtype == 'csparc2star':
 	command=args['commandline']
-	#Get file:
-	'''inlist=command.split()
-	counter=0
-	extrafile1=-1
-	for entry in inlist:
-		if entry == '-f': 
-			choice=counter
-		if entry == '--passthrough':
-			extrafile1=counter
-		counter=counter+1
-	infile=inlist[choice+1].strip('"')
-	if extrafile1>0: 
-		extrafile=inlist[extrafile1+1].strip('"')
-	if extrafile1<0:
-		extrafile='''''
-	
 	outfile=command.split()[-1].split('.')[0]+'.star'
 	cmd='''module load singularity
 singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python %s %s''' %(command,outfile)
@@ -944,14 +1122,14 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 %s
-/home/cosmic2/gateway/remote_scripts/cryoef_star_csv_2_dat.py %s >> stdout.txt 2>>stderr.txt
+%s/cryoef_star_csv_2_dat.py %s >> stdout.txt 2>>stderr.txt
 if test -f %s; then
 	%s >>stdout.txt 2>>stderr.txt
 fi
 cat %s.log >> stdout.txt
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,csparc2star,infile,datfile,command,infile.split('.')[0])
+        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,csparc2star,REMOTESCRIPTSDIR,infile,datfile,command,infile.split('.')[0])
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -1014,6 +1192,7 @@ echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 /home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
 	%(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,username,out_destination,outdir,relion_command,newstarname)
 	runfile = "./batch_command.run"
@@ -1030,15 +1209,15 @@ mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
 	# Following output to done.txt is needed by the gateway framework
 	#`date +'%s %a %b %e %R:%S %Z %Y' > done.txt`
 	#echo "retval=$rc">> done.txt
-	donefile = "done.txt"
-	#d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
-	d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-	FO = open(donefile, mode='a')
-	FO.write(d+"\n")
-	FO.write("retval=" + str(rc) + "\n")
-	FO.flush()
-	os.fsync(FO.fileno())
-	FO.close()
+	#donefile = "done.txt"
+	##d = subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y", shell=True, stdout=subprocess.PIPE)
+	#d=subprocess.Popen("date +'%s %a %b %e %R:%S %Z %Y'", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	#FO = open(donefile, mode='a')
+	#FO.write(d+"\n")
+	#FO.write("retval=" + str(rc) + "\n")
+	#FO.flush()
+	#os.fsync(FO.fileno())
+	#FO.close()
 
 if jobtype == 'pipeline':
         #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
