@@ -3,47 +3,49 @@
   <title>Data</title>
   <content tag="menu">Home</content>
 </head>
-<body>
-<s:if test="%{hasFolderData()}">
-  <h2>All Data</h2>
-  <div>
-    <b>Upload Relion directories, particle stacks, and 3D volumes using
-    the Globus data transfer service.<br>
-    Upload 3D volume and other small files (&lt; 200 MB) using your
-    browser.</b><br><br>
-    <s:url var="transferUrl" action="transfer"/>
-    <s:a href="%{transferUrl}" cssClass="btn btn-primary">
-        Globus upload / download</s:a>
-    <s:url id="uploadDataUrl" action="pasteData" method="upload"
-        includeParams="none"/>
-    <s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">
-        Browser upload</s:a>
-    <!-- https://getbootstrap.com/docs/3.3/javascript/
-    <a class="btn btn-primary" role="button" data-toggle="collapse"
-        href="#collapseExample" aria-expanded="false"
-        aria-controls="collapseExample"> Collapse example</a>
-    -->
-    <!--
-    <button class="btn btn-primary" type="button" data-toggle="collapse"
-        data-target="#collapseExample" aria-expanded="false"
-        aria-controls="collapseExample"> Collapse example </button>
-        <div class="collapse" id="collapseExample">
-            We can put the browser upload page here?!
-        </div>
-    -->
-  </div>
 
-  <div class="callout">
-    <s:if test="%{currentTabSize == 1}">
-      There is currently 1 data item in this folder.
-    </s:if>
-    <s:else>
-      There are currently <s:property value="%{currentTabSize}"/>
-      data items in this folder.
-      (Items <s:property value="%{thisPageFirstElementNumber + 1}"/> -
-      <s:property value="%{thisPageLastElementNumber + 1}"/> are shown here.)
-    </s:else>
-  </div>
+<body>
+
+<div class="panel panel-default">
+	<div class="panel-body">
+    	<p><strong>Tip: Upload Relion directories, particle stacks, and 3D
+		volumes using the Globus data transfer service.<br>
+    	Upload individual files and other small files (&lt; 200 MB) using
+		your web browser.</strong></p>
+
+		<s:if test="%{hasFolderData()}">
+			<p>
+    		<s:url var="transferUrl" action="transfer"/>
+    		<s:a href="%{transferUrl}" cssClass="btn btn-primary">
+				Globus upload / download</s:a>
+    		<s:url id="uploadDataUrl" action="pasteData" method="upload"
+        		includeParams="none"/>
+    		<s:a cssClass="btn btn-primary mc-replace" href="%{uploadDataUrl}">
+        		Browser upload</s:a>
+			</p>
+		</s:if>
+
+    	<!-- https://getbootstrap.com/docs/3.3/javascript/
+    	<a class="btn btn-primary" role="button" data-toggle="collapse"
+        	href="#collapseExample" aria-expanded="false"
+        	aria-controls="collapseExample"> Collapse example</a>
+    	-->
+    	<!--
+    	<button class="btn btn-primary" type="button" data-toggle="collapse"
+        	data-target="#collapseExample" aria-expanded="false"
+        	aria-controls="collapseExample"> Collapse example </button>
+        	<div class="collapse" id="collapseExample">
+            	We can put the browser upload page here?!
+        	</div>
+    	-->
+
+		<p><mark>Warning: Data are deleted after 2 days. Questions? Please email
+    		<s:property value="%{adminEmail}"/></mark></p>
+	</div>
+</div>
+
+<s:if test="%{hasFolderData()}">
+  <!-- Pagination -->
   <s:url id="firstPageUrl" action="data" method="setPage" includeParams="none">
     <s:param name="page" value="%{'0'}"/>
   </s:url>
@@ -62,7 +64,7 @@
   <s:form action="paginateData" theme="simple">
     <s:select name="pageSize" list="#{ 2000:'2000' }"
       onchange="reload(this.form)" value="pageSizeString"/>
-    records on each page
+    &nbsp; records on each page
   </s:form>
 <!--
         <s:form action="paginateData" theme="simple">
@@ -71,8 +73,21 @@
             records on each page
         </s:form>
  -->
+
+  <h3>All Data <small><strong>
+
+    <s:if test="%{currentTabSize == 1}">
+      There is currently 1 data item in this folder
+    </s:if>
+    <s:else>
+      There are currently <s:property value="%{currentTabSize}"/>
+      data items in this folder
+      (Items <s:property value="%{thisPageFirstElementNumber + 1}"/> -
+      <s:property value="%{thisPageLastElementNumber + 1}"/> are shown here.)
+    </s:else>
+	</strong></small></h3>
+
   <s:form name="selectData" action="data" theme="simple">
-    <h4>Data</h4>
     <table class="table table-striped">
       <!-- Field Headers -->
       <thead>
@@ -205,8 +220,8 @@
   </s:form>
 </s:if>
 <s:else>
-  <div class="callout">
-    There is currently no data in this folder.<br/>What would you like to do?
+  <div>
+    <p>There is currently no data in this folder.<br/>What would you like to do?</p>
   </div>
   <div class="button-group">
     <s:url var="transferUrl" action="transfer"/>

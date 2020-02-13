@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 # works with python 3.6.9
 # script to rerun or run gateway-submit-attributes
 # https://xsede-xdcdb-api.xsede.org/api/gateways
@@ -26,11 +26,17 @@ def send_attributes(args_dict):
         CURL = args_dict['curlcommand']
     if 'url' in argsfound and args_dict['url'] != None:
         URL = args_dict['url']
+<<<<<<< HEAD
+    if 'debug' in argsfound and args_dict['debug'] != None:
+        DEBUGARGS = ['--data-urlencode', 'debug=x']
+    else:
+=======
     if 'debug' in argsfound and args_dict['debug'] != False:
         #print('debug in argsfound')
         DEBUGARGS = ['--data-urlencode', 'debug=x']
     else:
         #print('no debug in argsfound')
+>>>>>>> d5b252631d0cca9dc1e3f9d1905b61e4781907f6
         DEBUGARGS = []
     argmissing = False
     expected_list = ('gatewayuser', 'xsederesourcename', 'jobid', 'submittime')
@@ -66,8 +72,13 @@ def send_attributes(args_dict):
   Gateway User: (?P<gatewayuser>.*)$
 (Debug specified. Attributes not staged)*'''
         output_reo = re.compile(output_pat, flags=re.MULTILINE)
+<<<<<<< HEAD
+        #print(command_completed.stdout.decode())
+        #print(command_completed.stderr.decode())
+=======
         print(command_completed.stdout.decode())
         print(command_completed.stderr.decode())
+>>>>>>> d5b252631d0cca9dc1e3f9d1905b61e4781907f6
         output_mo = output_reo.match(command_completed.stdout.decode())
         if (output_mo.group('jobid') != None and 
            output_mo.group('submittime') != None and 
@@ -99,7 +110,10 @@ try:
     parser.add_argument('--debug', dest='debug', action='store_true')
     args = parser.parse_args()
     args_dict = vars(args)
+<<<<<<< HEAD
+=======
     #print('args_dict: ({})\n'.format(args_dict,))
+>>>>>>> d5b252631d0cca9dc1e3f9d1905b61e4781907f6
     argsfound = args_dict.keys()
     if 'pickledir' in argsfound and args_dict['pickledir'] != None:
         PICKLEDIR = args_dict['pickledir']
@@ -152,7 +166,11 @@ try:
                 saved_dict['curlcommand'] = args_dict['curlcommand']
             if 'url' in argsfound and args_dict['url'] != None:
                 saved_dict['url'] = args_dict['url']
+<<<<<<< HEAD
+            if 'debug' in argsfound and args_dict['debug'] != None:
+=======
             if 'debug' in argsfound and args_dict['debug'] != False:
+>>>>>>> d5b252631d0cca9dc1e3f9d1905b61e4781907f6
                 saved_dict['debug'] = args_dict['debug']
             send_attributes(saved_dict)
         # if we got here, no exceptions raised, so remove the record file.
