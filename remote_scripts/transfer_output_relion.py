@@ -10,7 +10,10 @@ import string
 import random 
 import glob 
 
-fullpath='/projects/cosmic2/gateway/globus_transfers/'
+GLOBUSTRANSFERSDIR = os.environ['GLOBUSTRANSFERSDIR']
+REMOTESCRIPTSDIR = os.environ['REMOTESCRIPTSDIR']
+TGUSAGEDIR = os.environ['TGUSAGEDIR']
+fullpath=GLOBUSTRANSDERSDIR + '/'
 username=sys.argv[1]
 fullpath=sys.argv[2]
 reliondir=sys.argv[3]
