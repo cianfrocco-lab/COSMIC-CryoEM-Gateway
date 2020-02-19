@@ -99,6 +99,7 @@ public class ProfileManager {
         //log.debug ( "MONA: destination_path = " + destination_path );
         //log.debug ( "MONA: tr.getSrcEndpointname = " + tr.getSrcEndpointname() );
         //log.debug ( "MONA: tr.getDestEndpointname = " + tr.getDestEndpointname() );
+        //log.debug ( "MONA: tr.getTaskId = " + tr.getTaskId() );
 
         // Check incoming parameters
         if ( tr == null || destination_path == null ||
@@ -109,6 +110,7 @@ public class ProfileManager {
             Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
         //log.debug ( "MONA: globusRoot = " + globusRoot );
+        int saved = 0;
         String status = tr.getStatus();
         //log.debug ( "MONA: status = " + status );
 
@@ -117,49 +119,47 @@ public class ProfileManager {
         // from the COSMIC2 gateway so no need to create a user data dir item
         if (globusRoot != null) {
             if (destination_path.startsWith(globusRoot)) {
-                int saved = 0;
 
-                // First, if the new record has SUCCEEDED status, then we
-                // will get its info from the transfer_record table and
-                // create a new document needed by the CIPRES workflow
-                if (status.equals("SUCCEEDED")) {
-                    //log.debug("MONA: tr.getTaskId() = " + tr.getTaskId());
-                    TransferRecord old_tr = loadRecordByTaskId(tr.getTaskId());
-                    //log.debug("MONA: old_tr = " + old_tr );
-                    //log.debug("MONA: old_tr.getStatus() = " + old_tr.getStatus() );
-
-                    if (old_tr != null && old_tr.getTaskId() != null) {
-                        //log.debug ( "MONA: old_tr = " + old_tr );
-                        //log.debug ( "MONA: old_tr.getSrcEndpointname = " + old_tr.getSrcEndpointname() );
-                        //log.debug ( "MONA: old_tr.getDestEndpointname = " + old_tr.getDestEndpointname() );
-
-                        //if ( ! tr.getStatus().equals ( old_tr.getStatus() ) )
-                        if (!status.equals(old_tr.getStatus())) {
+                // First get the old transfer record...
+                TransferRecord old_tr = loadRecordByTaskId ( tr.getTaskId() );
+                if ( old_tr != null && old_tr.getTaskId() != null )
+                {
+                    // If the status has changed...
+                    if ( ! status.equals ( old_tr.getStatus() ) )
+                    {
+                        // If transfer successfully, create database entries
+                        if ( status.equals ( "SUCCEEDED" ) )
+                        {
                             Transfer2DataManager dataManager =
                                 new Transfer2DataManager();
-                            saved = dataManager.setupDataItems(old_tr,
-                                    destination_path);
+                            saved = dataManager.setupDataItems ( old_tr,
+                                    destination_path );
                         }
-                    }
-                }
-
-                if (saved == 0)
-                    return (0);
-            }
-        }
+                        else if ( status.equals ( "FAILED" ) )
+                        {
+                            updateTransferRecord ( tr.getTaskId(), "FAILED",
+                                tr.getCompletionTime(),
+                                tr.getFilesTransferred(), tr.getFaults(),
+                                tr.getDirectories(), tr.getFiles(),
+                                tr.getFilesSkipped(),
+                                tr.getByteTransferred() );
+                            saved = -1;
+                        }
+                    } // if ( ! status.equals ( old_tr.getStatus() ) )
+                } // if ( old_tr != null && old_tr.getTaskId() != null )
+            } // if (destination_path.startsWith(globusRoot))
+        } // if (globusRoot != null)
+        //log.debug ( "MONA: saved = " + saved );
 
         // Now update the transfer record
         // log.info("Update record (taskid): "+tr.getTaskId());
-        updateTransferRecord(tr.getTaskId(),
-                tr.getStatus(),
-                tr.getCompletionTime(),
-                tr.getFilesTransferred(),
-                tr.getFaults(),
-                tr.getDirectories(),
-                tr.getFiles(),
-                tr.getFilesSkipped(),
-                tr.getByteTransferred());
-        return (1);
+        if  ( saved != -1 )
+            updateTransferRecord ( tr.getTaskId(), tr.getStatus(),
+                tr.getCompletionTime(), tr.getFilesTransferred(),
+                tr.getFaults(), tr.getDirectories(), tr.getFiles(),
+                tr.getFilesSkipped(), tr.getByteTransferred() );
+
+        return ( saved );
     }
 
     public List<String> loadRecord(long userId) throws IOException, SQLException {
