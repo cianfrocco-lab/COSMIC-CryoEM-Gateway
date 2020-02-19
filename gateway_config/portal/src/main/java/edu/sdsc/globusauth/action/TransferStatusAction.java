@@ -19,6 +19,7 @@ import java.util.Map;
 
 /**
  * Created by cyoun on 11/29/16.
+ * Update by Mona Wong
  */
 public class TransferStatusAction extends NgbwSupport {
 
@@ -27,20 +28,34 @@ public class TransferStatusAction extends NgbwSupport {
     private List<Map<String,Object>> statuslist;
     private Map<String, Object> taskmap;
 
+    /**
+     * This function is called by transfer_status.jsp.  Originally it was
+     * enough to just get the status from Globus. However, we are now
+     * changing the transfer status in the database to FAILED under certain
+     * conditions, even if the Globus transfer is SUCCEEDED.  So this means,
+     * this function has been modified to display the status from the 
+     * database, rather than the Globus API call.
+     **/
     public String transfer_status() throws Exception {
 
+        //logger.debug ( "MONA: entered transfer_status()" );
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
+        //logger.debug ( "MONA: accesstoken = " + accesstoken );
         String username = (String) getSession().get(OauthConstants.PRIMARY_USERNAME);
+        //logger.debug ( "MONA: username = " + username );
         Authenticator authenticator = new GoauthAuthenticator(accesstoken);
 
         client = new JSONTransferAPIClient(username, null, null);
         client.setAuthenticator(authenticator);
 
         String taskId = request.getParameter("taskId");
+        //logger.debug ( "MONA: taskId = " + taskId );
+        TransferRecord tr = null;
         JSONTransferAPIClient.Result r;
         statuslist = new ArrayList<>();
 
         if (taskId != null && !taskId.isEmpty()) {
+            //logger.debug ( "MONA: if..." );
             String resource = "/task/" + taskId;
             Map<String, String> params = new HashMap<String, String>();
             String fields = "status,source_endpoint_display_name,"
@@ -53,7 +68,10 @@ public class TransferStatusAction extends NgbwSupport {
             taskmap.put("source_endpoint_display_name", r.document.getString("source_endpoint_display_name"));
             taskmap.put("destination_endpoint_display_name", r.document.getString("destination_endpoint_display_name"));
             taskmap.put("request_time", r.document.getString("request_time")+" UTC");
-            taskmap.put("status", r.document.getString("status"));
+            tr = TransferRecord.findTransferRecordByTaskId ( taskId );
+            //logger.debug ( "MONA: tr = " + tr );
+            //taskmap.put("status", r.document.getString("status"));
+            taskmap.put ( "status", tr.getStatus() );
             try {
                 String c_time = r.document.getString("completion_time");
                 if (c_time != null)
@@ -77,21 +95,42 @@ public class TransferStatusAction extends NgbwSupport {
             statuslist.add(taskmap);
 
         } else {
+            // Show last 7 days of user transfers
             String resource = "/task_list";
             Map<String, String> params = new HashMap<String, String>();
             LocalDate today = LocalDate.now();
-            LocalDate previousWeek = today.minus(2, ChronoUnit.WEEKS);
+            //LocalDate previousWeek = today.minus(2, ChronoUnit.WEEKS);
+            LocalDate previousWeek = today.minusDays ( 7L );
+            //logger.debug ( "MONA: previousWeek = " + previousWeek );
             params.put("filter", "request_time:"+previousWeek);
             r = client.getResult(resource, params);
+            //logger.debug ( "MONA: r = " + r );
             JSONArray data = r.document.getJSONArray("DATA");
+            //logger.debug ( "MONA: data = " + data );
+            //logger.debug ( "MONA: data.length() = " + data.length() );
+            String task_id = null;
+
             if (data.length() > 0) {
                 for (int i = 0; i < data.length(); i++) {
                     taskmap = new HashMap<String, Object>();
-                    taskmap.put("task_id", data.getJSONObject(i).getString("task_id"));
+                    //taskmap.put("task_id", data.getJSONObject(i).getString("task_id"));
+                    task_id = data.getJSONObject(i).getString ( "task_id" );
+                    //logger.debug ( "MONA: task_id = " + task_id );
+                    taskmap.put ( "task_id", task_id );
+                    tr = TransferRecord.findTransferRecordByTaskId ( task_id );
+                    //logger.debug ( "MONA: tr = " + tr );
+
+                    // This can happen if the gateway database is down when
+                    // the transfer happened?
+                    if ( tr == null )
+                        continue;
+
                     taskmap.put("source_endpoint_display_name", data.getJSONObject(i).getString("source_endpoint_display_name"));
                     taskmap.put("destination_endpoint_display_name", data.getJSONObject(i).getString("destination_endpoint_display_name"));
                     taskmap.put("request_time", data.getJSONObject(i).getString("request_time")+" UTC");
-                    taskmap.put("status", data.getJSONObject(i).getString("status"));
+                    //taskmap.put("status", data.getJSONObject(i).getString("status"));
+                    taskmap.put ( "status", tr.getStatus() );
+
                     try {
                         String c_time = data.getJSONObject(i).getString("completion_time");
                         if (c_time != null)
@@ -113,20 +152,24 @@ public class TransferStatusAction extends NgbwSupport {
                     taskmap.put("files_skipped", data.getJSONObject(i).getInt("files_skipped"));
                     taskmap.put("bytes_transferred", humanReadableByteCount(data.getJSONObject(i).getLong("bytes_transferred"),true));
                     statuslist.add(taskmap);
-                }
-            }
-        }
+                } // for (int i = 0; i < data.length(); i++)
+            } // if (data.length() > 0)
+        } // else
 
         //update transfer record
         ProfileManager profileManager = new ProfileManager();
         TransferAction txaction = new TransferAction();
         Long user_id = (Long) getSession().get("user_id");
+        //logger.debug ( "MONA: user_id = " + user_id );
         List<String> trlist = profileManager.loadRecord(user_id);
+        //logger.debug ( "MONA: trlist = " + trlist );
         if (trlist != null && trlist.size() > 0) {
             String dest_path = ( String ) getSession().get
                     ( OauthConstants.DEST_ENDPOINT_PATH );
+            //logger.debug ( "MONA: dest_path = " + dest_path );
             for (String taskid: trlist) {
-                TransferRecord tr = txaction.updateTask(taskid, client);
+                //logger.debug ( "MONA: dest_path = " + dest_path );
+                tr = txaction.updateTask(taskid, client);
                 profileManager.updateRecord(tr, dest_path);
             }
         }
