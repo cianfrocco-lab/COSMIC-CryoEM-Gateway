@@ -439,8 +439,8 @@ public class TransferAction extends NgbwSupport {
             } else {
 				if(ep_status.get("is_globus_connect")) {
 					if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
-                    	//logger.error("The endpoint, "+ dispname + ", is not connected or is paused.");
-                    	reportUserError ("The endpoint, "+ dispname + ", is not connected or paused.");
+                    	reportUserError ( "Warning, the endpoint, " +
+                            dispname + ", is not connected or paused." );
 						return "failure";
                 	}
 				}

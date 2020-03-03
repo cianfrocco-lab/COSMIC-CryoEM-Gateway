@@ -221,7 +221,7 @@
 </s:if>
 <s:else>
   <div>
-    <p>There is currently no data in this folder.<br/>What would you like to do?</p>
+    <p>There is currently no data in this folder. What would you like to do?</p>
   </div>
   <div class="button-group">
     <s:url var="transferUrl" action="transfer"/>
