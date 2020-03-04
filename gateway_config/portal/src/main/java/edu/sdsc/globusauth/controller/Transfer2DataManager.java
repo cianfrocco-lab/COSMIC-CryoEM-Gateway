@@ -23,15 +23,48 @@ import org.ngbw.sdk.database.Folder;
 import org.ngbw.sdk.database.User;
 import org.ngbw.sdk.database.UserDataDirItem;
 import org.ngbw.sdk.database.UserDataItem;
-import org.ngbw.web.actions.NgbwSupport;
 
 import org.ngbw.sdk.database.TransferRecord;
 
 
-public class Transfer2DataManager extends NgbwSupport
+/**
+ * This class encapsulates the handling of a Globus transfer and contains
+ * information to aid in the display of information back to the user in the
+ * calling action class.
+ * System errors are logged but will not be stored in this object.
+ **/
+public class Transfer2DataManager
 {
     private static final Log log = LogFactory.getLog
         ( Transfer2DataManager.class );
+
+    private ArrayList<String> failed_directories_messages =
+        new ArrayList<String>();
+    private ArrayList<String> failed_files_messages = new ArrayList<String>();
+    private int num_directories_saved = 0;
+    private int num_files_saved = 0;
+    private boolean system_error = false;
+    private ArrayList<String> user_system_error_messages =
+        new ArrayList<String>();
+
+    public void addUserSystemErrorMessage ( String msg )
+    {
+        if ( msg != null && ! (msg.trim()).isEmpty() )
+            user_system_error_messages.add ( msg );
+    }
+    public ArrayList<String> getFailedDirectoriesMessages()
+        { return ( failed_directories_messages ); }
+    public ArrayList<String> getFailedFilesMessages()
+        { return ( failed_files_messages ); }
+    public int getNumFilesSaved() { return ( num_files_saved ); }
+    public int getNumDirectoriesSaved() { return ( num_directories_saved ); }
+    public ArrayList<String> getUserSystemErrorMessages()
+        { return ( user_system_error_messages ); }
+    public boolean hasSystemError() { return ( system_error ); }
+    public void setUserSystemErrorMessages ( ArrayList val )
+        { user_system_error_messages = val; }
+    public void setSystemError ( boolean val ) { system_error = val; }
+
 
     /**
      * Setup CIPRES data items for the new Globus transferred files and
@@ -41,8 +74,8 @@ public class Transfer2DataManager extends NgbwSupport
      *      parameters or newTransferRecord.getStatus() != "SUCCEEDED";
      *      -1 if the transfer failed
      **/
-    public int setupDataItems ( TransferRecord transfer_record,
-        String destination_path )
+    public void setupDataItems
+        ( TransferRecord transfer_record, String destination_path )
     {
         //log.debug ( "MONA : Transfer2DataManager.setupDataItems()" );
         //log.debug ( "MONA : transfer_record = " + transfer_record );
@@ -51,7 +84,7 @@ public class Transfer2DataManager extends NgbwSupport
 
         if ( transfer_record == null || destination_path == null ||
             destination_path.trim().equals ( "" ) )
-            return ( 0 );
+            return;
 
         //log.debug ( "MONA : transfer_record.getFileNames() = " + transfer_record.getFileNames() );
         // Get the folder the user selected to store the transfer to
@@ -72,9 +105,10 @@ public class Transfer2DataManager extends NgbwSupport
         }
         catch ( Exception e )
         {
-            log.error ( "System Error: cannot get folder with ID = " +
+            log.error ( "System Error: cannot get transfer folder with ID = " +
                 transfer_record.getEnclosingFolderId() );
-            return ( 0 );
+            system_error = true;
+            return;
         }
 
         // Append user folder label to destination_path
@@ -86,10 +120,10 @@ public class Transfer2DataManager extends NgbwSupport
         //log.debug ( "MONA : directories = " + directories );
         String files[] = getList ( transfer_record.getFileNames() );
         //log.debug ( "MONA : files = " + files );
-		int saved = 0;
         
         if ( files != null )
         {
+            //log.debug ( "MONA : files.length = " + files.length );
 		    if ( files.length == 1 )
 		    {
 			    String path_file = new_destination_path + files[0];
@@ -102,16 +136,15 @@ public class Transfer2DataManager extends NgbwSupport
 				    dataItem.setLabel ( files[0] );
 				    dataItem.setEnclosingFolder ( folder );
 				    dataItem.save();
-				    saved++;
+				    num_files_saved++;
 			    }
 			    catch ( Exception e )
 			    {
 				    log.error (
 					    "System Error : cannot save Globus transferred file " +
 					    path_file + "(" + e + ")" );
-				    reportUserError (
-					    "A system error was encountered; unable to save your Globus transferred file " +
-					    files[0] );
+                    failed_files_messages.add
+                        ( files[0] + ": unable to save" );
 			    }
 		    } // if ( files.length == 1 )
 
@@ -139,26 +172,32 @@ public class Transfer2DataManager extends NgbwSupport
                         star_files );
                 else
                 {
-				    reportUserError (
-					    "Upload error: must contain at least 1 *.star file but none found!  Your upload has been cancelled.  Please try again." );
-                    addActionError ( "XXXXXXXXXXXXXX" ); 
-                    //transfer_record.setStatus ( "FAILED" );
-                    //transfer_record.save();
+                    String msg = "Error transferring ";
+                    boolean first = true;
 
         	        for ( String filename : files )
 			        {
                         File file =
                             new File ( new_destination_path + filename );
-		                file.delete();	
+		                file.delete();
+
+                        if ( first )
+                        {
+                            msg += filename;
+                            first = false;
+                        }
+                        else
+                            msg += ", " + filename;
 			        }
-                    saved = -1;
+                    failed_files_messages.add
+                        ( msg + ": missing required *.star file." );
                 }
 		    } // else
         } // if ( files != null )
 
         if ( directories != null && directories.length > 0 )
-            saved += saveDirectories2 ( transfer_record,
-                new_destination_path, folder, directories );
+            saveDirectories2 ( transfer_record, new_destination_path, folder,
+                directories );
 		/*
         int saved = saveFiles ( transfer_record, new_destination_path,
             folder );
@@ -168,7 +207,7 @@ public class Transfer2DataManager extends NgbwSupport
 
 		*/
 
-        return ( saved );
+        return;
     }
 
 
@@ -233,8 +272,8 @@ public class Transfer2DataManager extends NgbwSupport
             Path tmp = dir.toPath();
             if ( ! Files.isReadable ( tmp ) )
             {
-                reportUserError ( "Error: cannot read " + full_path );
-                addActionError ( "Error: cannot read " + full_path );
+                //reportUserError ( "Error: cannot read " + full_path );
+                //addActionError ( "Error: cannot read " + full_path );
                 continue;
             }
 
@@ -272,8 +311,8 @@ public class Transfer2DataManager extends NgbwSupport
                         String msg = 
                             "Unable to setup Globus transferred data item for file "
                             + file.getName() + " (" + e + ")";
-                        reportUserError ( msg );
-                        addActionError ( msg ); 
+                        //reportUserError ( msg );
+                        //addActionError ( msg ); 
                         //reportError(error, "Error creating new TaskInputSourceDocument");
                         log.error
                             ( "System Error : cannot create data item for Globus data item "
@@ -327,8 +366,8 @@ public class Transfer2DataManager extends NgbwSupport
                         String msg = 
                             "Unable to setup Globus transferred data item for file "
                             + file.getName() + " (" + e + ")";
-                        reportUserError ( msg );
-                        addActionError ( msg ); 
+                        //reportUserError ( msg );
+                        //addActionError ( msg ); 
                         //reportError(error, "Error creating new TaskInputSourceDocument");
                         log.error
                             ( "System Error : cannot create data item for Globus data item "
@@ -347,18 +386,16 @@ public class Transfer2DataManager extends NgbwSupport
      * Save the given TransferRecord's directories
      * @return - number of files saved (>= 0 )
      **/
-    //private int saveDirectories2 ( Long tr_id, String destination_path,
-    private int saveDirectories2 ( TransferRecord tr, String destination_path,
+    private void saveDirectories2 ( TransferRecord tr, String destination_path,
         Folder folder, String[] directories )
     {
         //log.debug ( "MONA : Transfer2DataManager.saveDirectories2()" );
         //log.debug ( "MONA : destination_path = " + destination_path );
 
-        //if ( tr_id == null || tr_id.longValue() <= 0L ||
         if ( tr == null || destination_path == null ||
             destination_path.trim().equals ( "" ) || folder == null ||
             directories == null || directories.length <= 0 )
-            return ( 0 );
+            return;
 
         UserDataDirItem data_item = null;
         File dir = null;
@@ -387,8 +424,8 @@ public class Transfer2DataManager extends NgbwSupport
                 paths.add ( dir );
             else
             {
-                reportUserError ( "Error: cannot read " + full_path );
-                addActionError ( "Error: cannot read " + full_path );
+                failed_directories_messages.add ( "Error reading directory " +
+                    directory );
                 continue;
             }
 
@@ -399,8 +436,6 @@ public class Transfer2DataManager extends NgbwSupport
 
             if ( files != null && ! files.isEmpty() )
             {
-                //size = files.size();
-                //log.debug ( "MONA : size 1 = " + size );
                 for ( File file : files )
                 {
                     //log.debug ( "MONA : file = " + file );
@@ -423,15 +458,12 @@ public class Transfer2DataManager extends NgbwSupport
                     }
                     catch ( Exception e )
                     {
-                        String msg = 
-                            "Unable to setup Globus transferred data item for file "
-                            + file.getName() + " (" + e + ")";
-                        reportUserError ( msg );
-                        addActionError ( msg ); 
-                        //reportError(error, "Error creating new TaskInputSourceDocument");
                         log.error
                             ( "System Error : cannot create data item for Globus data item "
                               + file.getName() + " (" + e + ")" );
+                        failed_directories_messages.add
+                            ( "Error transferring " + directory + "/" +
+                            file.getName() );
                     }
                 } // for ( File file : files )
             } // if ( files != null && ! files.isEmpty() )
@@ -456,7 +488,7 @@ public class Transfer2DataManager extends NgbwSupport
                 //log.debug ( "MONA : file = " + file );
                 if ( file.exists() )
                 {
-                    log.debug ( "file exists!" );
+                    log.debug ( "particles.star exists!" );
                     dir = new File ( full_path + "/" + subdir );
                     //log.debug ( "MONA : dir = " + dir );
 
@@ -478,15 +510,12 @@ public class Transfer2DataManager extends NgbwSupport
                     }
                     catch ( Exception e )
                     {
-                        String msg = 
-                            "Unable to setup Globus transferred data item for file "
-                            + file.getName() + " (" + e + ")";
-                        reportUserError ( msg );
-                        addActionError ( msg ); 
-                        //reportError(error, "Error creating new TaskInputSourceDocument");
                         log.error
                             ( "System Error : cannot create data item for Globus data item "
                               + file.getName() + " (" + e + ")" );
+                        failed_directories_messages.add
+                            ( "Error transferring " + subdir + "/" +
+                            file.getName() );
                     }
                 } // if ( file.exists() )
             } // for ( String subdir : subdirs )
@@ -496,6 +525,8 @@ public class Transfer2DataManager extends NgbwSupport
         // If nothing saved, then delete the directories uploaded!
         if ( saved == 0 )
         {
+            boolean first = true;
+            String bad_paths = null;
             //log.debug ( "MONA : paths = " + paths );
             for ( File path : paths )
             {
@@ -503,26 +534,28 @@ public class Transfer2DataManager extends NgbwSupport
                 try
                 {
                     FileUtils.deleteDirectory ( path );
+
+                    if ( first )
+                    {
+                        bad_paths = path.getName() + "/";
+                        first = false;
+                    }
+                    else
+                        bad_paths += ", " + path + "/";
                 }
                 catch ( Exception e )
                 {
                     log.error ( "System error: cannot delete directory " +
                         path.getName() + " (" + e + ")" );
                 }
-
-                try
-                {
-                    tr.setStatus ( "FAILED" );
-                    tr.save();
-                } catch ( Exception e )
-                {
-                    log.error ( "Unable to update TransferRecord ID " +
-                        tr_id + " (" + e + ")" );
-                }
             }
+            failed_directories_messages.add ( "Error transferring directory " +
+                bad_paths + ": missing required *.star file." );
         }
+        else if ( saved > 0 )
+            num_directories_saved += saved;
 
-        return ( saved );
+        return;
     }
 
     /*
@@ -583,9 +616,11 @@ public class Transfer2DataManager extends NgbwSupport
      * Save the given TransferRecord's file(s)
      * @param tr_id - TransferRecord ID
      * @param destination_path - the user's toplevel data directory
+     * @param folder - folder to save data in
+     * @param files - list of star files to save
      * @return - number of files saved (>= 0 )
      */
-    private int saveFiles2 ( Long tr_id, String destination_path,
+    private void saveFiles2 ( Long tr_id, String destination_path,
         Folder folder, List<String> files )
     {
         //log.debug ( "MONA : Transfer2DataManager.saveFiles2()" );
@@ -595,11 +630,12 @@ public class Transfer2DataManager extends NgbwSupport
             destination_path == null ||
             destination_path.trim().equals ( "" ) || folder == null ||
             files == null || files.size() == 0 )
-            return ( 0 );
+            return;
 
         UserDataDirItem data_item = null;
         File file = null;;
-        int saved = 0;
+        boolean first = true;
+        String error_msg = "Error transferring ";
         long size = 0L;
 
         for ( String filename : files )
@@ -609,31 +645,33 @@ public class Transfer2DataManager extends NgbwSupport
             try
             {
                 size = FileUtils.sizeOf ( file );
-                //log.debug ( "MONA : size = " + size );
+                ////log.debug ( "MONA : size = " + size );
                 data_item = new UserDataDirItem ( folder, tr_id, filename,
                     size );
                 //log.debug ( "MONA : data_item = " + data_item );
                 if ( data_item != null )
                 {
                     data_item.save();
-                    saved++;
+				    num_files_saved++;
                 }
             }
             catch ( Exception e )
             {
-                String msg = 
-                    "Unable to setup Globus transferred data item for file " +
-                    file.getName() + " (" + e + ")";
-                reportUserError ( msg );
-                addActionError ( msg ); 
-                reportError ( e, "Error creating new TaskInputSourceDocument");
                 log.error
                     ( "System Error : cannot create data item for Globus data item "
                     + file.getName() + " (" + e + ")" );
-            }
-        }
 
-        return ( saved );
+                if ( first )
+                    error_msg += filename;
+                else
+                    error_msg += ", " + filename;
+            }
+        } // for ( String filename : files )
+
+        if ( ! first )
+            failed_files_messages.add ( error_msg );
+
+        return;
     }
     
     private String[] getList ( String s )

@@ -1,6 +1,7 @@
 package edu.sdsc.globusauth.action;
 
 import edu.sdsc.globusauth.controller.ProfileManager;
+import edu.sdsc.globusauth.controller.Transfer2DataManager;
 import edu.sdsc.globusauth.util.OauthConstants;
 import org.apache.log4j.Logger;
 import org.globusonline.transfer.Authenticator;
@@ -54,8 +55,63 @@ public class TransferStatusAction extends NgbwSupport {
         JSONTransferAPIClient.Result r;
         statuslist = new ArrayList<>();
 
+        // First, update transfer record
+        ProfileManager profileManager = new ProfileManager();
+        TransferAction txaction = new TransferAction();
+        Transfer2DataManager transfer_manager = null;
+        Long user_id = (Long) getSession().get("user_id");
+        //logger.debug ( "MONA: user_id = " + user_id );
+        List<String> trlist = profileManager.loadRecord(user_id);
+        //logger.debug ( "MONA: trlist = " + trlist );
+        if (trlist != null && trlist.size() > 0) {
+            String dest_path = ( String ) getSession().get
+                    ( OauthConstants.DEST_ENDPOINT_PATH );
+            //logger.debug ( "MONA: dest_path = " + dest_path );
+            int val = 0;
+            ArrayList<String> list = null;
+
+            for (String taskid: trlist) {
+                //logger.debug ( "MONA: taskid = " + taskid );
+                tr = txaction.updateTask(taskid, client);
+                transfer_manager = profileManager.updateRecord
+                    ( tr, dest_path );
+
+                // First, display the user errors
+                list = transfer_manager.getUserSystemErrorMessages();
+                if ( list != null && ! list.isEmpty() )
+                    for ( String msg : list )
+                        reportUserError ( msg );
+
+                val = transfer_manager.getNumFilesSaved();
+                if ( val == 1 )
+                    reportUserMessage ( val +
+                        " file was successfully saved" );
+                else if ( val > 1 )
+                    reportUserMessage ( val +
+                        " files were successfully saved" );
+
+                list = transfer_manager.getFailedFilesMessages();
+                if ( list != null && ! list.isEmpty() )
+                    for ( String msg : list )
+                        reportUserError ( msg );
+
+                val = transfer_manager.getNumDirectoriesSaved();
+                if ( val == 1 )
+                    reportUserMessage ( val +
+                        " directory was successfully saved" );
+                else if ( val > 1 )
+                    reportUserMessage ( val +
+                        " directories were successfully saved" );
+
+                list = transfer_manager.getFailedDirectoriesMessages();
+                if ( list != null && ! list.isEmpty() )
+                    for ( String msg : list )
+                        reportUserError ( msg );
+            }
+        }
+
+        // If getting status for a single transfer...
         if (taskId != null && !taskId.isEmpty()) {
-            //logger.debug ( "MONA: if..." );
             String resource = "/task/" + taskId;
             Map<String, String> params = new HashMap<String, String>();
             String fields = "status,source_endpoint_display_name,"
@@ -72,6 +128,7 @@ public class TransferStatusAction extends NgbwSupport {
             //logger.debug ( "MONA: tr = " + tr );
             //taskmap.put("status", r.document.getString("status"));
             taskmap.put ( "status", tr.getStatus() );
+            //log.debug ( "MONA: status = " + tr.getStatus() );
             try {
                 String c_time = r.document.getString("completion_time");
                 if (c_time != null)
@@ -155,24 +212,6 @@ public class TransferStatusAction extends NgbwSupport {
                 } // for (int i = 0; i < data.length(); i++)
             } // if (data.length() > 0)
         } // else
-
-        //update transfer record
-        ProfileManager profileManager = new ProfileManager();
-        TransferAction txaction = new TransferAction();
-        Long user_id = (Long) getSession().get("user_id");
-        //logger.debug ( "MONA: user_id = " + user_id );
-        List<String> trlist = profileManager.loadRecord(user_id);
-        //logger.debug ( "MONA: trlist = " + trlist );
-        if (trlist != null && trlist.size() > 0) {
-            String dest_path = ( String ) getSession().get
-                    ( OauthConstants.DEST_ENDPOINT_PATH );
-            //logger.debug ( "MONA: dest_path = " + dest_path );
-            for (String taskid: trlist) {
-                //logger.debug ( "MONA: dest_path = " + dest_path );
-                tr = txaction.updateTask(taskid, client);
-                profileManager.updateRecord(tr, dest_path);
-            }
-        }
 
         return SUCCESS;
 

@@ -2,6 +2,7 @@ package edu.sdsc.globusauth.controller;
 
 /**
  * Created by cyoun on 10/12/16.
+ * Updated by Mona Wong Feb 2020
  */
 
 import java.util.ArrayList;
@@ -15,14 +16,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
-import edu.sdsc.globusauth.controller.Transfer2DataManager;
 import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.database.OauthProfile;
 import org.ngbw.sdk.database.TransferRecord;
 
 
-//public class ProfileManager extends HibernateUtil {
 public class ProfileManager {
 
     private static final Log log = LogFactory.getLog ( ProfileManager.class );
@@ -72,9 +70,12 @@ public class ProfileManager {
                                      int filesSkipped,
                                      long byteTransferred) throws IOException, SQLException {
 
-        log.info("updatetransferrecord: start");
+        //log.debug ( "MONA: entered ProfileManager.updateTransferRecord()" );
+        //log.debug ( "MONA: taskId = " + taskId );
+        //log.debug ( "MONA: status = " + status );
+        //log.info("updatetransferrecord: start");
         TransferRecord tr = TransferRecord.findTransferRecordByTaskId(taskId);
-        log.info("endpoint: "+tr.getSrcEndpointname());
+        //log.info("endpoint: "+tr.getSrcEndpointname());
         tr.setStatus(status);
         tr.setCompletionTime(completionTime);
         tr.setFilesTransferred(filesTransferred);
@@ -91,8 +92,8 @@ public class ProfileManager {
      *      current status value in the database is ACTIVE or INACTIVE.
      *      If this NOT the case, DO NOT use this function!
      **/
-    public int updateRecord ( TransferRecord tr, String destination_path )
-        throws IOException, SQLException
+    public Transfer2DataManager updateRecord
+        ( TransferRecord tr, String destination_path )
     {
         //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
         //log.debug ( "MONA: tr = " + tr );
@@ -100,66 +101,109 @@ public class ProfileManager {
         //log.debug ( "MONA: tr.getSrcEndpointname = " + tr.getSrcEndpointname() );
         //log.debug ( "MONA: tr.getDestEndpointname = " + tr.getDestEndpointname() );
         //log.debug ( "MONA: tr.getTaskId = " + tr.getTaskId() );
+        //log.debug ( "MONA: tr.getStatus = " + tr.getStatus() );
 
         // Check incoming parameters
         if ( tr == null || destination_path == null ||
                 destination_path.trim().equals ( "" ) )
-            return ( 0 );
+            return ( null );
+
+        String status = tr.getStatus();
+        //log.debug ( "MONA: status = " + status );
+        Transfer2DataManager tdm = new Transfer2DataManager();
 
         String globusRoot =
             Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
         //log.debug ( "MONA: globusRoot = " + globusRoot );
-        int saved = 0;
-        String status = tr.getStatus();
-        //log.debug ( "MONA: status = " + status );
+
+        if ( globusRoot == null )
+        {
+            log.error ( "System Error: Globus root directory not found!" );
+            tdm.setSystemError ( true );
+            ArrayList<String> error = new ArrayList<String>( 1 );
+            error.add ( "A Globus system error has been encountered" );
+            tdm.setUserSystemErrorMessages ( error );
+            return ( tdm );
+        }
 
         // If the transfer is to the COSMIC2 gateway, then we will create
         // the appropriate user data dir item; otherwise, the transfer is
         // from the COSMIC2 gateway so no need to create a user data dir item
-        if (globusRoot != null) {
-            if (destination_path.startsWith(globusRoot)) {
+        if ( destination_path.startsWith ( globusRoot ) )
+        {
+            //log.debug ( "MONA: transferring TO gateway" );
+            TransferRecord old_tr = null;
 
-                // First get the old transfer record...
-                TransferRecord old_tr = loadRecordByTaskId ( tr.getTaskId() );
-                if ( old_tr != null && old_tr.getTaskId() != null )
+            // First get the old transfer record...
+            try { old_tr = loadRecordByTaskId ( tr.getTaskId() ); }
+            catch ( Exception e )
+            {
+                // If no old transfer record...this shouldn't happen but
+                // is also not a problem since we can just save the the new
+                // transfer info
+                log.error
+                    ( "System Warning: no transfer record with task id = " +
+                    tr.getTaskId() + " found!" );
+            }
+
+            if ( old_tr != null && old_tr.getTaskId() != null )
+            {
+                // If the status has changed...
+                if ( ! status.equals ( old_tr.getStatus() ) )
                 {
-                    // If the status has changed...
-                    if ( ! status.equals ( old_tr.getStatus() ) )
-                    {
-                        // If transfer successfully, create database entries
-                        if ( status.equals ( "SUCCEEDED" ) )
-                        {
-                            Transfer2DataManager dataManager =
-                                new Transfer2DataManager();
-                            saved = dataManager.setupDataItems ( old_tr,
-                                    destination_path );
-                        }
-                        else if ( status.equals ( "FAILED" ) )
-                        {
-                            updateTransferRecord ( tr.getTaskId(), "FAILED",
-                                tr.getCompletionTime(),
-                                tr.getFilesTransferred(), tr.getFaults(),
-                                tr.getDirectories(), tr.getFiles(),
-                                tr.getFilesSkipped(),
-                                tr.getByteTransferred() );
-                            saved = -1;
-                        }
-                    } // if ( ! status.equals ( old_tr.getStatus() ) )
-                } // if ( old_tr != null && old_tr.getTaskId() != null )
-            } // if (destination_path.startsWith(globusRoot))
-        } // if (globusRoot != null)
-        //log.debug ( "MONA: saved = " + saved );
+                    // If transfer successfully, create database entries
+                    if ( status.equals ( "SUCCEEDED" ) )
+                        tdm.setupDataItems ( old_tr, destination_path );
+                }
 
-        // Now update the transfer record
+                // Now determine the status for the transfer record
+                if ( (tdm.getFailedFilesMessages()).size() > 0 )
+                {
+                    if ( tdm.getNumFilesSaved() > 0 )
+                        status = "PARTIAL";
+                    else
+                        status = "FAILED";
+                }
+
+                /*
+                log.debug ( "MONA: status = " + status );
+                log.debug ( "MONA: failed directories messages size = " +
+                    (tdm.getFailedDirectoriesMessages()).size() );
+                log.debug ( "MONA: num directories saved = " +
+                    tdm.getNumDirectoriesSaved() );
+                */
+
+                if ( (tdm.getFailedDirectoriesMessages()).size() > 0 )
+                {
+                    if ( tdm.getNumDirectoriesSaved() > 0 )
+                        status = "PARTIAL";
+                    else if ( status.equals ( "SUCCEEDED" ) )
+                        status = "FAILED";
+                }
+            } // if ( old_tr != null && old_tr.getTaskId() != null )
+        } // if (destination_path.startsWith(globusRoot))
+
         // log.info("Update record (taskid): "+tr.getTaskId());
-        if  ( saved != -1 )
-            updateTransferRecord ( tr.getTaskId(), tr.getStatus(),
+        try
+        {
+            //log.debug ( "MONA: updating transfer record status = " + status );
+            updateTransferRecord ( tr.getTaskId(), status,
                 tr.getCompletionTime(), tr.getFilesTransferred(),
                 tr.getFaults(), tr.getDirectories(), tr.getFiles(),
                 tr.getFilesSkipped(), tr.getByteTransferred() );
+        }
+        catch ( Exception e )
+        {
+            log.error ( "System Error: cannot update transfer record ID = " +
+                tr.getTrId() );
+            tdm.setSystemError ( true );
+            ArrayList<String> error = new ArrayList<String>( 1 );
+            error.add ( "Sorry, cannot update your transfer record" );
+            tdm.setUserSystemErrorMessages ( error );
+        }
 
-        return ( saved );
+        return ( tdm );
     }
 
     public List<String> loadRecord(long userId) throws IOException, SQLException {
