@@ -88,7 +88,7 @@ public class TransferStatusAction extends NgbwSupport {
                         " file was successfully saved" );
                 else if ( val > 1 )
                     reportUserMessage ( val +
-                        " files were successfully saved" );
+                        " *.star files were successfully saved" );
 
                 list = transfer_manager.getFailedFilesMessages();
                 if ( list != null && ! list.isEmpty() )
