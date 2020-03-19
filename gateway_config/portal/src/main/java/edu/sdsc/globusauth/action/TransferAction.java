@@ -85,7 +85,14 @@ public class TransferAction extends NgbwSupport {
         client.setAuthenticator(authenticator);
     }
 
-    public String transfer() throws Exception {
+	/**
+	 * Originally this code can throw an Exception.  To be more user-friendly,
+	 * instead now it will display user error message and if appropriate,
+	 * return ERROR.
+     * public String transfer() throws Exception {
+	 **/
+    public String transfer()
+	{
         //logger.info ( "MONA: entered TransferAction.transfer()" );
 
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
@@ -95,29 +102,57 @@ public class TransferAction extends NgbwSupport {
         Authenticator authenticator = new GoauthAuthenticator(accesstoken);
         config = OauthUtils.getConfig(OauthConstants.OAUTH_PORPS);
 
-        client = new JSONTransferAPIClient(username, null, null);
-        client.setAuthenticator(authenticator);
-        EndpointListAction iplistaction = new EndpointListAction(accesstoken, username);
-        setMyendpoints(iplistaction.my_endpoint_search_transfer("administered-by-me"));
+		try
+		{
+        	client = new JSONTransferAPIClient(username, null, null);
+        	client.setAuthenticator(authenticator);
+		}
+		catch ( Exception e )
+		{
+			reportUserError ( "System Error: cannot get your access credential!" );
+			info ( e.toString() );
+			return SUCCESS;
+		}
+
+        EndpointListAction iplistaction;
+		try
+		{
+        	iplistaction = new EndpointListAction(accesstoken, username);
+        	setMyendpoints(iplistaction.my_endpoint_search_transfer("administered-by-me"));
+		}
+		catch ( Exception e )
+		{
+			reportUserError ( "System Error: cannot get endpoint listing!" );
+			info ( e.toString() );
+			return SUCCESS;
+		}
 
         //logger.info("search label: "+searchLabel);
         //logger.info("search value: "+searchValue);
         //logger.info("my emdpoint name: "+myendpointName);
         //logger.info("my endpoint value: "+myendpointValue);
 
-        if ((searchLabel != null && searchLabel.trim().length() > 0) &&
+		try
+		{
+        	if ((searchLabel != null && searchLabel.trim().length() > 0) &&
                 (searchValue != null && searchValue.trim().length() > 0)) {
-            bookmarklist = iplistaction.add_my_endpoint_transfer(searchLabel,searchValue);
-            if (bookmarklist.size() == 1) {
-                setIntialLocation(bookmarklist.get(0));
-            }
-        } else if ((myendpointName != null && myendpointName.trim().length() > 0) &&
+            	bookmarklist = iplistaction.add_my_endpoint_transfer(searchLabel,searchValue);
+            	if (bookmarklist.size() == 1) {
+                	setIntialLocation(bookmarklist.get(0));
+            	}
+        	} else if ((myendpointName != null && myendpointName.trim().length() > 0) &&
                 (myendpointValue != null && myendpointValue.trim().length() > 0)) {
-            bookmarklist = iplistaction.add_my_endpoint_transfer(myendpointName,myendpointValue);
-            if (bookmarklist.size() == 1) {
-                setIntialLocation(bookmarklist.get(0));
-            }
-        }
+            	bookmarklist = iplistaction.add_my_endpoint_transfer(myendpointName,myendpointValue);
+            	if (bookmarklist.size() == 1) {
+                	setIntialLocation(bookmarklist.get(0));
+            	}
+        	}
+		}
+		catch ( Exception e )
+		{
+			reportUserError ( "System Error: cannot update your bookmark!" );
+			info ( e.toString() );
+		}
 
         String transferlocation = request.getParameter("transferLocation");
         //logger.info("Exchange Location: "+transferlocation);
@@ -255,35 +290,53 @@ public class TransferAction extends NgbwSupport {
                         }
                     }
                 } else if (actionType.equals("Delete")) {
-                    Map<String, Object> bmObj = iplistaction.removeBookmark(s_eptype);
-                    int srcType = (Integer)bmObj.get("index");
-                    if (srcType == -1 || srcType == 3) {
-                        bookmarklist = new ArrayList<>();
-                        return SUCCESS;
-                    } else if (srcType == 0) {
-                        String bid = (String) bmObj.get("id");
-                        String bname = (String) bmObj.get("name");
-                        String epid = (String) bmObj.get("endpoint_id");
-                        String path = (String) bmObj.get("path");
-                        //String d_name = (String) bmObj.get("disp_name");
-                        setSourceInfo(bid,epid,path,bname);
-                        getSourceInfo();
-                    } else if (srcType == 1) {
-                        String bid = (String) bmObj.get("id");
-                        String bname = (String) bmObj.get("name");
-                        String epid = (String) bmObj.get("endpoint_id");
-                        String path = (String) bmObj.get("path");
-                        //String d_name = (String) bmObj.get("disp_name");
-                        setDestinationInfo(bid,epid,path,bname);
-                        getDestinationInfo();
-                    }
+
+					try
+					{
+                    	Map<String, Object> bmObj = iplistaction.removeBookmark(s_eptype);
+                    	int srcType = (Integer)bmObj.get("index");
+                    	if (srcType == -1 || srcType == 3) {
+                        	bookmarklist = new ArrayList<>();
+                        	return SUCCESS;
+                    	} else if (srcType == 0) {
+                        	String bid = (String) bmObj.get("id");
+                        	String bname = (String) bmObj.get("name");
+                        	String epid = (String) bmObj.get("endpoint_id");
+                        	String path = (String) bmObj.get("path");
+                        	//String d_name = (String) bmObj.get("disp_name");
+                        	setSourceInfo(bid,epid,path,bname);
+                        	getSourceInfo();
+                    	} else if (srcType == 1) {
+                        	String bid = (String) bmObj.get("id");
+                        	String bname = (String) bmObj.get("name");
+                        	String epid = (String) bmObj.get("endpoint_id");
+                        	String path = (String) bmObj.get("path");
+                        	//String d_name = (String) bmObj.get("disp_name");
+                        	setDestinationInfo(bid,epid,path,bname);
+                        	getDestinationInfo();
+                    	}
+					}
+					catch ( Exception e )
+					{
+						reportUserError
+							( "System Error: unable to delete your bookmark!" );
+						info ( e.toString() );
+					}
                 }
             }
         }
 
         //iplistaction.my_endpoint_list();
         //setBookmarklist(iplistaction.getBookmarklist());
-        setBookmarklist(iplistaction.my_bookmark_list());
+		try
+		{
+        	setBookmarklist(iplistaction.my_bookmark_list());
+		}
+		catch ( Exception e )
+		{
+			reportUserError ( "System Error: unable to set your bookmark!" );
+			info ( e.toString() );
+		}
 
         getSourceInfo();
         //logger.info("SRC Bookmark ID: "+s_epbmid);
@@ -294,11 +347,22 @@ public class TransferAction extends NgbwSupport {
 
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
 	    //logger.info("Source Endpoint activation....");
-            String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname);
-            if (result.equals(SUCCESS)) {
-                getCount(s_epid, s_eppath, s_dispname);
-            }
-            return SUCCESS;
+			try
+			{
+            	String result = activationProcess(s_epbmid,s_epid,s_eppath,s_dispname);
+            	if (result.equals(SUCCESS)) {
+                	getCount(s_epid, s_eppath, s_dispname);
+            	}
+            	return SUCCESS;
+			}
+			catch ( Exception e )
+			{
+				reportUserError
+					( "System Error: unable to activate the source endpoint \""
+					+ s_dispname + "\"" );
+				info ( e.toString() );
+				return SUCCESS;
+			}
         }
         // HTTP_POST is a transfer request...
         else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
@@ -322,9 +386,18 @@ public class TransferAction extends NgbwSupport {
             if ( d_eppath.startsWith ( globusRoot ) )
                 d_eppath += current_folder.getLabel() + "/";
 
-            String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname);
-            //logger.info ( "MONA: d_result = " + d_result );
-            if (d_result.equals("failure")) return SUCCESS;
+			try
+			{
+            	String d_result = activationProcess(d_epbmid,d_epid,d_eppath,d_dispname);
+            	//logger.info ( "MONA: d_result = " + d_result );
+            	if (d_result.equals("failure")) return SUCCESS;
+			}
+			catch ( Exception e )
+			{
+				reportUserError
+					( "System Error: unable to activate the destination endpoint!" );
+				info ( e.toString() );
+			}
 
             List<String> filter_filenames = new ArrayList<>();
             List<String> filter_dirnames = new ArrayList<>();
@@ -339,50 +412,60 @@ public class TransferAction extends NgbwSupport {
                 }
             }
 
-            JSONTransferAPIClient.Result r = client.getResult("/submission_id");
-            //logger.info ( "MONA: r = " + r );
-            String submissionId = r.document.getString("value");
-            //logger.info ( "MONA: submissionId = " + submissionId );
-            int sync_level = Integer.parseInt(config.getProperty("sync_level"));
-            boolean encrypt_data = Boolean.parseBoolean(config.getProperty("encrypt_data"));
+			try
+			{
+            	JSONTransferAPIClient.Result r = client.getResult("/submission_id");
+            	//logger.info ( "MONA: r = " + r );
+            	String submissionId = r.document.getString("value");
+            	//logger.info ( "MONA: submissionId = " + submissionId );
+            	int sync_level = Integer.parseInt(config.getProperty("sync_level"));
+            	boolean encrypt_data = Boolean.parseBoolean(config.getProperty("encrypt_data"));
 
-            JSONObject transfer = new JSONObject();
-            transfer.put("DATA_TYPE", "transfer");
-            transfer.put("submission_id", submissionId);
-            transfer.put("source_endpoint", s_epid);
-            transfer.put("destination_endpoint", d_epid);
-            transfer.put("sync_level", sync_level);
-            transfer.put("encrypt_data", encrypt_data);
+            	JSONObject transfer = new JSONObject();
+            	transfer.put("DATA_TYPE", "transfer");
+            	transfer.put("submission_id", submissionId);
+            	transfer.put("source_endpoint", s_epid);
+            	transfer.put("destination_endpoint", d_epid);
+            	transfer.put("sync_level", sync_level);
+            	transfer.put("encrypt_data", encrypt_data);
 
-            String file_names = null;
-            String dir_names = null;
-            String delim = "";
-            if (filter_filenames.size() > 0) {
-                file_names = "";
-                for (String file : filter_filenames) {
-                    //logger.info("Filtered file name:" + file);
-                    file_names += delim + file;
-                    delim = "|";
-                    addTransferItem(s_eppath+file, d_eppath+file, false, transfer);
-                }
-            }
-            if (filter_dirnames.size() > 0) {
-                dir_names = "";
-                delim = "";
-                for (String dir : filter_dirnames) {
-                    //logger.info("Filtered directory name:"+dir);
-                    dir_names += delim + dir;
-                    delim = "|";
-                    addTransferItem(s_eppath+dir, d_eppath+dir, true, transfer);
-                }
-            }
+            	String file_names = null;
+            	String dir_names = null;
+            	String delim = "";
+            	if (filter_filenames.size() > 0) {
+                	file_names = "";
+                	for (String file : filter_filenames) {
+                    	//logger.info("Filtered file name:" + file);
+                    	file_names += delim + file;
+                    	delim = "|";
+                    	addTransferItem(s_eppath+file, d_eppath+file, false, transfer);
+                	}
+            	}
+            	if (filter_dirnames.size() > 0) {
+                	dir_names = "";
+                	delim = "";
+                	for (String dir : filter_dirnames) {
+                    	//logger.info("Filtered directory name:"+dir);
+                    	dir_names += delim + dir;
+                    	delim = "|";
+                    	addTransferItem(s_eppath+dir, d_eppath+dir, true, transfer);
+                	}
+            	}
+            	//logger.info("File names: "+file_names);
+            	//logger.info("Directory names: "+dir_names);
 
-            //logger.info("File names: "+file_names);
-            //logger.info("Directory names: "+dir_names);
-
-            r = client.postResult("/transfer", transfer, null);
-            taskId = r.document.getString("task_id");
-            saveTask(taskId,file_names,dir_names);
+            	r = client.postResult("/transfer", transfer, null);
+            	taskId = r.document.getString("task_id");
+            	saveTask(taskId,file_names,dir_names);
+            	return "transferstatus";
+            	//return SUCCESS;
+			}
+			catch ( Exception e )
+			{
+				reportUserError ( "System Error: unable to transfer!" );
+				info ( e.toString() );
+				return SUCCESS;
+			}
 
             /*
             //update transfer record
@@ -403,13 +486,9 @@ public class TransferAction extends NgbwSupport {
                 }
             }.start();
             */
-
-            return "transferstatus";
-            //return SUCCESS;
         } else {
             return "failure";
         }
-
     }
 
 	public String activationProcess(String epbmid,
@@ -417,7 +496,9 @@ public class TransferAction extends NgbwSupport {
                                     String eppath,
                                     String dispname) throws Exception {
         //logger.info ( "MONA: entered activationProcess" );
+        //logger.info ( "MONA: epbmid = " + epbmid );
         //logger.info ( "MONA: eppath = " + eppath );
+        //logger.info ( "MONA: dispname = " + dispname );
 		Map<String, Boolean> ep_status = endpointStatus(epid);
         if (epbmid.equals("XSERVER")) {
             if (!ep_status.get("activated")) {
@@ -439,8 +520,8 @@ public class TransferAction extends NgbwSupport {
             } else {
 				if(ep_status.get("is_globus_connect")) {
 					if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
-                    	//logger.error("The endpoint, "+ dispname + ", is not connected or is paused.");
-                    	reportUserError ("The endpoint, "+ dispname + ", is not connected or paused.");
+                    	reportUserError ( "Warning, the endpoint, " +
+                            dispname + ", is not connected or paused." );
 						return "failure";
                 	}
 				}
@@ -574,8 +655,12 @@ public class TransferAction extends NgbwSupport {
 
     public Map<String,Boolean> endpointStatus(String endpointId)
             throws IOException, JSONException, GeneralSecurityException, APIError {
+		//logger.debug ( "MONA: entered endpointStatus()" );
+		//logger.debug ( "MONA: endpointId = " + endpointId );
         String resource = BaseTransferAPIClient.endpointPath(endpointId);
+		//logger.debug ( "MONA: resource = " + resource );
         JSONTransferAPIClient.Result r = client.getResult(resource);
+
         Map<String,Boolean> ep_status = new HashMap<>();
         boolean activated = r.document.getBoolean("activated");
         boolean is_connected = false;
@@ -593,7 +678,7 @@ public class TransferAction extends NgbwSupport {
 		/*
         JSONArray data = r.document.getJSONArray("DATA");
         for (int i=0; i< data.length(); i++) {
-            is_connected = data.getJSONObject(i).getBoolean("is_connected");
+        	is_connected = data.getJSONObject(i).getBoolean("is_connected");
             is_paused = data.getJSONObject(i).getBoolean("is_paused");
 
             logger.info(i+" is_connected: "+is_connected);
@@ -694,14 +779,18 @@ public class TransferAction extends NgbwSupport {
 
     private String createProxyFromFile(String endpointId) throws Exception {
 
+		//logger.debug ( "MONA: entered createProxyFromFile()" );
         String mkproxy_path = config.getProperty(OauthConstants.MKPROXY);
         String issuer_cred_file = config.getProperty(OauthConstants.ISSUER_CRED);
+		//logger.debug ( "MONA: issuer_cred_file = " + issuer_cred_file );
         String lifetime = config.getProperty(OauthConstants.LIFETIME);
         String pub_key = getPublicKey(endpointId);
+		//logger.debug ( "MONA: pub_key = " + pub_key );
 
         StringBuffer sb = new StringBuffer();
         FileInputStream user_cert = new FileInputStream(issuer_cred_file);
         ByteArrayInputStream pub_cert = new ByteArrayInputStream(pub_key.getBytes());
+		//logger.debug ( "MONA: pub_cert = " + pub_cert );
         String[] cmd_array = { mkproxy_path, lifetime };
 
         ProcessBuilder pb = new ProcessBuilder();
@@ -764,6 +853,26 @@ public class TransferAction extends NgbwSupport {
         item.put("recursive",flag);
         items.append("DATA", item);
     }
+
+	public boolean transfer2Gateway()
+	{
+		//logger.debug ( "MONA : entered TransferAction.transfer2Gateway()" );
+        String globusRoot = Workbench.getInstance().getProperties().getProperty
+        	( "database.globusRoot" );
+        //logger.info ( "MONA: globusRoot = " + globusRoot );
+
+		getDestinationInfo();
+        //logger.info ( "MONA: d_epbmid = " + d_epbmid );
+        //logger.info ( "MONA: d_epid = " + d_epid );
+        //logger.info ( "MONA: d_eppath = " + d_eppath );
+        //logger.info ( "MONA: d_epname = " + d_epname );
+        //logger.info ( "MONA: d_dispname = " + d_dispname );
+
+		if ( d_eppath.startsWith ( globusRoot ) )
+			return ( true );
+		else
+			return ( false );
+	}
 
 	public boolean userCanTransfer()
 	{
@@ -882,7 +991,9 @@ public class TransferAction extends NgbwSupport {
         } catch (Exception e) {
             logger.error("Display file list: "+e.toString());
 			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
-			reportUserError("Error, unable to get file count on the source endpoint ID, \""+disp_name+"\".");
+			reportUserError
+				( "Error, unable to get access (file count) on the source endpoint \""
+				+ disp_name + "\"." );
             return filecount;
         }
     }
@@ -938,8 +1049,8 @@ public class TransferAction extends NgbwSupport {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
-                //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
-                reportUserError ( "Error, unable to create your data directory on XSEDE Comet storage.");
+                //reportUserError ( "Error, unable to create your data directory on XSEDE Comet storage.");
+                reportUserError ( "Error, unable to create your data directory on " + s_dispname );
                 return false;
             }
             return true;

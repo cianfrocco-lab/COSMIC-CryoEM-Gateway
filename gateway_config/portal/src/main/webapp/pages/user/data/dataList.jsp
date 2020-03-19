@@ -8,10 +8,13 @@
 
 <div class="panel panel-default">
 	<div class="panel-body">
-    	<p><strong>Tip: Upload Relion directories, particle stacks, and 3D
-		volumes using the Globus data transfer service.<br>
-    	Upload individual files and other small files (&lt; 200 MB) using
-		your web browser.</strong></p>
+    	<p><strong>Tips:</strong> Upload Relion directories, particle stacks,
+		and 3D volumes using the Globus data transfer service. You can use
+		your web browser to upload small, individual files.</p>
+
+		<p><span class="text-danger">Warning: Data are deleted after 5
+			days.</span> Questions? Please email
+			<s:property value="%{adminEmail}"/></p>
 
 		<s:if test="%{hasFolderData()}">
 			<p>
@@ -38,9 +41,6 @@
             	We can put the browser upload page here?!
         	</div>
     	-->
-
-		<p><mark>Warning: Data are deleted after 2 days. Questions? Please email
-    		<s:property value="%{adminEmail}"/></mark></p>
 	</div>
 </div>
 
@@ -221,7 +221,7 @@
 </s:if>
 <s:else>
   <div>
-    <p>There is currently no data in this folder.<br/>What would you like to do?</p>
+    <p>There is currently no data in this folder. What would you like to do?</p>
   </div>
   <div class="button-group">
     <s:url var="transferUrl" action="transfer"/>

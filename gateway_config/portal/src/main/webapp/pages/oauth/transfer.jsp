@@ -275,85 +275,100 @@
 </head>
 <body>
 
-<%@ include file="/pages/common/messages.jsp" %>
+<div><h2>Globus Transfer</h2></div>
 
-<div class="container">
-    <div class="row">
-        <s:form id="endpoint-search-form" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
-            <div class="col-sm-4" style="background-color:lavender;">
-                <label for="search">Endpoint Search:</label>
-                <s:textfield cssClass="form-control" id="search" name="searchLabel"/>
-                <s:hidden id="searchValue" name="searchValue" value=""/><p></p>
-                <s:submit id="ep-search" name="ep-search" value="Add" cssClass="btn btn-primary"/>
-            </div>
-        </s:form>
-        <s:form id="my-endpoint-search-form" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
-            <div class="col-sm-4 selectContainer" style="background-color:lavenderblush;">
-                <label for="myeplist">My Endpoints</label>
-                <s:select id="myeplist"
-                          cssClass="form-control"
-                          headerKey="-1" headerValue="Select your endpoint"
-                          list="myendpoints"
-                          name="myendpointValue"/>
-                <s:hidden id="myendpointName" name="myendpointName" value=""/><p></p>
-                <s:submit id="my-ep-select" name="my-ep-select" value="Add" cssClass="btn btn-primary"/>
-            </div>
-        </s:form>
-    </div>
-    <p></p>
-</div>
+<div>
+	<button class="btn btn-primary" type="button" data-toggle="collapse"
+	data-target="#collapseMyEndpoints" aria-expanded="false"
+	aria-controls="collapseMyEndpoints"> My EndPoints </button>
 
-<%-- <div class="container"> --%>
-<h2>My Endpoints</h2>
+	<!--
+	<button class="btn btn-primary" type="button" data-toggle="collapse"
+	data-target="#collapseXSEDEEndpoint" aria-expanded="false"
+	aria-controls="collapseXSEDEEndpoint"> XSEDE EndPoint </button>
+	-->
 
-<s:if test="bookmarklist.size() > 0">
-    <div class="row">
-        <div class="col-md-11">
-            <table class="table">
-                <th class="col-md-4 text-left">Endpoint</th>
-                <th class="col-md-5 text-left">Path</th>
-                <th class="col-md-1 text-center">List Files</th>
-                <th class="col-md-1 text-center"></th>
+	<button class="btn btn-primary" type="button" data-toggle="collapse"
+	data-target="#collapseSearchAddEndpoints" aria-expanded="false"
+	aria-controls="collapseSearchAndEndpoints"> Search & Add EndPoints </button>
+</div><br>
 
-                <s:iterator value="bookmarklist" var="data">
-                    <tr>
-                        <s:form id="endpoint-list-%{#data['id']}" cssClass="form-horizontal" action="transfer" method="GET" theme="simple" onsubmit="return validateForm(this,event);">
-                            <s:hidden name="bookmarkId" value="%{#data['id']}" />
-                            <s:hidden name="endpointId" value="%{#data['endpoint_id']}" />
-                            <s:hidden id="endpointName" name="endpointName" value="%{#data['name']}" />
+<div class="collapse" id="collapseMyEndpoints">
 
-                            <td class="col-md-4 text-left">
-                                <s:property value="#data['disp_name']" />
-                            </td>
+	<div class="panel panel-default">
+  		<div class="panel-heading">
+    		<h3 class="panel-title">My Endpoints</h3>
+  		</div>
 
-                            <td class="col-md-5 text-left">
-                                <s:textfield cssClass="form-control" id="endpointPath" name="endpointPath" value="%{#data['path']}"/>
-                            </td>
-                            <td class="col-md-1 text-center">
-                                <s:submit id="actionType" name="actionType" value="List" cssClass="btn btn-primary"/>
-                            </td>
-                            <td class="col-md-1 text-center">
-                                <s:submit id="actionType" name="actionType" value="Delete" cssClass="btn btn-primary"/>
-                            </td>
-                        </s:form>
-                    </tr>
-                </s:iterator>
-            </table>
-        </div>
-    </div>
-</s:if>
-<s:else>
-    <p>
-        <strong>Please register your Globus Connect Personal Endpoints.</strong>
-    </p>
-</s:else>
+  		<div class="panel-body">
+			<s:if test="bookmarklist.size() > 0">
+    			<div class="row">
+        			<div class="col-md-11">
+            			<table class="table">
+                			<th class="col-md-4 text-left">Endpoint</th>
+                			<th class="col-md-5 text-left">Path</th>
+                			<th class="col-md-1 text-center">List Files</th>
+                			<th class="col-md-1 text-center"></th>
 
-<h2>XSEDE Endpoint</h2>
+            				<tr>
+                				<s:form id="server-endpoint" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
+                    				<s:hidden name="bookmarkId" value="XSERVER" />
+                    				<td class="col-md-6 text-left">
+                        				<s:property value="%{#session.dataset_endpoint_name}" />
+                    				</td>
+                            		<td class="col-md-5 text-left"></td>
+                    				<td class="col-md-1 text-center">
+                        				<s:submit id="actionType" name="actionType" value="List" cssClass="btn btn-primary"/>
+                    				</td>
+                            		<td class="col-md-1 text-center"></td>
+                				</s:form>
+            				</tr>
+
+                			<s:iterator value="bookmarklist" var="data">
+                    			<tr>
+                        			<s:form id="endpoint-list-%{#data['id']}" cssClass="form-horizontal" action="transfer" method="GET" theme="simple" onsubmit="return validateForm(this,event);">
+                            			<s:hidden name="bookmarkId" value="%{#data['id']}" />
+                            			<s:hidden name="endpointId" value="%{#data['endpoint_id']}" />
+                            			<s:hidden id="endpointName" name="endpointName" value="%{#data['name']}" />
+
+                            			<td class="col-md-4 text-left">
+                                			<s:property value="#data['disp_name']" />
+                            			</td>
+
+                            			<td class="col-md-5 text-left">
+                                			<s:textfield cssClass="form-control" id="endpointPath" name="endpointPath" value="%{#data['path']}"/>
+                            			</td>
+
+                            			<td class="col-md-1 text-center">
+                                			<s:submit id="actionType" name="actionType" value="List" cssClass="btn btn-primary"/>
+                            			</td>
+
+                            			<td class="col-md-1 text-center">
+                                			<s:submit id="actionType" name="actionType" value="Delete" cssClass="btn btn-primary"/>
+                            			</td>
+                        			</s:form>
+                    			</tr>
+                			</s:iterator>
+            			</table>
+        			</div>
+    			</div>
+			</s:if>
+			<s:else>
+    			<p><strong>Please register your Globus Connect Personal Endpoints.</strong></p>
+			</s:else>
+  		</div> <!-- ends class="panel-body" -->
+	</div> <!-- ends class="panel panel-default" -->
+</div> <!-- ends class="collapse" id="collapseMyEndpoints" -->
+
+<!--
+<div class="collapse" id="collapseXSEDEEndpoint">
+
+<h3>XSEDE Endpoint</h3>
 <div class="row">
     <div class="col-md-7">
         <table class="table">
             <th class="col-md-5 text-left">Endpoint</th>
-            <%-- <th class="col-md-10 text-left">Path</th> --%>
+            <!-- <th class="col-md-10 text-left">Path</th> 
             <th class="col-md-1 text-center">List Files</th>
             <tr>
                 <s:form id="server-endpoint" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
@@ -369,8 +384,51 @@
         </table>
     </div>
 </div>
+</div>
+-->
 
     <%-- <div class="page-header"> --%>
+
+<div class="collapse" id="collapseSearchAddEndpoints">
+	<div class="panel panel-default">
+  		<div class="panel-heading">
+    		<h3 class="panel-title">Search & Add Endpoints</h3>
+  		</div>
+
+	<div class="panel-body">
+
+<div class="container">
+    <div class="row">
+        <s:form id="endpoint-search-form" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
+            <!-- <div class="col-sm-4" style="background-color:lavender;"> -->
+            <div class="col-sm-4">
+                <label for="search">Search Endpoint:</label>
+                <s:textfield cssClass="form-control" id="search" name="searchLabel"/>
+                <s:hidden id="searchValue" name="searchValue" value=""/><p></p>
+                <s:submit id="ep-search" name="ep-search" value="Add" cssClass="btn btn-primary"/>
+            </div>
+        </s:form>
+        <s:form id="my-endpoint-search-form" cssClass="form-horizontal" action="transfer" method="GET" theme="simple">
+            <!-- <div class="col-sm-4 selectContainer" style="background-color:lavenderblush;"> -->
+            <div class="col-sm-4 selectContainer">
+                <label for="myeplist">Add Endpoint</label>
+                <s:select id="myeplist"
+                          cssClass="form-control"
+                          headerKey="-1" headerValue="Select your endpoint"
+                          list="myendpoints"
+                          name="myendpointValue"/>
+                <s:hidden id="myendpointName" name="myendpointName" value=""/><p></p>
+                <s:submit id="my-ep-select" name="my-ep-select" value="Add" cssClass="btn btn-primary"/>
+            </div>
+        </s:form>
+    </div>
+    <p></p>
+</div>
+</div>
+</div>
+</div>
+
+<!--
 <div>
 <h2>
     Globus Transfer &nbsp;&nbsp;&nbsp;
@@ -382,29 +440,57 @@
 </s:if>
 </h2>
 </div>
+-->
 
 <s:if test="bookmarklist.size() > 0">
-    <p><strong>Destination Endpoint:</strong> <s:property value="%{#session.dest_disp_name}"/></p>
-    <p><strong>Source Endpoint:</strong> <s:property value="%{#session.src_disp_name}"/></p>
-    <s:if test="filecount > 0">
-        <s:form id="transfer-file-list" cssClass="form-inline" action="transfer" method="POST" theme="simple">
-            <s:hidden id="selectedFiles" name="selectedFiles" value=""/>
-            <div id="user-file-tree-container" class="demo" style="margin-top:2em;"></div>
-            <p></p>
-            <s:if test="%{userCanTransfer()}">
-            	<div class="form-group form-buttons">
-	                <div class="col-md-10 pull-right">
-	                    <s:submit name="transfer" value="Transfer" cssClass="btn btn-primary"/>
-	                </div>
-            	</div>
-            </s:if>
-        </s:form>
-    </s:if>
-    <s:else>
-        <p>
-            <strong>No File List</strong>
-        </p>
-    </s:else>
+
+	<!-- The container, row and col-* classes didn't work -->
+    <div class="bg-info" style="padding:15px;">
+    	<strong>Destination Endpoint:</strong>
+		<s:property value="%{#session.dest_disp_name}"/>
+		<!--
+    	<strong>Source Endpoint:</strong>
+		<s:property value="%{#session.src_disp_name}"/>
+		-->
+    	<s:url var="transferUrl" action="transfer">
+        	<s:param name="transferLocation">true</s:param>
+    	</s:url>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    	<s:a href="%{transferUrl}" cssClass="btn btn-primary">Switch Source and Destination</s:a>
+	</div>
+
+	<div class="well">
+		<p><strong>Source Endpoint:</strong>
+		<s:property value="%{#session.src_disp_name}"/></p>
+    	<s:if test="filecount > 0">
+        	<s:form id="transfer-file-list" cssClass="form-inline" action="transfer" method="POST" theme="simple">
+            	<s:hidden id="selectedFiles" name="selectedFiles" value=""/>
+				<!--
+            	<div id="user-file-tree-container" class="demo" style="margin-top:2em;"></div>
+				-->
+            	<p id="user-file-tree-container" class="demo"></p>
+            	<s:if test="%{userCanTransfer()}">
+        			<s:if test="%{transfer2Gateway()}">
+    					<p class="text-danger">Please note, if you upload
+						multiple files, there must be at least 1 *.star file.
+						Also, if you upload a directory, there must be at
+						least 1 *.star file in the top or second level
+						directory.  <strong>Only the *.star file will be listed
+						in the data folder.</strong></p>
+					</s:if>
+            		<div class="form-group form-buttons">
+	                	<p class="col-md-10 pull-right">
+	                    	<s:submit name="transfer" value="Transfer"
+								cssClass="btn btn-primary"/>
+	                	</p>
+            		</div>
+            	</s:if>
+        	</s:form>
+    	</s:if>
+    	<s:else>
+        	<p><strong>No file listing...</strong></p>
+    	</s:else>
+	</div>
 </s:if>
 <s:else>
     <p>

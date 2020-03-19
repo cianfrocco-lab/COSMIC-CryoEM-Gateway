@@ -124,6 +124,16 @@ try:
         for result in results:
             jobcount24h = result[0]
             #print(result)
+        #    jobcount per user (last 24 hours)
+        sql = "select job_stats.EMAIL, count(job_stats.jobhandle) from job_stats where job_stats.DATE_SUBMITTED >= '{}' group by job_stats.EMAIL;".format(yesterday.isoformat())
+        #print('sql: ({})'.format(sql))
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        jobcountuser24h_dict = {}
+        for result in results:
+            jobcountuser24h_dict[result[0]] = result[1]
+            #print('result ({})'.format(result))
+            #print(result)
         #print(jobcount24h)
         #SUs:
         # for SU queries, should import usage.py and use
@@ -133,7 +143,7 @@ try:
         # job_stats table has DATE_SUBMITTED field
         #
         #    SU usage (cumulative)
-        sql = "select SUM(job_stats.SU_CHARGED * resource_conversion.CONVERSION) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '2016-07-01';"
+        sql = "select SUM(COALESCE(SU_OVERRIDE, COALESCE(SU_CHARGED, COALESCE(SU_COMPUTED, COALESCE(SU_PREDICTED, 0))))  * COALESCE(resource_conversion.CONVERSION, 1)) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '2016-07-01';"
         cursor.execute(sql)
         results = cursor.fetchall()
         for result in results:
@@ -141,20 +151,24 @@ try:
             #print(result)
         #print(SUcum)
         #    SU usage (last 24 hours)
-        sql = "select SUM(job_stats.SU_CHARGED * resource_conversion.CONVERSION) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '{}';".format(yesterday.isoformat())
+        sql = "select SUM(COALESCE(SU_OVERRIDE, COALESCE(SU_CHARGED, COALESCE(SU_COMPUTED, COALESCE(SU_PREDICTED, 0)))) * COALESCE(resource_conversion.CONVERSION, 1)) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '{}';".format(yesterday.isoformat())
+        #print('sql: ({})'.format(sql))
         cursor.execute(sql)
         results = cursor.fetchall()
         for result in results:
             SU24h = result[0]
+            #print('result ({})'.format(result))
             #print(result)
         #print(SU24h)
         #    SU per user (last 24 hours)
-        sql = "select job_stats.EMAIL, SUM(job_stats.SU_CHARGED * resource_conversion.CONVERSION) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '{}' group by job_stats.EMAIL;".format(yesterday.isoformat())
+        sql = "select job_stats.EMAIL, SUM(COALESCE(SU_OVERRIDE, COALESCE(SU_CHARGED, COALESCE(SU_COMPUTED, COALESCE(SU_PREDICTED, 0)))) * COALESCE(resource_conversion.CONVERSION, 1)) from job_stats INNER JOIN resource_conversion ON job_stats.RESRC_CONVRTN_ID = resource_conversion.ID where job_stats.DATE_SUBMITTED >= '{}' group by job_stats.EMAIL;".format(yesterday.isoformat())
+        #print('sql: ({})'.format(sql))
         cursor.execute(sql)
         results = cursor.fetchall()
         SUuser24h_dict = {}
         for result in results:
             SUuser24h_dict[result[0]] = result[1]
+            #print('result ({})'.format(result))
             #print(result)
         #print(SUuser24h_dict)
         #Users:
@@ -259,9 +273,12 @@ if time.localtime()[3] == 9:
     message = message + 'SU usage (cumulative) {}\n'.format(SUcum)
     message = message + 'SU usage (last 24 hours) {}\n'.format(SU24h)
     message = message + 'SU per user (last 24 hours)\n'
+    for item in SUuser24h_dict.items():
+        message = message + '    {} {}\n'.format(item[0], item[1])
     message = message + 'Number of jobs submitted (cumulative) {}\n'.format(jobcountcum)
     message = message + 'Number of jobs submitted (last 24 hours) {}\n'.format(jobcount24h)
-    for item in SUuser24h_dict.items():
+    message = message + 'Number of jobs per user (last 24 hours)\n'
+    for item in jobcountuser24h_dict.items():
         message = message + '    {} {}\n'.format(item[0], item[1])
     message = message + 'Number of users (cumulative) {}\n'.format(usercountcum)
     message = message + 'Number of new users (last 24 hours) {}\n'.format(usercount24h)
