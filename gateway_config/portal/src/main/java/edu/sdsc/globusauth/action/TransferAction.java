@@ -418,6 +418,7 @@ public class TransferAction extends NgbwSupport {
                                     String dispname) throws Exception {
         //logger.info ( "MONA: entered activationProcess" );
         //logger.info ( "MONA: eppath = " + eppath );
+        //logger.info ( "MONA: dispname = " + dispname );
 		Map<String, Boolean> ep_status = endpointStatus(epid);
         if (epbmid.equals("XSERVER")) {
             if (!ep_status.get("activated")) {
@@ -694,14 +695,18 @@ public class TransferAction extends NgbwSupport {
 
     private String createProxyFromFile(String endpointId) throws Exception {
 
+		//logger.debug ( "MONA: entered createProxyFromFile()" );
         String mkproxy_path = config.getProperty(OauthConstants.MKPROXY);
         String issuer_cred_file = config.getProperty(OauthConstants.ISSUER_CRED);
+		//logger.debug ( "MONA: issuer_cred_file = " + issuer_cred_file );
         String lifetime = config.getProperty(OauthConstants.LIFETIME);
         String pub_key = getPublicKey(endpointId);
+		//logger.debug ( "MONA: pub_key = " + pub_key );
 
         StringBuffer sb = new StringBuffer();
         FileInputStream user_cert = new FileInputStream(issuer_cred_file);
         ByteArrayInputStream pub_cert = new ByteArrayInputStream(pub_key.getBytes());
+		//logger.debug ( "MONA: pub_cert = " + pub_cert );
         String[] cmd_array = { mkproxy_path, lifetime };
 
         ProcessBuilder pb = new ProcessBuilder();
@@ -764,6 +769,11 @@ public class TransferAction extends NgbwSupport {
         item.put("recursive",flag);
         items.append("DATA", item);
     }
+
+	public boolean transfer2Gateway()
+	{
+		return ( true );
+	}
 
 	public boolean userCanTransfer()
 	{
@@ -938,8 +948,8 @@ public class TransferAction extends NgbwSupport {
             String error_msg = e.toString();
             if (!error_msg.contains("ExternalError.MkdirFailed.Exists")) {
                 logger.error("Create directory: " + error_msg);
-                //reportUserError("The user directory on XSEDE Comet resource was failed to access.");
-                reportUserError ( "Error, unable to create your data directory on XSEDE Comet storage.");
+                //reportUserError ( "Error, unable to create your data directory on XSEDE Comet storage.");
+                reportUserError ( "Error, unable to create your data directory on " + s_dispname );
                 return false;
             }
             return true;
