@@ -444,50 +444,51 @@
 
 <s:if test="bookmarklist.size() > 0">
 
-			<div class="container">
-    			<div class="row">
-            		<!-- <div class="col-md-8 bg-info"> -->
-            		<div class="bg-info">
-    					<strong>Destination Endpoint:</strong>
-						<s:property value="%{#session.dest_disp_name}"/><br>
-    					<strong>Source Endpoint:</strong>
-						<s:property value="%{#session.src_disp_name}"/>
-					</div>
-            		<div>
-    					<s:url var="transferUrl" action="transfer">
-        					<s:param name="transferLocation">true</s:param>
-    					</s:url>
-    					<s:a href="%{transferUrl}" cssClass="btn btn-primary">Switch Source and Destination</s:a>
-					</div>
-				</div>
-			</div>
+	<!-- The container, row and col-* classes didn't work -->
+    <div class="bg-info" style="padding:15px;">
+    	<strong>Destination Endpoint:</strong>
+		<s:property value="%{#session.dest_disp_name}"/>
+		<!--
+    	<strong>Source Endpoint:</strong>
+		<s:property value="%{#session.src_disp_name}"/>
+		-->
+    	<s:url var="transferUrl" action="transfer">
+        	<s:param name="transferLocation">true</s:param>
+    	</s:url>
+		&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    	<s:a href="%{transferUrl}" cssClass="btn btn-primary">Switch Source and Destination</s:a>
+	</div>
 
 	<div class="well">
-        <s:if test="%{transfer2Gateway()}">
-    		<p class="text-danger">Please note, if you upload multiple files,
-			there must be at least 1 *.star file.  Also, if you upload a
-			directory, there must be at least 1 *.star file in the top or
-			second level directory.  <strong>Only the *.star file will be
-			listed in the data folder.</strong></p>
-		</s:if>
-
+		<p><strong>Source Endpoint:</strong>
+		<s:property value="%{#session.src_disp_name}"/></p>
     	<s:if test="filecount > 0">
         	<s:form id="transfer-file-list" cssClass="form-inline" action="transfer" method="POST" theme="simple">
             	<s:hidden id="selectedFiles" name="selectedFiles" value=""/>
+				<!--
             	<div id="user-file-tree-container" class="demo" style="margin-top:2em;"></div>
-            	<p></p>
-
+				-->
+            	<p id="user-file-tree-container" class="demo"></p>
             	<s:if test="%{userCanTransfer()}">
+        			<s:if test="%{transfer2Gateway()}">
+    					<p class="text-danger">Please note, if you upload
+						multiple files, there must be at least 1 *.star file.
+						Also, if you upload a directory, there must be at
+						least 1 *.star file in the top or second level
+						directory.  <strong>Only the *.star file will be listed
+						in the data folder.</strong></p>
+					</s:if>
             		<div class="form-group form-buttons">
-	                	<div class="col-md-10 pull-right">
-	                    	<s:submit name="transfer" value="Transfer" cssClass="btn btn-primary"/>
-	                	</div>
+	                	<p class="col-md-10 pull-right">
+	                    	<s:submit name="transfer" value="Transfer"
+								cssClass="btn btn-primary"/>
+	                	</p>
             		</div>
             	</s:if>
         	</s:form>
     	</s:if>
     	<s:else>
-        	<p><strong>No File List</strong></p>
+        	<p><strong>No file listing...</strong></p>
     	</s:else>
 	</div>
 </s:if>
