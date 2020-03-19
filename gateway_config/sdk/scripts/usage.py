@@ -200,7 +200,7 @@ def allUsage():
             ORDER BY (tgusage.SUBMIT_TIME) 
     """ % chargeNumberClause
 
-    print "All usage query:\n%s" % query
+    print("All usage query:\n%s" % query)
     # DictCursor isn't implemented in this version of pymysql
     # cur = conn.cursor(MySQLdb.cursors.DictCursor)
     cur = conn.cursor()
@@ -254,7 +254,7 @@ def suPerUserTotalByEmail(date):
         GROUP BY job_stats.EMAIL, job_stats.RESRC_CONVRTN_ID 
     """ % (newChargeNumberClause, dateClause)
 
-    print "suPerUserTotalByEmail query:\n%s" % query
+    print("suPerUserTotalByEmail query:\n%s" % query)
 
     cur = conn.cursor()
     cur.execute(query)
@@ -315,7 +315,7 @@ def suPerUserTotal(date):
     """ % chargeNumberClause
     query += dateClause + " GROUP BY users.USERNAME, job_stats.EMAIL"
 
-    print "Su per user total query:\n%s" % query
+    print("Su per user total query:\n%s" % query)
 
     cur = conn.cursor()
     cur.execute(query)
@@ -425,7 +425,7 @@ def overLimitWarning():
         GROUP BY job_stats.USER_ID HAVING SUM(tgusage.SU * resource_conversion.CONVERSION) > %d 
     """ % (chargeNumberClause, startOfPeriod, maxSusLevel0)
 
-    print "OverLimitWarning query:\n%s" % query
+    print("OverLimitWarning query:\n%s" % query)
 
     cur = conn.cursor()
     cur.execute(query)
@@ -488,14 +488,14 @@ def overLimitWarning():
             print("Sending warning email to %s, uid=%d, %s, role=%s for level %d" % (row[2], row[0], row[1], row[6], level))
             mailer.overLimitWarning(row[2], row[1], template, hours, application, portal, email);
 
-        except IntegrityError, ie:
+        except IntegrityError as ie:
             conn.rollback()
             # print str(ie)
-            print "%s already issued for %d" % (key, long(row[0]))
-        except Error, e:
+            print("%s already issued for %d" % (key, long(row[0])))
+        except Error as e:
             conn.rollback()
-            print str(e)
-            print "insert row for %d FAILED unexpectedly." % long(row[0])
+            print(str(e))
+            print("insert row for %d FAILED unexpectedly." % long(row[0]))
         cur2.close()
 
     cur.close()
@@ -554,7 +554,7 @@ def main(argv=None):
                 suPerUserTotal( dateRange )
             return 0
         elif opt in ("-h"):
-            print __doc__
+            print(__doc__)
             return 0
         elif opt in ("-c"):
             chargeNumber = arg
@@ -562,7 +562,7 @@ def main(argv=None):
             newChargeNumberClause = " job_stats.charge_number = '%s' and " % chargeNumber
         elif opt in ("-e"):
             useEmail = True
-    print __doc__
+    print(__doc__)
     return 0
 
 if __name__ == "__main__":

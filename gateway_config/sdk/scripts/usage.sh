@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source $HOME/.bashrc
+#source $HOME/.bashrc
 export PATH=/usr/sbin:$PATH:$SDK_VERSIONS
 TODAY=`date +%m-%d-%Y`
 #CIPRES_CHARGE=TG-DEB090011
@@ -8,9 +8,11 @@ CIPRES_CHARGE=csd547
 CIPRES_CHARGE=TG-MCB170058
 #IPLANT_CHARGE=TG-MCB110022
 
-source /users/u2/cosmic2-gw/gatewayVE/bin/activate
+#source /users/u2/cosmic2-gw/gatewayVE/bin/activate
 
-cd ~/tgusage
+cd ${SDK_VERSIONS}
+mkdir tgusage
+cd ${SDK_VERSIONS}/tgusage
 tgusage.sh $1 
 
 usage.py -j  
