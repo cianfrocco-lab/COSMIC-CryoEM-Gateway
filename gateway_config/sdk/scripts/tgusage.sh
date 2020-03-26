@@ -23,7 +23,7 @@ fi
 
 # This gets usage info for all accounts (cosmic2 community account like always, but also individual allocations and iplant)
 ssh -i ${comet.keyFile} cosmic2@comet.sdsc.edu "mkdir tgusage_${HOSTNAME} 2>/dev/null"
-ssh -t -i ${comet.keyFile} cosmic2@comet.sdsc.edu \
+ssh -t -t -i ${comet.keyFile} cosmic2@comet.sdsc.edu \
 	"source ${comet.rc}; cd tgusage_${HOSTNAME}; cipres-tgusage -j --username=cosmic2 --begindate=$BEGIN --enddate=$END > tgusage_report.txt"
 scp -i ${comet.keyFile} cosmic2@comet.sdsc.edu:tgusage_${HOSTNAME}/tgusage_report.txt .
 
