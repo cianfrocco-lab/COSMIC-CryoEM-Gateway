@@ -1,4 +1,4 @@
 #!/bin/sh
-source ${gateway.rc}
+. ${gateway.rc}
 $@
 

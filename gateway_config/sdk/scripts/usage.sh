@@ -11,7 +11,10 @@ CIPRES_CHARGE=TG-MCB170058
 #source /users/u2/cosmic2-gw/gatewayVE/bin/activate
 
 cd ${SDK_VERSIONS}
-mkdir tgusage
+if test ! -d tgusage 
+then
+  mkdir tgusage
+fi
 cd ${SDK_VERSIONS}/tgusage
 tgusage.sh $1 
 
