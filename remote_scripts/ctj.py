@@ -74,7 +74,8 @@ cutoffset_pat = '(?P<uncut>\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)\.\d\d\d(?P<ca>.\d\
 cutoffset_reo = re.compile(cutoffset_pat)
 #FO = os.popen('/usr/local/xdusage-2.1-1/bin/xdusage -j')
 #FO = os.popen('/usr/local/xdusage-2.1-1/bin/xdusage -j -s {}')
-FO = os.popen('/usr/local/xdusage-2.1-1/bin/xdusage -j -u {} -s {} -e {}'.format(username, xdstart, xdend))
+#FO = os.popen('/usr/local/xdusage-2.1-1/bin/xdusage -j -u {} -s {} -e {}'.format(username, xdstart, xdend))
+FO = os.popen('/usr/local/xdusage-2.1-1/bin/xdusage -j -a -s {} -e {}'.format(xdstart, xdend))
 myline = FO.readline()
 while myline != '':
     # check for Project line
