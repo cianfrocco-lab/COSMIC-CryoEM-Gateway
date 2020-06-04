@@ -110,6 +110,17 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
+                toolresource="COMET"
+                configfile="pisexml/particle_picking_ctf_motion.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
                 toolresource="COMET"
                 configfile="pisexml/csparc2star.xml"
