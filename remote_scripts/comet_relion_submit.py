@@ -127,7 +127,7 @@ def prepareMicassess(inputline,jobdir):
 def preparePreprocessingRun(inputline,jobdir):
 
 	#Get information from commandline:
-	#Example: --bfactor 100 --ctf_res_lim 6  --cs 2.7 --do_motion --out_box 0 --tile_frames 5 --apix 1 --diameter 200 --movie_binning 1  --out_apix 0 --kev 300 --i mic_upload_test/micrographs.star 
+	# pipeline --cs 2.7 --apix .66 --kev 300 --i "testing pipeline/micrograph_uploading/micrographs.star"
 
 	#DEBUGGING
 	o1=open('_preprocess.txt','w')
@@ -143,9 +143,18 @@ def preparePreprocessingRun(inputline,jobdir):
                 # eindex is odd, so don't split on whitespace
                 testargs.append(elements[eindex])
         input_starfile = None
+	apix = None
+	cs = None
+	kev = None
         for eindex in range(len(testargs)):
             if testargs[eindex] == '--i':
                 input_starfile = testargs[eindex + 1]
+	    if testargs[eindex] == '--apix':
+		apix=testargs[eindex + 1]
+	    if testargs[eindex] == '--cs':
+                cs=testargs[eindex + 1]
+	    if testargs[eindex] == '--kev':
+                kev=testargs[eindex + 1]
 	if input_starfile == None:
             print "Error, could not parse input starfile in (%s)" % inputline
             log(statusfile, "can't get input starfile, submit_job is returning 1\n")
@@ -165,70 +174,21 @@ def preparePreprocessingRun(inputline,jobdir):
 
 	o1.write('starfilename=%s\n' %(starfilename))
 	o1.write('userdir=%s\n' %(userdir))
-	#Align movies
-	movie_align=False
-	ctf_run=False
-	cryolo_run=False
-	negstain=False
-	if '--do_motion' in inputline: 
-		movie_align=True
-	if '--do_ctf' in inputline: 
-		ctf_run=True
-	if '--do_cryolo' in inputline: 
-		cryolo_run=True
-	if '--negative_stain' in inputline: 
-		negstain=True
-	movie_dose_weighting=False
-	if movie_align is True:
-		if negstain is True:
-			print 'Error: Both motion correction and negative options were chosen. Please fix and resubmit.'
-			sys.exit()
-		if '--dose' in inputline: 
-			movie_dose_weighting=True
-		if movie_dose_weighting is True:
-			movie_dose_per_frame=float(inputline.split()[returnEntryNumber(inputline,'--dose')])
-		if movie_dose_weighting is False:
-			movie_dose_per_frame=1
-		movie_binning=int(inputline.split()[returnEntryNumber(inputline,'--movie_binning')])
-		movie_bfactor=int(inputline.split()[returnEntryNumber(inputline,'--bfactor')])
-		movie_tiles=int(inputline.split()[returnEntryNumber(inputline,'--tile_frames')])
-		angpix=float(inputline.split()[returnEntryNumber(inputline,'--apix')])
-		ctf_kev=int(inputline.split()[returnEntryNumber(inputline,'--kev')])
-		if '--gain_ref' in inputline: 
-			movie_gain_reference=inputline.split()[returnEntryNumber(inputline,'--gain_ref')]
-		
-		#Get relative path from starfile 
-	        ##Read star file header to get particle name
-        	rlno1=open(starfilename,'r')
-	        colnum=-1
-        	for rln_line in rlno1:
-                	if '_rlnMicrographMovieName' in rln_line:
-				if len(rln_line.split()) == 2:
-	                        	colnum=int(rln_line.split()[-1].split('#')[-1])-1
-				if len(rln_line.split()) == 1: 
-					colnum=0
-	        rlno1.close()
-		o1.write('reading rln col=%i' %(colnum))
-
-        	if colnum<0:
-			print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
-		        return 1
         
-	if movie_align is False:
-		rlno1=open(starfilename,'r')
-                colnum=-1
-                for rln_line in rlno1:
-                        if '_rlnMicrographName' in rln_line:
-                                if len(rln_line.split()) == 2:
-                                        colnum=int(rln_line.split()[-1].split('#')[-1])-1
-                                if len(rln_line.split()) == 1:
-                                        colnum=0
-                rlno1.close()
-                o1.write('reading rln col=%i' %(colnum))
+	rlno1=open(starfilename,'r')
+        colnum=-1
+        for rln_line in rlno1:
+        	if '_rlnMicrographName' in rln_line:
+                	if len(rln_line.split()) == 2:
+                        	colnum=int(rln_line.split()[-1].split('#')[-1])-1
+                        if len(rln_line.split()) == 1:
+                                colnum=0
+        rlno1.close()
+        o1.write('reading rln col=%i' %(colnum))
 
-                if colnum<0:
-                        print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
-                        return 1
+        if colnum<0:
+        	print "Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting"
+                return 1
 
 	rlno1=open(starfilename,'r')
 	for rln_line in rlno1:
@@ -261,214 +221,23 @@ def preparePreprocessingRun(inputline,jobdir):
         cmd="ln -s '%s/'* ." %(DirToSymLink)
 	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
 
-	if ctf_run is True:
-		#Get CTF info: 
-		ctf_kev=int(inputline.split()[returnEntryNumber(inputline,'--kev')])
-		ctf_cs=float(inputline.split()[returnEntryNumber(inputline,'--cs')])
-		ctf_reslim=int(inputline.split()[returnEntryNumber(inputline,'--ctf_res_lim')])
-		angpix=float(inputline.split()[returnEntryNumber(inputline,'--apix')])
-		ampcontrast=0.1
-		if negstain is True:
-			ampcontrast=0.25	
-	o1.write('here2\n')
-	if cryolo_run is True: 
-		#Particle stack values	
-		particle_diameter_angstroms=int(inputline.split()[returnEntryNumber(inputline,'--diameter')]) #Angstroms
-		particle_output_angpix=float(inputline.split()[returnEntryNumber(inputline,'--out_apix')]) #angpix
-		if particle_output_angpix == 0: 
-			particle_output_angpix=angpix
-		particle_output_boxsize_unbinned=int(inputline.split()[returnEntryNumber(inputline,'--out_box')]) #pixels, unbinned
-		if particle_output_boxsize_unbinned==0: 
-			particle_output_boxsize_unbinned=round(2*particle_diameter_angstroms/angpix)
-			#Check if even dimensions
-			if particle_output_boxsize_unbinned%2==1: 
-				particle_output_boxsize_unbinned=particle_output_boxsize_unbinned+1
-		particle_output_diam=round(particle_diameter_angstroms/angpix)
-		bg_radius=round(particle_output_diam/2)
-		if particle_output_angpix != 0: 
-			particle_output_boxsize_binned=round(particle_output_boxsize_unbinned/(particle_output_angpix/angpix))
-			if particle_output_boxsize_binned%2==1:
-				particle_output_boxsize_binned=particle_output_boxsize_binned+1
-			bg_radius=round((particle_output_diam/(particle_output_angpix/angpix))/2)
+	#Get email
+	jobproperties_dict = getProperties('_JOBINFO.TXT')
+        mailuser = jobproperties_dict['email']
 
-	#DEBUGGING parameter parsing
-	o1.write('preprocessing info\n')
-	o1.write('movie align=%s\n' %(movie_align))
-	if movie_align is True:
-		if movie_dose_weighting is True: 
-			o1.write('movie_dose_per_frame=%f\n' %(movie_dose_per_frame))
-		o1.write('movie_binning=%i\n' %(movie_binning))
-		o1.write('movie_bfactor=%i\n' %(movie_bfactor))
-		o1.write('movie_tiles=%i\n' %(movie_tiles))
-		if '--gain_ref' in inputline:
-			o1.write('gain_ref=%s\n' %(movie_gain_reference))
-	if ctf_run is True:
-		o1.write('ctf_kev=%i\n' %(ctf_kev))
-		o1.write('ctf_cs=%f\n' %(ctf_cs))
-		o1.write('ctf_reslim=%i\n' %(ctf_reslim))
-		o1.write('angpix=%f\n' %(angpix))
-	if cryolo_run is True:
-		o1.write('particle_diameter_angstroms=%i\n' %(particle_diameter_angstroms))
-		o1.write('particle_output_angpix=%f\n' %(particle_output_angpix))
-		o1.write('particle_output_boxsize=%i\n' %(particle_output_boxsize_unbinned))
-		o1.write('\n\nFinished\n')
-
-	#Movie align command generation
-	movie_align_cmd=''
-	if movie_align is True: 
-		#Define output directory
-		if not os.path.exists('MotionCorr_cosmic'): 
-			os.makedirs('MotionCorr_cosmic')
-		counter=1
-		while counter<1000:
-			if not os.path.exists('MotionCorr_cosmic/job%03i' %(counter)): 
-				movie_outdir='MotionCorr_cosmic/job%03i' %(counter)
-				os.makedirs('MotionCorr_cosmic/job%03i' %(counter))
-				counter=10001
-			counter=counter+1
-		movie_align_cmd='relion_run_motioncorr_mpi --i %s --o %s --first_frame_sum 1 --last_frame_sum -1 --use_own  --j 1 --bin_factor %i --bfactor %i --angpix %f --voltage %i --dose_per_frame %i --preexposure 0 --patch_x %i --patch_y %i --gain_rot 0 --gain_flip 0' %(newstarname,movie_outdir,movie_binning,movie_bfactor,angpix,ctf_kev,movie_dose_per_frame,movie_tiles,movie_tiles)
-
-		#Add other options here: gain reference, dose weighting
-		if '--gain_ref' in inputline:
-			movie_align_cmd=movie_align_cmd+' --gainref %s' %(movie_gain_reference)
-		if movie_dose_weighting is True: 
-			movie_align_cmd=movie_align_cmd+' --dose_weighting  --save_noDW'
-		
-		o1.write('movie_align_cmd:\n')
-		o1.write('%s\n' %(movie_align_cmd))
-
-	#Generate CTF command
-	if movie_align is True:
-		input_mic_file='%s/corrected_micrographs.star' %(movie_outdir)
-	if movie_align is False: 
-		input_mic_file=input_starfile.split('/')
-		del input_mic_file[0]
-		input_mic_file='/'.join(input_mic_file)
-		input_mic_file=newstarname
-		o1.write('%s\n' %(input_mic_file))
-		input_starfile=input_mic_file
-		input_starfile=newstarname
-	o1.write('here3')
-	ctf_cmd=''
-	ctf_sel_cmd=''
-	if ctf_run is True:
-		if not os.path.exists('CtfFind_cosmic'):
-		        os.makedirs('CtfFind_cosmic')
-	        counter=1
-        	while counter<1000:
-        		if not os.path.exists('CtfFind_cosmic/job%03i' %(counter)):
-	                	ctf_outdir='CtfFind_cosmic/job%03i' %(counter)
-        	                os.makedirs('CtfFind_cosmic/job%03i' %(counter))
-                	        counter=10001
-	                counter=counter+1
-		ctf_cmd='relion_run_ctffind_mpi --i %s --o %s --CS %f --HT %i --AmpCnst %f --XMAG 10000 --DStep %f --Box 512 --ResMin 30 --ResMax 5 --dFMin 5000 --dFMax 50000 --FStep 500 --dAst 100 --ctffind_exe /home/cosmic2/software_dependencies/ctffind-4.1.13/ctffind --ctfWin -1 --is_ctffind4 --fast_search' %(input_mic_file,ctf_outdir,ctf_cs,ctf_kev,ampcontrast,angpix)
-
-		if movie_dose_weighting is True: 	
-			ctf_cmd=ctf_cmd+'   --use_noDW '
-
-		o1.write('\n\nctf_cmd:\n')
-		o1.write('%s\n' %(ctf_cmd))
-
-		ctf_out_starfile='%s/micrographs_ctf.star' %(ctf_outdir)
-
-		#Command to select bad mics
-        	ctf_sel_cmd='relion_star_handler --i %s --o %s_sel.star --select rlnCtfMaxResolution --maxval %i' %(ctf_out_starfile,ctf_out_starfile[:-5],ctf_reslim)
-
-	picking_cmd=''
-	extraction_cmd=''
-	mics_for_picking_symlink=''
-	cryolo_cp_cmd=''
-	o1.write('here5\n')
-	if cryolo_run is True:
-		if ctf_run is False: 
-			ctf_out_starfile=input_starfile
-		if not os.path.exists('crYOLO_cosmic'):
-        	        os.makedirs('crYOLO_cosmic')
-	        counter=1
-        	while counter<1000:
-                	if not os.path.exists('crYOLO_cosmic/job%03i' %(counter)):
-                        	picking_outdir='crYOLO_cosmic/job%03i' %(counter)
-	                        os.makedirs('crYOLO_cosmic/job%03i' %(counter))
-        	                counter=10001
-                	counter=counter+1
-
-		if movie_align is True: 
-			mics_for_picking_symlink='GLOBIGNORE="*noDW.mrc" && ln -s %s/%s/*/*.mrc %s/%s/ && unset GLOBIGNORE &&' %(jobdir,movie_outdir,jobdir,picking_outdir)
-
-		if movie_align is False: 
-			#Get mic name from starfile
-			o1.write('here8\n')
-			'''
-			for line in open(starfilename,'r'): 
-				if len(line)<40: 
-					continue
-				o1.write('%s\n' %(line))
-				l=line.split('/')
-				del l[-1]
-				mic_dir='\t'.join(l)
-			mics_for_picking_symlink='ln -s %s/%s/%s/*.mrc %s/' %(userdir,foldername,mic_dir,picking_outdir)
-			'''
-			mics_to_symlink=starfilename.split('/')
-			del mics_to_symlink[-1]
-			mics_to_symlink='/'.join(mics_to_symlink)
-			mics_for_picking_symlink='ln -s %s/*.mrc %s/' %(mics_to_symlink,picking_outdir)
-				
-		#Write out config.json file: 
-		config_open=open('/home/cosmic2/software_dependencies/crYOLO/config.json','r')
-        	new_config=open('config.json','w')
-	        for line in config_open:
-        		if 'anchors' in line:
-                		line=line.replace('xx','%.f' %(particle_diameter_angstroms/angpix))
-	                if negstain is True:
-				if '1,' in line:
-                        		line=line.replace('1,','1')
-			if 'filter' in line: 
-				if negstain is True:
-					continue
-			new_config.write(line)
-        	new_config.close()
-	        config_open.close()
-		o1.write('here7\n')		
-		picking_cmd='/opt/miniconda3/envs/cryolo/bin/cryolo_predict.py -c config.json -w /home/cosmic2/software_dependencies/crYOLO/gmodel_phosnet_20190218_loss0042.h5 -i %s/ -o %s/ -t 0.2' %(picking_outdir,picking_outdir)
-
-		o1.write('crYOLO:\n')
-		o1.write('%s\n' %(picking_cmd))
-
-		#Extract particles
-		if not os.path.exists('Extract_cosmic'):
-        	        os.makedirs('Extract_cosmic')
-	        counter=1
-        	while counter<1000:
-                	if not os.path.exists('Extract_cosmic/job%03i' %(counter)):
-                        	extract_outdir='Extract_cosmic/job%03i' %(counter)
-	                        os.makedirs('Extract_cosmic/job%03i' %(counter))
-        	                counter=10001
-                	counter=counter+1
-	
-		#Copy STAR coordinates into correctly named subdirectory
-		just_dir=newstarname.split('/')
-		del just_dir[-1]
-		just_dir='/'.join(just_dir)
-		copy_star_into='%s/%s/' %(picking_outdir,just_dir)
-		o1.write('copy_star_info=%s' %(copy_star_into))
-		os.makedirs(copy_star_into)
-
-		cryolo_cp_cmd='cp %s/STAR/*.star %s' %(picking_outdir,copy_star_into)
-		o1.write('\n%s\n' %(cryolo_cp_cmd))
-		extraction_cmd='relion_preprocess_mpi --i %s/micrographs_ctf_sel.star --coord_dir %s/ --coord_suffix .star --part_star %s/particles.star --part_dir %s --extract --extract_size %i --norm --white_dust 5 --black_dust 5 --invert_contrast' %(ctf_outdir,picking_outdir,extract_outdir,extract_outdir,particle_output_boxsize_unbinned)
-
-		if particle_output_angpix != 0:
-			extraction_cmd=extraction_cmd+' --scale %i --bg_radius %i' %(particle_output_boxsize_binned,bg_radius)
-		if particle_output_angpix == 0: 
-			extraction_cmd=extraction_cmd+' --bg_radius %i' %(bg_radius)
-	
-	class2d_cmd=''
-	#if '--do_2D' in inputline: 
-	#	#Prepare 2D classification
-
-	o1.close()
-
-	return movie_align_cmd,ctf_cmd,ctf_sel_cmd,picking_cmd,extraction_cmd,mics_for_picking_symlink,class2d_cmd,cryolo_cp_cmd,DirToSymLink
+	#Format pipeline.sh script
+	with open(os.path.join('/home/yilaili/codes/Automatic-preprocessing-COSMIC2/', 'pipeline.sh'), 'r') as f:
+	        with open(os.path.join(pwd, 'pipeline.sh'), 'w') as new_f:
+        	    for line in f:
+                	new_line = line.replace('$$input_dir', starfiledirname)\
+	                .replace('$$input_star', starfilename.split('/')[-1])\
+        	        .replace('$$user_email', mailuser)\
+                	.replace('$$CS', cs)\
+	                .replace('$$HT', kev)\
+        	        .replace('$$apix', apix)\
+                	.replace('$$final_apix', apix)
+	                new_f.write(new_line)
+	return DirToSymLink
 
 
 def prepareRelionRun(args):
@@ -548,7 +317,7 @@ def prepareRelionRun(args):
 
 	rlno1=open(starfilename,'r')
         for rln_line in rlno1:
-                if len(rln_line) >= 40:
+                if len(rln_line.split()) >= 10:
                         starfiledirname=rln_line.split()[colnum].split('@')[-1].split('/')
                         del starfiledirname[-1]
                         del starfiledirname[-1]
@@ -622,22 +391,34 @@ def prepareRelionRun(args):
 
 	if '--ref' not in inputline:
 		if '--denovo_3dref' not in inputline: 
-			if not os.path.exists('Class2D_cosmic'):
-	                	os.makedirs('Class2D_cosmic')
-        		counter=1
-			while counter<=500: 
-				if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
-			        	os.makedirs('Class2D_cosmic/job%03i' %(counter))
-		                	outdir='Class2D_cosmic/job%03i' %(counter)
-					counter=10000
-				counter=counter+1
-			#Get num iters: 
-                	varcounter=0
-                	for variable in inputline.split():
-	                	if variable == '--iter':
-         	               		iter_position=varcounter
-                        	varcounter=varcounter+1
-                	numiters=inputline.split()[iter_position+1]
+			if '--reconstruct_subtracted_bodies' in inputline: 
+				if not os.path.exists('Multibody_cosmic'):
+                                        os.makedirs('Multibody_cosmic')
+                                counter=1
+                                while counter<=500:
+                                        if not os.path.exists('Multibody_cosmic/job%03i' %(counter)):
+                                                os.makedirs('Multibody_cosmic/job%03i' %(counter))
+                                                outdir='Multibody_cosmic/job%03i' %(counter)
+                                                counter=10000
+                                        counter=counter+1
+	
+			if '--reconstruct_subtracted_bodies' not in inputline:
+				if not os.path.exists('Class2D_cosmic'):
+		                	os.makedirs('Class2D_cosmic')
+        			counter=1
+				while counter<=500: 
+					if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
+			        		os.makedirs('Class2D_cosmic/job%03i' %(counter))
+			                	outdir='Class2D_cosmic/job%03i' %(counter)
+						counter=10000
+					counter=counter+1
+				#Get num iters: 
+	                	varcounter=0
+        	        	for variable in inputline.split():
+	        	        	if variable == '--iter':
+         	        	       		iter_position=varcounter
+                        		varcounter=varcounter+1
+	                	numiters=inputline.split()[iter_position+1]
 		if '--denovo_3dref' in inputline: 
 			if not os.path.exists('InitialModel_cosmic'):
                                 os.makedirs('InitialModel_cosmic')
@@ -718,31 +499,89 @@ def prepareRelionRun(args):
 	outwrite.close()
 
 	#Replace zipfile name in relion command 
-	if '"' not in inputline:
+	if '--reconstruct_subtracted_bodies' not in inputline:
+		if '"' not in inputline:
+			inputline_list=inputline.split()
+			#tmplog.write('1:'+inputline_list+'\n')
+        		tmplog.write("inputline_list (%s)\n" % (inputline_list,))
+			tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--i')]))
+			inputline_list[returnEntryNumber(inputline,'--i')]=newstarname
+			inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
+			tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
+			if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map': 
+				inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'
+
+			#Join list into single string
+		        relion_command=' '.join(inputline_list)	
+			tmplog.write(relion_command)	
+
+		if '"' in inputline: 
+			inputline_list=inputline.split('"')[0].split()
+			tmplog.write("inputline_list (%s)\n" % (inputline_list,))
+	                inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
+        	        tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
+                	if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map':
+                        	inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'	
+			relion_command=' '.join(inputline_list)+'  %s' %(newstarname)
+			tmplog.write(relion_command)	
+	if '--reconstruct_subtracted_bodies' in inputline:
 		inputline_list=inputline.split()
-		#tmplog.write('1:'+inputline_list+'\n')
-        	tmplog.write("inputline_list (%s)\n" % (inputline_list,))
-		tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--i')]))
-		inputline_list[returnEntryNumber(inputline,'--i')]=newstarname
+                tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--i')]))
+                masksfile=inputline_list[returnEntryNumber(inputline,'--multibody_masks')]
+		with zipfile.ZipFile(masksfile) as zip_ref:
+			zip_ref.extractall()
+		masksfile='%s/multibody-masks.star' %(masksfile.split('/')[0][:-4])
 		inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
-		tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
-		if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map': 
-			inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'
+		inputline_list[returnEntryNumber(inputline,'--i')]=''
+		inputline_list[returnEntryNumber(inputline,'--multibody_masks')]=masksfile
+		relion_command=' '.join(inputline_list)
+                tmplog.write(relion_command)
+		numiters=-1
 
-		#Join list into single string
-	        relion_command=' '.join(inputline_list)	
-		tmplog.write(relion_command)	
+		#Handle data.star file
+		datastar=inputline_list[returnEntryNumber(inputline,'--datastar')]
+		optimiser=inputline_list[returnEntryNumber(inputline,'--continue')]
+		samplingstar=inputline_list[returnEntryNumber(inputline,'--samplingstar')]
+		model1star=inputline_list[returnEntryNumber(inputline,'--model1star')]
+		model2star=inputline_list[returnEntryNumber(inputline,'--model2star')]
+		model1mrc=inputline_list[returnEntryNumber(inputline,'--model1mrc')]
+		model2mrc=inputline_list[returnEntryNumber(inputline,'--model2mrc')]
+		newoutdir=''
+		r1=open(optimiser,'r')
+		for line in r1: 
+			if datastar.split('/')[-1] in line: 
+				newoutdir=line.split()[-1]
 
-	if '"' in inputline: 
-		inputline_list=inputline.split('"')[0].split()
-		tmplog.write("inputline_list (%s)\n" % (inputline_list,))
-                inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
-                tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
-                if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map':
-                        inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'	
-		relion_command=' '.join(inputline_list)+'  %s' %(newstarname)
-		tmplog.write(relion_command)	
+		#Create output directory
+		tmplog.write(newoutdir)
+		numdirs=len(newoutdir.split('/'))
+		numdirs=len(newoutdir.split('/'))
+		counter=0
+		runningdir=''
+		while counter < numdirs-1: 
+			if counter == 0: 
+				os.makedirs(newoutdir.split('/')[counter])
+		        	runningdir=newoutdir.split('/')[counter]
+			if counter>0: 
+				os.makedirs('%s/%s' %(runningdir,newoutdir.split('/')[counter]))
+				runningdir='%s/%s' %(runningdir,newoutdir.split('/')[counter])
+			counter=counter+1
 
+		#Copy files into running dir	
+		newoutdir=newoutdir.split('/')
+		del newoutdir[-1]
+		newoutdir='/'.join(newoutdir)
+		tmplog.write('\n'+datastar.split('/')[-1])
+		tmplog.write('\n%s/%s' %(newoutdir,datastar.split('/')[-1][:-5])) 
+		shutil.copyfile(datastar.split('/')[-1],'%s/%s.star' %(newoutdir,datastar.split('/')[-1][:-5]))
+		shutil.copyfile(samplingstar.split('/')[-1],'%s/%s.star' %(newoutdir,samplingstar.split('/')[-1][:-5]))
+		shutil.copyfile(model1star.split('/')[-1],'%s/%s.star' %(newoutdir,model1star.split('/')[-1][:-5]))
+		shutil.copyfile(model2star.split('/')[-1],'%s/%s.star' %(newoutdir,model2star.split('/')[-1][:-5]))
+		shutil.copyfile(model2mrc,'%s/%s' %(newoutdir,model2mrc))
+		shutil.copyfile(model1mrc,'%s/%s' %(newoutdir,model1mrc))
+		mpi_to_use=3 
+		nodes=1
+		gpuextra2='--gpu 0,1:2,3'
 	return relion_command,outdir,DirToSymLink,runtime,nodes,numiters,inputZipFile.split('/')[0],partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname #print 'cmd="%s"' %(relion_command)
 
 def returnEntryNumber(inputlist,queryString):
@@ -1186,7 +1025,7 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 5 %s >>stdout.txt 2>>stderr.txt
+mpirun -np %i %s --j 5 %s --scratch_dir /scratch/$USER/$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
 %s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
@@ -1217,11 +1056,12 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 
 if jobtype == 'pipeline':
         #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
-	movie_align_cmd,ctf_cmd,ctf_sel_cmd,picking_cmd,extraction_cmd,mics_for_picking_symlink,class2d_cmd,cryolo_cp_cmd,DirToSymLink=preparePreprocessingRun(args['commandline'],jobdir)
-
+	DirToSymLink=preparePreprocessingRun(args['commandline'],jobdir)
+	out_destination=DirToSymLink
+	outdir='AutoPipeline'
 	#General parameters
-        totcores=24
-	runminutes = math.ceil(600)
+        totcores=1
+	runminutes = math.ceil(2880)
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         o1=open('_JOBINFO.TXT','a')
@@ -1231,7 +1071,7 @@ if jobtype == 'pipeline':
         jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
         mailuser = jobproperties_dict['email']
         jobname = jobproperties_dict['JobHandle']
-        partition='compute'
+        partition='shared'
 	for line in open('_JOBINFO.TXT','r'):
        		if 'User\ Name=' in line:
 			username=line.split('=')[-1].strip()
@@ -1243,43 +1083,7 @@ if jobtype == 'pipeline':
 
 	#Create command
 	runcmd=''
-	transfercmd=''
-	if len(movie_align_cmd)>0:
-		runcmd=runcmd+'mpirun -np %i %s >> stdout.txt 2>> stderr.txt\n' %(totcores,movie_align_cmd)
-	
-		for entry in movie_align_cmd.split():
-                        if 'MotionCorr_cosmic' in entry:
-                                job=entry.split('/')[1]
-		motiondirname='MotionCorr_cosmic/%s' %(job)		
-		transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,motiondirname,movie_align_cmd)
-
-	if len(ctf_cmd) >0: 
-		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,ctf_cmd)
-		runcmd=runcmd+'%s\n' %(ctf_sel_cmd)
-		for entry in ctf_cmd.split():
-        	        if 'CtfFind_cosmic' in entry:
-                	        job=entry.split('/')[1]
-	        ctfdirname='CtfFind_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,ctfdirname,ctf_cmd)
-
-	if len(picking_cmd)>0:
-		runcmd=runcmd+'%s\n' %(mics_for_picking_symlink)
-		runcmd=runcmd+'singularity exec /home/cosmic2/software_dependencies/crYOLO/sdsc-comet-ubuntu-cryolo-cpu.simg %s >>stdout.txt 2>>stderr.txt\n' %(picking_cmd) 
-		runcmd=runcmd+'%s\n'  %(cryolo_cp_cmd)
-        	for entry in picking_cmd.split():
-                	if 'crYOLO_cosmic' in entry:
-                        	job=entry.split('/')[1]
-        	pickdirname='crYOLO_cosmic/%s' %(job)
-        	transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,pickdirname,picking_cmd)
-
-	if len(extraction_cmd)>0:
-		runcmd=runcmd+'mpirun -np %i %s >>stdout.txt 2>>stderr.txt\n' %(totcores,extraction_cmd)
-		for entry in extraction_cmd.split():
-                	if 'Extract_cosmic' in entry:
-                        	job=entry.split('/')[1]
-        	extractdirname='Extract_cosmic/%s' %(job)
-	        transfercmd=transfercmd+"%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' empty\n" %(REMOTESCRIPTSDIR,username,DirToSymLink,extractdirname,extraction_cmd)
-
+	runcmd=runcmd+'bash pipeline.sh >> stdout.txt 2>> stderr.txt\n' 
 	text = """#!/bin/sh
 #SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
 #SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
@@ -1294,26 +1098,20 @@ if jobtype == 'pipeline':
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
-#SBATCH --ntasks-per-node=24             # Total number of mpi tasks requested
+#SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
 #SBATCH --no-requeue
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 module purge
-module load gnutools
-module load intel/2015.6.233
-module load intelmpi/2015.6.233
-module load relion/3.0_beta_cpu
-module load singularity
-date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 %s
-%s
+%s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 echo 'Job finished && date' >> job_status.txt
-"""%(partition,jobname, runtime, mailuser, args['account'],jobdir,runcmd,transfercmd)
+"""%(partition,jobname, runtime, mailuser, args['account'],jobdir,runcmd,REMOTESCRIPTSDIR,username,out_destination,outdir,runcmd,'pipeline')
 	runfile = "./batch_command.run"
 	statusfile = "./batch_command.status"
 	cmdfile = "./batch_command.cmdline"
