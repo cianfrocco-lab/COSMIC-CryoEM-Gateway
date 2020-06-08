@@ -99,7 +99,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
+			<!--<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
                 toolresource="COMET"
                 configfile="pisexml/auto_micassess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -113,6 +113,17 @@
 			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
                 toolresource="COMET"
                 configfile="pisexml/particle_picking_ctf_motion.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>--!>
+			<Tool id="RELION_MULTIBODY_COMET" name="Relion Multibody refinement"
+                toolresource="comet-gpu"
+            	configfile="pisexml/relion_multibody_comet.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
