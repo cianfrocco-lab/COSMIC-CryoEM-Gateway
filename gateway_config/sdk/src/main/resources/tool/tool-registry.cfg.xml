@@ -99,7 +99,8 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
+			<!--
+			     <Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
                 toolresource="COMET"
                 configfile="pisexml/auto_micassess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -120,7 +121,8 @@
                 </InputParameters>
                 <OutputParameters>
                 </OutputParameters>
-            </Tool>--!>
+            </Tool>
+			-->
 			<Tool id="RELION_MULTIBODY_COMET" name="Relion Multibody refinement"
                 toolresource="comet-gpu"
             	configfile="pisexml/relion_multibody_comet.xml"
