@@ -1,0 +1,377 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>Relion 3D Multibody refinement</title>
+    <version>3.1</version>
+    <description>Iteratively refine masked regions separately within a structure Relion</description>
+    <authors>S. H. W. Scheres</authors>
+<!--
+    <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
+ -->
+	<reference>http://www.sciencedirect.com/science/article/pii/S104784771200248
+1</reference>
+    <category>RELION</category>
+    <doclink>http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Main_Page</doclink>
+  </head>
+
+  <command>relion_multibody_comet</command>
+<!-- 
+Per our conversation earlier today, I’m sending along a comet submission script for the analysis routine that will be a part of the gateway. 
+
+First, you can look at an example submission script that I typically have used (‘relion_refine_submission.txt’). The cluster input variables are standard, 
+and then there is a single command that will run using MPI. 
+
+The barebones version of the command line input is the following (‘relion_refine_submission_base.txt’). I’ve bolded and underlined the areas that users 
+will have to input: 
+
+ibrun -v relion_refine_mpi  —o /path/to/working/directory/[output] -*auto_refine -*split_random_halves —i /path/to/working/directory/[input file] 
+-*particle_diameter [user provided] —angpix [user provided] —ref /path/to/working/directory/[user provided] -*ini_high [user provided] -*ctf 
+-*flatten_solvent -*zero_mask -*oversampling 1 -*healpix_order 2 -*auto_local_healpix_order 4 -*offset_range [user provided] -*offset_step [user provided] 
+—sym [user provided] -*low_resol_join_halves 40 -*norm -*scale  -*j 1 -*memory_per_thread 4
+
+A list of variables that I would change for these test run (or at least an initial list of variables):
+—o Output file basename
+—i Input file
+—particle_diameter Diameter of particle (Angstroms)
+—angpix Pixel size of data (A/pix)
+—ref 3D model to use as template 
+—ini_high Initial filter for 3D volume
+—offset_range Pixel search range 
+—offset_step Pixel search range step size
+—sym Symmetry of sample 
+I’m not sure what the next steps are for building out this command, but this is a definite start. There will be a few added changes to the submission command based upon users data, which we will incorporate into the gateway job template page.
+
+Let me know what else I can do to help!
+Mike -->
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"relion_refine_mpi"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+                 "gpu=4\\n" .
+                 "runhours=12\\n" .
+                 "ChargeFactor=1.0\\n" .
+				 "ntasks-per-node=15\\n" .
+				 "node_exclusive=1\\n" .
+				 "nodes=10\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<format>
+				<language>perl</language>
+                <code>"--dont_combine_weights_via_disc --pool 100 --pad 2 --oversampling 1 --solvent_correct_fsc --reconstruct_subtracted_bodies "</code>  
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+      <name>infile</name>
+      <attributes>
+        <prompt>Images File</prompt>
+        <format>
+          <language>perl</language>
+          <code>"--i \"$value\""</code>
+        </format>
+        <group>90</group>
+      </attributes>
+    </parameter>
+
+<!-- Files to transfer back -->
+	<parameter type="Results">
+	  <name>stderr.txt</name>
+	  <attributes>
+	    <filenames>stderr</filenames>
+	  </attributes>
+	</parameter>
+    
+<!-- visible input parameters -->	
+
+    <parameter type="InFile" issimple="1" ismandatory="1">
+	    <name>optimiser</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Consensus refinement optimiser.star (e.g. run_it019_optimiser.star)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--continue $value"</code>
+		    </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an optimiser.star file</message>
+                    <language>perl</language>
+                    <code>!$optimiser</code>
+                </ctrl>
+            </ctrls>
+	    </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>data</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Data STAR file associated with optimiser.star (e.g. run_it019_data.star)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--datastar $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an data.star file</message>
+                    <language>perl</language>
+                    <code>!$data</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>model1mrc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MRC file for half 1 associated with optimiser.star (e.g. run_it019_half1_class001.mrc)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--model1mrc $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an MRC file</message>
+                    <language>perl</language>
+                    <code>!$model1mrc</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>model1</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Model STAR file for half 1 associated with optimiser.star (e.g. run_it019_half1_model.star)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--model1star $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an model.star file</message>
+                    <language>perl</language>
+                    <code>!$model1</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>model2mrc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>MRC file for half 2 associated with optimiser.star (e.g. run_it019_half2_class001.mrc)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--model2mrc $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an MRC file</message>
+                    <language>perl</language>
+                    <code>!$model2mrc</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>model2</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Model STAR file for half 2 associated with optimiser.star (e.g. run_it019_half2_model.star)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--model2star $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an model.star file</message>
+                    <language>perl</language>
+                    <code>!$model2</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>sampling</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Sampling STAR file associated with optimiser.star (e.g. run_it019_sampling.star)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--samplingstar $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please choose an sampling.star file</message>
+                    <language>perl</language>
+                    <code>!$sampling</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>	
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>bodies</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Body .zip file containing all masks in .mrc format</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--multibody_masks $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please select a .zip file  optimiser.star file</message>
+                    <language>perl</language>
+                    <code>!$bodies</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <!-- Advanced parameters -->
+
+    <!-- DISABLE output directory parameter; due to XML syntax, had to add
+         a blank between "- -" so if you are going to re-enable this
+         parameter, be sure to remove the blank!
+    <parameter type="String" ismandatory="1">
+	    <name>o</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Output directory name (o)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"- -o $value"</code>
+		    </format>
+		    <comment>
+			    <value>Name of output directory.</value>
+		    </comment>
+            <vdef>
+                <value>output</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a string for the output directory name</message>
+                    <language>perl</language>
+                    <code>!$o</code>
+                </ctrl>
+            </ctrls>
+	    </attributes>
+    </parameter>
+    -->
+
+    <parameter type="Excl" issimple="1" ismandatory="1">
+	    <name>healpix_order</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Initial angular sampling, in degrees (healpix_order)</prompt>
+            <vdef>
+                <value>4</value>
+            </vdef>
+            <vlist>
+                <value>0</value>
+                <label>30</label>
+                <value>1</value>
+                <label>15</label>
+                <value>2</value>
+                <label>7.5</label>
+                <value>3</value>
+                <label>3.7</label>
+                <value>4</value>
+                <label>1.8</label>
+                <value>5</value>
+                <label>0.9</label>
+                <value>6</value>
+                <label>0.5</label>
+                <value>7</value>
+                <label>0.2</label>
+                <value>8</value>
+                <label>0.1</label>
+            </vlist>
+		    <format>
+			    <language>perl</language>
+			    <code>"--healpix_order $value"</code>
+		    </format>
+	    </attributes>
+    </parameter>
+
+    <parameter type="Integer" issimple="1" ismandatory="1">
+	    <name>offset_range</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Initial offset range, in pixels (offset_range)</prompt>
+		    <vdef>
+			    <value>3</value>
+		    </vdef>
+		    <format>
+			    <language>perl</language>
+			    <code>"--offset_range $value"</code>
+		    </format>
+		    <ctrls>
+			    <ctrl>
+                    <message>Please enter an integer > 0 for pixel search range (in pixels)</message>
+				    <language>perl</language>
+				    <code>$offset_range &lt; 1</code>
+			    </ctrl>
+		    </ctrls>
+	    </attributes>
+    </parameter>
+
+    <parameter type="Float" issimple="1" ismandatory="1">
+	    <name>offset_step</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Initial offset step, in pixels (offset_step)</prompt>
+            <vdef>
+                <value>0.75</value>
+            </vdef>
+		    <format>
+			    <language>perl</language>
+			    <code>"--offset_step " . 2 * $value</code>
+		    </format>
+	    </attributes>
+    </parameter>
+
+</parameters>
+
+</pise>
