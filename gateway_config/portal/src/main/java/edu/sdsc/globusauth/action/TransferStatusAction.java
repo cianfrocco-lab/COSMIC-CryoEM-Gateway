@@ -64,6 +64,9 @@ public class TransferStatusAction extends NgbwSupport {
         List<String> trlist = profileManager.loadRecord(user_id);
         //logger.debug ( "MONA: trlist = " + trlist );
         if (trlist != null && trlist.size() > 0) {
+            String dest_name = ( String ) getSession().get
+                    ( OauthConstants.DEST_ENDPOINT_NAME );
+            //logger.debug ( "MONA: dest_name = " + dest_name );
             String dest_path = ( String ) getSession().get
                     ( OauthConstants.DEST_ENDPOINT_PATH );
             //logger.debug ( "MONA: dest_path = " + dest_path );
@@ -73,8 +76,13 @@ public class TransferStatusAction extends NgbwSupport {
             for (String taskid: trlist) {
                 //logger.debug ( "MONA: taskid = " + taskid );
                 tr = txaction.updateTask(taskid, client);
+                //logger.debug ( "MONA: tr = " + tr );
+                /*
                 transfer_manager = profileManager.updateRecord
                     ( tr, dest_path );
+                */
+                transfer_manager =
+                    profileManager.updateRecord ( tr, dest_path, dest_name );
 
                 // First, display the user errors
                 list = transfer_manager.getUserSystemErrorMessages();
@@ -110,6 +118,8 @@ public class TransferStatusAction extends NgbwSupport {
             }
         }
 
+        //logger.debug ( "MONA: taskId = " + taskId );
+
         // If getting status for a single transfer...
         if (taskId != null && !taskId.isEmpty()) {
             String resource = "/task/" + taskId;
@@ -119,6 +129,7 @@ public class TransferStatusAction extends NgbwSupport {
                     +"sync_level,files,directories,files_skipped,bytes_transferred";
             params.put("fields", fields);
             r = client.getResult(resource, params);
+            //logger.debug ( "MONA: r = " + r );
             taskmap = new HashMap<String, Object>();
             taskmap.put("task_id", taskId);
             taskmap.put("source_endpoint_display_name", r.document.getString("source_endpoint_display_name"));

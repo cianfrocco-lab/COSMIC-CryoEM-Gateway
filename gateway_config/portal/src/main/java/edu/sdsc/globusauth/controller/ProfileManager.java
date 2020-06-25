@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,10 +20,14 @@ import org.apache.commons.logging.LogFactory;
 import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.database.OauthProfile;
 import org.ngbw.sdk.database.TransferRecord;
+import org.ngbw.web.actions.NgbwSupport;
+
+import edu.sdsc.globusauth.util.OauthConstants;
+import edu.sdsc.globusauth.util.OauthUtils;
 
 
-public class ProfileManager {
-
+public class ProfileManager extends NgbwSupport
+{
     private static final Log log = LogFactory.getLog ( ProfileManager.class );
 
     public void addProfile(OauthProfile profile) throws IOException, SQLException
@@ -93,13 +98,13 @@ public class ProfileManager {
      *      If this NOT the case, DO NOT use this function!
      **/
     public Transfer2DataManager updateRecord
-        ( TransferRecord tr, String destination_path )
+        ( TransferRecord tr, String destination_path, String destination_name )
     {
-        //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
+        log.debug ( "MONA: entered ProfileManager.updateRecord()" );
         //log.debug ( "MONA: tr = " + tr );
-        //log.debug ( "MONA: destination_path = " + destination_path );
+        log.debug ( "MONA: destination_path = " + destination_path );
+        log.debug ( "MONA: destination_name = " + destination_name );
         //log.debug ( "MONA: tr.getSrcEndpointname = " + tr.getSrcEndpointname() );
-        //log.debug ( "MONA: tr.getDestEndpointname = " + tr.getDestEndpointname() );
         //log.debug ( "MONA: tr.getTaskId = " + tr.getTaskId() );
         //log.debug ( "MONA: tr.getStatus = " + tr.getStatus() );
 
@@ -108,14 +113,18 @@ public class ProfileManager {
                 destination_path.trim().equals ( "" ) )
             return ( null );
 
-        String status = tr.getStatus();
-        //log.debug ( "MONA: status = " + status );
-        Transfer2DataManager tdm = new Transfer2DataManager();
-
+        Properties config =
+            OauthUtils.getConfig ( OauthConstants.OAUTH_PORPS );
+        String gateway_endpoint_name =
+            config.getProperty ( OauthConstants.DATASET_ENDPOINT_NAME );
+        log.debug ( "MONA: gateway_endpoint_name = " + gateway_endpoint_name );
         String globusRoot =
             Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
-        //log.debug ( "MONA: globusRoot = " + globusRoot );
+        log.debug ( "MONA: globusRoot = " + globusRoot );
+        String status = tr.getStatus();
+        log.debug ( "MONA: status = " + status );
+        Transfer2DataManager tdm = new Transfer2DataManager();
 
         if ( globusRoot == null )
         {
@@ -130,9 +139,12 @@ public class ProfileManager {
         // If the transfer is to the COSMIC2 gateway, then we will create
         // the appropriate user data dir item; otherwise, the transfer is
         // from the COSMIC2 gateway so no need to create a user data dir item
-        if ( destination_path.startsWith ( globusRoot ) )
+        //if ( destination_path.startsWith ( globusRoot ) )
+        if ( destination_name.equals ( gateway_endpoint_name ) )
         {
-            //log.debug ( "MONA: transferring TO gateway" );
+            destination_path = globusRoot + destination_path;
+            log.debug ( "MONA: new destination_path = " + destination_path );
+            log.debug ( "MONA: transferring TO gateway" );
             TransferRecord old_tr = null;
 
             // First get the old transfer record...
@@ -182,12 +194,12 @@ public class ProfileManager {
                         status = "FAILED";
                 }
             } // if ( old_tr != null && old_tr.getTaskId() != null )
-        } // if (destination_path.startsWith(globusRoot))
+        } // if ( destination_name.equals ( gateway_endpoint_name ) )
 
         // log.info("Update record (taskid): "+tr.getTaskId());
         try
         {
-            //log.debug ( "MONA: updating transfer record status = " + status );
+            log.debug ( "MONA: updating transfer record status = " + status );
             updateTransferRecord ( tr.getTaskId(), status,
                 tr.getCompletionTime(), tr.getFilesTransferred(),
                 tr.getFaults(), tr.getDirectories(), tr.getFiles(),
