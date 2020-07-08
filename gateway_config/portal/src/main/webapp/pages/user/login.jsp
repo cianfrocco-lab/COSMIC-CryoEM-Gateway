@@ -7,19 +7,25 @@
 
 <body onLoad="detectBrowser()"/>
 <%-- BEGIN MAIN CONTENT AREA --%>
-<%--
-<div class="col-xs-5">
-    <b><font size="+1">Please click on the "Login" button in the above menu to get authorization to use the COSMIC2 Science Gateway.</font><p>
-        
-        You will be redirected to the Globus OAuth2 login page where you can choose your organization.  After you've successfully authenticated with your organization, you will be automatically returned to the COSMIC2 gateway as an authorized user.</b>
-</div>
-    --%>
   <div class="col-xs-10">
-      <h2>Welcome to COSMIC<sup>2</sup>!</h2> 
+    <div class="alert alert-danger" role="alert">
+        <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
+            aria-hidden="true"></span>
+        <span class="sr-only">Warning:</span>
+        The COSMIC<sup>2</sup> Science Gateway will be
+        down for general system maintenance<br>&nbsp;&nbsp;&nbsp;&nbsp;
+        on Tuesday, July 21, 2020 between 16:30 and 23:30 Pacific Time.</font>
+    </div>
 
-      This is a science gateway for cryo-EM structure determination.<br><br>
+      <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
-      Please login below with your university credentials and then you are ready to go!<br><br> 
+      <br>
+      <h3>This is a science gateway for cryo-EM structure determination.</h3><br>
+
+      <h4>Please login below with your university credentials and you are
+          ready to go!<br>
+          If you are a new user, we will email you shortly when your
+          transfer access has been enabled.</h4><br>
 
     <s:url id="loginUrl" action="login"/>
         <s:a cssClass="btn btn-primary" href="%{loginUrl}">Login</s:a><br><br>
