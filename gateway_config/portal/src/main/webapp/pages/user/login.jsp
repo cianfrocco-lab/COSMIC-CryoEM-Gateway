@@ -8,6 +8,7 @@
 <body onLoad="detectBrowser()"/>
 <%-- BEGIN MAIN CONTENT AREA --%>
   <div class="col-xs-10">
+    <!-- Maintenance alert
     <div class="alert alert-danger" role="alert">
         <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
             aria-hidden="true"></span>
@@ -16,6 +17,7 @@
         down for general system maintenance<br>&nbsp;&nbsp;&nbsp;&nbsp;
         on Tuesday, July 21, 2020 between 16:30 and 23:30 Pacific Time.</font>
     </div>
+    -->
 
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
