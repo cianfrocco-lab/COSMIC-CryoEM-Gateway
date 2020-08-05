@@ -8,26 +8,24 @@
 <body onLoad="detectBrowser()"/>
 <%-- BEGIN MAIN CONTENT AREA --%>
   <div class="col-xs-10">
-    <!-- Maintenance alert
     <div class="alert alert-danger" role="alert">
         <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
             aria-hidden="true"></span>
         <span class="sr-only">Warning:</span>
         The COSMIC<sup>2</sup> Science Gateway will be
         down for general system maintenance<br>&nbsp;&nbsp;&nbsp;&nbsp;
-        on Tuesday, July 21, 2020 between 16:30 and 23:30 Pacific Time.</font>
+        on Tuesday, August 18, 2020 between 16:30 and 23:30 Pacific Time.</font>
     </div>
-    -->
 
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
+      <h3><p>This is a science gateway for cryo-EM structure determination.</p></h3>
       <br>
-      <h3>This is a science gateway for cryo-EM structure determination.</h3><br>
-
-      <h4>Please login below with your university credentials and you are
-          ready to go!<br>
-          If you are a new user, we will email you shortly when your
-          transfer access has been enabled.</h4><br>
+      <h4><p>Please login below using your university credentials and you are
+          ready to go!</p>
+          <p>If you are a new user, please email us @ cosmic2support@umich.edu
+          when you are ready to upload using Globus.</p></h4>
+      <br>
 
     <s:url id="loginUrl" action="login"/>
         <s:a cssClass="btn btn-primary" href="%{loginUrl}">Login</s:a><br><br>
