@@ -135,8 +135,8 @@ public class RemoteTailAction extends ManageTasks
 			long streamcount = br.lines().count();
 			br.reset();
 			long initialindex = 0;
-			if (streamcount >= 10) {
-				initialindex = streamcount - 10;
+			if (streamcount >= 20) {
+				initialindex = streamcount - 20;
 			} else {
 				initialindex = 0;
 			}

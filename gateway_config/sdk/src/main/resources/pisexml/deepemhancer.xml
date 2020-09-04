@@ -1,0 +1,107 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>DeepEMhancer</title>
+    <version>1.0</version>
+    <description>Non-linear post-processing of cryo-EM maps for local sharpening-like post-processing and automatic masking/denoising.</description>
+    <authors>Sanchez-Garcia R, Gomez-Blanco J, Cuervo A, Carazo JM, Sorzano COS, Vargas J.</authors>
+    <reference>Sanchez-Garcia R, Gomez-Blanco J, Cuervo A, Carazo JM, Sorzano COS, Vargas J. "DeepEMhancer: a deep learning solution for cryo-EM volume post-processing" bioRxiv (2020)</reference>
+    <category>Validation and Analysis</category>
+    <doclink>https://github.com/rsanchezgarc/deepEMhancer</doclink>
+  </head>
+
+  <command>deepemhancer</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"deepemhancer"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "runhours=3\\n" . 
+			     "ntasks-per-node=1\\n" .
+				 "node_exclusive=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>3D reconstruction MRC file (full or half map; NOT sharpened)</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"-i \"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+    <parameter type="Excl" issimple="1" ismandatory="1">
+        <name>model</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Deep learning model to use for processing. Wide and tight target models were trained on maps with wider or tighter masks. HighRes was trained on maps less than 4A resolution</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-p $value"</code>
+            </format>
+            <vdef>
+                <value>tightTarget</value>
+            </vdef>
+            <vlist>
+                <value>wideTarget</value>
+                <label>wideTarget</label>
+                <value>tightTarget</value>
+                <label>tightTarget</label>
+				<value>highRes</value>
+                <label>highRes</label>
+			</vlist>
+        </attributes>
+    </parameter>
+	
+<!-- Files to transfer back -->
+	<parameter type="Results">
+      <name>Sharpened map</name>
+      <attributes>
+        <filenames>*deepEMhancer-sharpened.mrc</filenames>
+      </attributes>
+    </parameter>
+<!-- visible input parameters -->	
+
+</parameters>
+
+</pise>
