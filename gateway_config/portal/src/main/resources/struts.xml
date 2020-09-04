@@ -138,6 +138,12 @@
             </result>
         </action>
 
+        <action name="displayremotetail" class="org.ngbw.web.actions.RemoteTailAction" method="execute">
+            <result name="success">
+                pages/user/task/displayRemoteTail.jsp
+                </result>
+        </action>
+
         <action name="home" class="org.ngbw.web.actions.NgbwSupport">
             <result>/pages/user/home.jsp</result>
         </action>

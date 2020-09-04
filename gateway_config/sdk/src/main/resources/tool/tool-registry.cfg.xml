@@ -100,7 +100,7 @@
                 </OutputParameters>
             </Tool>
 			<!--
-			     <Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
+			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
                 toolresource="COMET"
                 configfile="pisexml/auto_micassess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -191,6 +191,18 @@
 				<OutputParameters>
 				</OutputParameters>
 			</Tool>
+			<Tool id="DEEPEMHANCER"
+                name="DeepEMhancer - non-linear post-processing with deep learning"
+                toolresource="comet-gpu"
+                configfile="pisexml/deepemhancer.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
             <!-- Only for debugging (works) (:
 			<Tool id="SLEEP"
 				name="sleep on Comet"

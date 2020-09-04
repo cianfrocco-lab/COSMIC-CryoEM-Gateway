@@ -741,6 +741,8 @@ if 'csparc2star.py' in args['commandline']:
 	jobtype='csparc2star'
 if 'micassess' in args['commandline']:
 	jobtype='micassess'
+if 'deepemhancer' in args['commandline']:
+        jobtype='deepemhancer'
 
 if jobtype == 'micassess':
 	formatted_starname=prepareMicassess(args['commandline'],jobdir)
@@ -812,6 +814,76 @@ zip -r /projects/cosmic2/meta-data/%s-micassess.zip MicAssess/
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
         %(partition,jobname, runtime, mailuser, args['account'],jobdir,formatted_starname,formatted_starname[:-5],randomString(40))
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'deepemhancer':
+        command=args['commandline']
+	outfile='%s_deepEMhancer-sharpened.mrc' %(command.split()[-1].strip('"')[:-4])
+        cmd='''module load cuda/9.2
+source /share/apps/compute/anaconda/etc/profile.d/conda.sh
+conda activate /projects/cosmic2/conda/deepEMhancer_env
+%s -o %s -g 0,1,2,3
+''' %(command,outfile)
+        runhours=4
+        runminutes = math.ceil(60 * runhours)
+        partition='gpu'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+#SBATCH --gres=gpu:4
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"

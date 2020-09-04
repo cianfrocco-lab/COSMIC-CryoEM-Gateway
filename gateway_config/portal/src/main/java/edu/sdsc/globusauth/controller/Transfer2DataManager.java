@@ -12,10 +12,14 @@ import java.io.FilenameFilter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,18 +39,6 @@ import org.ngbw.sdk.database.TransferRecord;
  **/
 public class Transfer2DataManager
 {
-    private static final Log log = LogFactory.getLog
-        ( Transfer2DataManager.class );
-
-    private ArrayList<String> failed_directories_messages =
-        new ArrayList<String>();
-    private ArrayList<String> failed_files_messages = new ArrayList<String>();
-    private int num_directories_saved = 0;
-    private int num_files_saved = 0;
-    private boolean system_error = false;
-    private ArrayList<String> user_system_error_messages =
-        new ArrayList<String>();
-
     public void addUserSystemErrorMessage ( String msg )
     {
         if ( msg != null && ! (msg.trim()).isEmpty() )
@@ -77,10 +69,10 @@ public class Transfer2DataManager
     public void setupDataItems
         ( TransferRecord transfer_record, String destination_path )
     {
-        //log.debug ( "MONA : Transfer2DataManager.setupDataItems()" );
+        log.debug ( "MONA : Transfer2DataManager.setupDataItems()" );
         //log.debug ( "MONA : transfer_record = " + transfer_record );
-        //log.debug ( "MONA : transfer_record status = " + transfer_record.getStatus() );
-        //log.debug ( "MONA : destination_path = " + destination_path );
+        log.debug ( "MONA : transfer_record status = " + transfer_record.getStatus() );
+        log.debug ( "MONA : destination_path = " + destination_path );
 
         if ( transfer_record == null || destination_path == null ||
             destination_path.trim().equals ( "" ) )
@@ -95,8 +87,8 @@ public class Transfer2DataManager
         try
         {
             folder = new Folder ( transfer_record.getEnclosingFolderId() );
-            //log.debug ( "MONA : folder label = " + folder.getLabel() );
-            //log.debug ( "MONA : folder userid = " + folder.getUserId() );
+            log.debug ( "MONA : folder label = " + folder.getLabel() );
+            log.debug ( "MONA : folder userid = " + folder.getUserId() );
             //log.debug ( "MONA : folder creation date = " + folder.getCreationDate() );
             User user = new User ( transfer_record.getUserId() );
             //log.debug ( "MONA : user = " + user );
@@ -114,28 +106,41 @@ public class Transfer2DataManager
         // Append user folder label to destination_path
         String new_destination_path = destination_path + folder.getLabel() +
             "/";
-        //log.debug ( "MONA : new destination_path = " + new_destination_path );
+        log.debug ( "MONA : new destination_path = " + new_destination_path );
         
-        String directories[] = getList ( transfer_record.getDirectoryNames() );
-        //log.debug ( "MONA : directories = " + directories );
+        String dirs[] = getList ( transfer_record.getDirectoryNames() );
+        log.debug ( "MONA : dirs = " + Arrays.toString ( dirs ) );
+        ArrayList new_dirs = cleanDirs ( dirs );
+        log.debug ( "MONA : new_dirs = " + new_dirs );
+
+        // Save directories first so that any files in the directory will not
+        // be double saved...
+        if ( new_dirs != null && new_dirs.size() > 0 )
+            saveDirectories ( transfer_record.getTrId(), new_destination_path,
+                folder, new_dirs );
+
         String files[] = getList ( transfer_record.getFileNames() );
         //log.debug ( "MONA : files = " + files );
-        
-        if ( files != null )
+        ArrayList<String> new_files = removeChildFiles ( files, new_dirs );
+        log.debug ( "MONA : new_files = " + new_files );
+                  
+        if ( new_files != null && new_files.size() > 0 )
         {
             //log.debug ( "MONA : files.length = " + files.length );
-		    if ( files.length == 1 )
+		    if ( new_files.size() == 1 )
 		    {
-			    String path_file = new_destination_path + files[0];
-			    //log.debug ( "MONA : path_file = " + path_file );
+                String file = new_files.get ( 0 );
+			    String path_file = new_destination_path + file;
+			    log.debug ( "MONA : path_file = " + path_file );
 
 			    try
 			    {
 				    UserDataItem dataItem = new UserDataItem ( path_file,
                         folder );
-				    dataItem.setLabel ( files[0] );
+				    dataItem.setLabel ( file );
 				    dataItem.setEnclosingFolder ( folder );
 				    dataItem.save();
+			        //log.debug ( "MONA : saved dataItem = " + dataItem );
 				    num_files_saved++;
 			    }
 			    catch ( Exception e )
@@ -143,20 +148,22 @@ public class Transfer2DataManager
 				    log.error (
 					    "System Error : cannot save Globus transferred file " +
 					    path_file + "(" + e + ")" );
-                    failed_files_messages.add
-                        ( files[0] + ": unable to save" );
+                    failed_files_messages.add ( file + ": unable to save" );
 			    }
-		    } // if ( files.length == 1 )
+		    } // if ( new_files.size() == 1 )
 
 		    // Else multiple files, has to contain at least 1 *.star file
 		    else
 		    {
+                String filename = null;
+                Iterator<String> itr = new_files.iterator();
         	    String parts[];
                 List<String> star_files = new ArrayList<String>();
 
-        	    for ( String filename : files )
+                while( itr.hasNext() )
 			    {
-				    //log.debug ( "MONA: filename = " + filename );
+                    filename = itr.next();
+				    log.debug ( "MONA: filename = " + filename );
     			    parts = filename.split ( "\\." );
 				    //log.debug ( "MONA: parts = " + parts );
 				    //log.debug ( "MONA: parts.length = " + parts.length );
@@ -164,19 +171,22 @@ public class Transfer2DataManager
 				    if ( parts[parts.length-1].equals ( "star" ) )
                         star_files.add ( filename );
 			    }
-			    //log.debug ( "MONA: star_files = " + star_files );
+			    log.debug ( "MONA: star_files = " + star_files );
 			    //log.debug ( "MONA: star_files.size() = " + star_files.size() );
 
                 if ( star_files.size() > 0 )
-                    saveFiles2 ( tr_id, new_destination_path, folder,
+                    saveFiles ( tr_id, new_destination_path, folder,
                         star_files );
                 else
                 {
-                    String msg = "Error transferring ";
                     boolean first = true;
+                    String msg = "Error transferring ";
 
-        	        for ( String filename : files )
+                    itr = new_files.iterator();
+
+                    while ( itr.hasNext() )
 			        {
+                        filename = itr.next();
                         File file =
                             new File ( new_destination_path + filename );
 		                file.delete();
@@ -195,251 +205,221 @@ public class Transfer2DataManager
 		    } // else
         } // if ( files != null )
 
+        /*
         if ( directories != null && directories.length > 0 )
             saveDirectories2 ( transfer_record, new_destination_path, folder,
                 directories );
-		/*
-        int saved = saveFiles ( transfer_record, new_destination_path,
-            folder );
-        saved += saveDirectories ( transfer_record, new_destination_path,
-            folder );
-        reportUserError ( saved + " files/directories were saved" );
-
-		*/
+        */
 
         return;
     }
 
 
-    /**
-     * Save the given TransferRecord's directories
-     * @return - number of files saved (>= 0 )
-     **/
-    private int saveDirectories ( TransferRecord transfer_record,
-        String destination_path, Folder folder )
+    //***************** PRIVATE ***********************//
+
+    private static final Log log = LogFactory.getLog
+        ( Transfer2DataManager.class );
+
+    private ArrayList<String> failed_directories_messages =
+        new ArrayList<String>();
+    private ArrayList<String> failed_files_messages = new ArrayList<String>();
+    private int num_directories_saved = 0;
+    private int num_files_saved = 0;
+    private boolean system_error = false;
+    private ArrayList<String> user_system_error_messages =
+        new ArrayList<String>();
+
+	/**
+	 * This function will remove all directories > 2 levels deep and put their
+	 * 2nd parent into the list; eg if the directory is a/b/c, then a/b will
+	 * be returned.  All second level directories will be returns (eg a/b).
+	 * For a first level directory, if there is a second level child, then
+	 * first level directory will be removed; otherwise, it will be returned
+	 * (eg if a & a/b, a will be removed and a/b returned).  HashSet is used
+     * because it doesn't allow duplicates but the data returned will be
+     * ArrayList for ease of use with already working code.
+     *
+     * Using HashSet because it does not allow duplicate
+	 **/
+	private ArrayList cleanDirs ( String[] dirs_in )
+	{
+		log.debug ( "MONA: entered cleanDirs()" );
+		if ( dirs_in == null || dirs_in.length < 1 )
+			return ( null );
+
+		int count = 0;
+		String dir = null;
+        String top = null;
+		String[] dir_parts = null;
+		HashSet<String> dir1 = new HashSet ( dirs_in.length );
+		HashSet<String> dir2 = new HashSet ( dirs_in.length );
+        Iterator<String> itr;
+
+		// First, go through incoming directories
+		for ( int i = 0; i < dirs_in.length; i++ )
+		{
+			//log.debug ( "MONA: dirs_in @ " + i + " = " + dirs_in[i] );
+			count = StringUtils.countMatches ( dirs_in[i], "/" );
+			//log.debug ( "MONA: count = " + count );
+			if ( count == 0 )
+				dir1.add ( dirs_in[i] );
+			else if ( count == 1 )
+				dir2.add ( dirs_in[i] );
+			else
+			{
+    			dir_parts = dirs_in[i].split ( "/" );
+				dir = dir_parts[0] + "/" + dir_parts[1];
+				//log.debug ( "MONA: dir = " + dir );
+				dir2.add ( dir );
+			}
+		}
+		log.debug ( "MONA: dir1 1 = " + dir1 );
+		log.debug ( "MONA: dir2 1 = " + dir2 );
+
+		// Next, remove dir1 if parent of a dir2 entry
+        itr = dir1.iterator();
+		//for ( String top : dir1 )
+        while ( itr.hasNext() )
+		{
+            top = itr.next();
+			//log.debug ( "MONA: top = " + top );
+			for ( String child : dir2 )
+			{
+			    //log.debug ( "MONA: child = " + child );
+                if ( child.startsWith ( top ) )
+                {
+                    //log.debug ( "MONA: removing " + top );
+                    itr.remove();
+                    break;
+                }
+			}
+		}
+		log.debug ( "MONA: dir1 2 = " + dir1 );
+		log.debug ( "MONA: dir2 2 = " + dir2 );
+
+		//HashSet[] dirs_out = { dir1, dir2 };
+        ArrayList reply = new ArrayList ( dir1 );
+        reply.addAll ( dir2 );
+		log.debug ( "MONA: reply = " + reply );
+
+		return ( reply );
+	}
+
+    private String[] getList ( String s )
     {
-        //log.debug ( "MONA : Transfer2DataManager.saveDirectories()" );
-        //log.debug ( "MONA : transfer_record = " + transfer_record );
-        //log.debug ( "MONA : transfer_record ID = " + transfer_record.getTrId() );
-        //log.debug ( "MONA : transfer_record status = " + transfer_record.getStatus() );
-        //log.debug ( "MONA : destination_path = " + destination_path );
-
-        int saved = 0;
-        long size = 0L;
-
-        if ( transfer_record == null || destination_path == null ||
-            destination_path.trim().equals ( "" ) || folder == null )
-            return ( saved );
-
-        Long tr_id = transfer_record.getTrId();
-        /*
-        String user_data_folder = folder.getLabel();
-        //log.debug ( "MONA : user_data_folder = " + user_data_folder );
-        destination_path += user_data_folder + "/";
-        log.debug ( "MONA : new destination_path = " + destination_path );
-        */
-
-        // Check and handle directories...
-        String dirString = transfer_record.getDirectoryNames();
-        //log.debug ( "MONA : dirString = " + dirString );
-        if ( dirString == null || dirString.trim().equals ( "" ) )
-            return ( saved );
-
-        String transferred_dirs[] = dirString.split ( "\\|" );
-        //log.debug ( "MONA : transferred_dirs = " + transferred_dirs );
-        //log.debug ( "MONA : transferred_dirs length = " + transferred_dirs.length );
-
-        if ( transferred_dirs == null || transferred_dirs.length <= 0 )
-            return ( saved );
-
-        int label_start_index = destination_path.length();
-        //log.debug ( "MONA : label_start_index = " + label_start_index );
-        String[] starfile_ext = { "star" };
-        UserDataDirItem data_item = null;
-
-        // Loop through all the transferred directories
-        for ( String transferred_dir : transferred_dirs )
-        {
-            // First, look for *.star file in the top-level transferred
-            // directories...
-            //log.debug ( "MONA : transferred_dir = " + transferred_dir );
-            String full_path = destination_path + transferred_dir + "/";
-            //log.debug ( "MONA : full_path = " + full_path );
-            File dir = new File ( full_path );
-            //log.debug ( "MONA : dir = " + dir );
-
-            // If the directory is not readable, skip it...
-            Path tmp = dir.toPath();
-            if ( ! Files.isReadable ( tmp ) )
-            {
-                //reportUserError ( "Error: cannot read " + full_path );
-                //addActionError ( "Error: cannot read " + full_path );
-                continue;
-            }
-
-            //log.debug ( "MONA : starfile_ext = " + starfile_ext );
-            Collection < File > files = FileUtils.listFiles ( dir,
-                starfile_ext, false );
-            //log.debug ( "MONA : files = " + files );
-
-            if ( files != null && ! files.isEmpty() )
-            {
-                size = files.size();
-                //log.debug ( "MONA : size 1 = " + size );
-                for ( File file : files )
-                {
-                    //log.debug ( "MONA : file = " + file );
-                    //log.debug ( "MONA : file name = " + file.getName() );
-                    String label = file.toString().substring
-                        ( label_start_index );
-                    //log.debug ( "MONA : label = " + label );
-                    try
-                    {
-                        size = FileUtils.sizeOf ( dir );
-                        //log.debug ( "MONA : size 2 = " + size );
-                        data_item = new UserDataDirItem ( folder, tr_id, label,
-                            size );
-                        //log.debug ( "MONA : data_item = " + data_item );
-                        if ( data_item != null )
-                        {
-                            data_item.save();
-                            saved++;
-                        }
-                    }
-                    catch ( Exception e )
-                    {
-                        String msg = 
-                            "Unable to setup Globus transferred data item for file "
-                            + file.getName() + " (" + e + ")";
-                        //reportUserError ( msg );
-                        //addActionError ( msg ); 
-                        //reportError(error, "Error creating new TaskInputSourceDocument");
-                        log.error
-                            ( "System Error : cannot create data item for Globus data item "
-                              + file.getName() + " (" + e + ")" );
-                    }
-                }
-            }
-
-            // Now, look for particles.star file only one directory down...
-            //files = FileUtils.listFiles ( dir, starfile_ext, true );
-            String[] subdirs = dir.list ( new FilenameFilter()
-                {
-                    @Override
-                    public boolean accept ( File current, String name )
-                    {
-                        return new File ( current, name ).isDirectory();
-                    }
-                });
-            //log.debug ( "MONA : subdirs = " + subdirs );
-
-            for ( String subdir : subdirs )
-            {
-                //log.debug ( "MONA : subdir = " + subdir );
-                File file = new File ( full_path + "/" + subdir +
-                    "/particles.star" );
-                //log.debug ( "MONA : file = " + file );
-                if ( file.exists() )
-                {
-                    log.debug ( "file exists!" );
-                    dir = new File ( full_path + "/" + subdir );
-                    //log.debug ( "MONA : dir = " + dir );
-
-                    String label = file.toString().substring
-                        ( label_start_index );
-                    //log.debug ( "MONA : label = " + label );
-                    try
-                    {
-                        size = FileUtils.sizeOf ( dir );
-                        //log.debug ( "MONA : size 3 = " + size );
-                        data_item = new UserDataDirItem ( folder, tr_id, label,
-                            size );
-                        //log.debug ( "MONA : data_item = " + data_item );
-                        if ( data_item != null )
-                        {
-                            data_item.save();
-                            saved++;
-                        }
-                    }
-                    catch ( Exception e )
-                    {
-                        String msg = 
-                            "Unable to setup Globus transferred data item for file "
-                            + file.getName() + " (" + e + ")";
-                        //reportUserError ( msg );
-                        //addActionError ( msg ); 
-                        //reportError(error, "Error creating new TaskInputSourceDocument");
-                        log.error
-                            ( "System Error : cannot create data item for Globus data item "
-                              + file.getName() + " (" + e + ")" );
-                    }
-                }
-            }
-        }
-
-        //log.debug ( "MONA : saved = " + saved );
-        return ( saved );
+    	if ( s == null || s.trim().equals ( "" ) )
+    		return null;
+    	else
+    		return ( s.split ( "\\|" ) );
     }
 
+    private String getTopDir ( String dir )
+    {
+        //log.debug ( "MONA : entered getTopDir" );
+    	if ( dir == null || dir.trim().equals ( "" ) )
+    		return null;
+    	else
+		{
+			int index = dir.indexOf ( "/" );
+        	//log.debug ( "MONA : index = " + index );
+			if ( index == -1 )
+				return ( null );
+			else
+			{
+        		//log.debug ( "MONA : returning " + dir.substring ( 0, index ) );
+				return ( dir.substring ( 0, index ) );
+			}
+		}
+    }
+    
+	//private ArrayList<String> getUniqueTopDirectories ( String[] dirs )
+	private HashSet getUniqueTopDirectories ( String[] dirs )
+	{
+        //log.debug ( "MONA : entered getUniqueTopDirectories" );
+
+		if ( dirs == null )
+			return null;
+		else if ( dirs.length < 2 )
+			return ( new HashSet ( Arrays.asList ( dirs ) ) );
+			//return ( new ArrayList<String> ( Arrays.asList ( dirs ) ) );
+
+		// Ok, we have at least 2 directories...
+
+		HashSet new_dirs = new HashSet();
+		String top = null;
+		
+		for ( String dir : dirs )
+		{
+			top = getTopDir ( dir );
+			if ( top != null && top.length() > 0 )
+				new_dirs.add ( top );
+		}
+		//log.debug ( "MONA : final new_dirs = " + new_dirs );
+
+		return ( ( new_dirs.size() > 0 ) ? new_dirs : null );
+	}
 
     /**
-     * Save the given TransferRecord's directories
+     * Save the given given directories. 
      * @return - number of files saved (>= 0 )
      **/
-    private void saveDirectories2 ( TransferRecord tr, String destination_path,
-        Folder folder, String[] directories )
+    private void saveDirectories ( long tr_id, String destination_path,
+        Folder folder, ArrayList directories )
     {
-        //log.debug ( "MONA : Transfer2DataManager.saveDirectories2()" );
-        //log.debug ( "MONA : destination_path = " + destination_path );
+        log.debug ( "MONA : Transfer2DataManager.saveDirectories()" );
+        log.debug ( "MONA : destination_path = " + destination_path );
+        log.debug ( "MONA : directories = " + directories );
 
-        if ( tr == null || destination_path == null ||
+        if ( tr_id < 1 || destination_path == null ||
             destination_path.trim().equals ( "" ) || folder == null ||
-            directories == null || directories.length <= 0 )
+            directories == null || directories.size() < 1 )
             return;
 
         UserDataDirItem data_item = null;
-        File dir = null;
+        File dirF = null;
+		String dirS = null;
         String full_path = null;
+		Iterator<String> itr = directories.iterator();
         int label_start_index = destination_path.length();
         //log.debug ( "MONA : label_start_index = " + label_start_index );
         List<File> paths = new ArrayList<File>();
         int saved = 0;
         long size = 0L;
         String[] starfile_ext = { "star" };
-        long tr_id = tr.getTrId();
 
         // Loop through all the transferred directories
-        for ( String directory : directories )
+		while( itr.hasNext() )
         {
             // First, look for *.star file in the top-level transferred
             // directories...
-            //log.debug ( "MONA : directory = " + directory );
-            full_path = destination_path + directory + "/";
-            //log.debug ( "MONA : full_path = " + full_path );
-            dir = new File ( full_path );
-            //log.debug ( "MONA : dir = " + dir );
+			dirS = itr.next();
+            //log.debug ( "MONA : dirS = " + dirS );
+            full_path = destination_path + dirS + "/";
+            log.debug ( "MONA : full_path = " + full_path );
+            dirF = new File ( full_path );
+            //log.debug ( "MONA : dirF = " + dirF );
 
-            Path tmp = dir.toPath();
+            Path tmp = dirF.toPath();
             if ( Files.isReadable ( tmp ) )
-                paths.add ( dir );
+                paths.add ( dirF );
             else
             {
                 failed_directories_messages.add ( "Error reading directory " +
-                    directory );
+                    dirS );
                 continue;
             }
 
             //log.debug ( "MONA : starfile_ext = " + starfile_ext );
-            Collection < File > files = FileUtils.listFiles ( dir,
+            Collection < File > files = FileUtils.listFiles ( dirF,
                 starfile_ext, false );
-            //log.debug ( "MONA : files = " + files );
+            log.debug ( "MONA : files = " + files );
 
             if ( files != null && ! files.isEmpty() )
             {
                 for ( File file : files )
                 {
                     //log.debug ( "MONA : file = " + file );
-                    //log.debug ( "MONA : file name = " + file.getName() );
+                    log.debug ( "MONA : file name = " + file.getName() );
                     String label = file.toString().substring
                         ( label_start_index );
                     //log.debug ( "MONA : label = " + label );
@@ -462,15 +442,14 @@ public class Transfer2DataManager
                             ( "System Error : cannot create data item for Globus data item "
                               + file.getName() + " (" + e + ")" );
                         failed_directories_messages.add
-                            ( "Error transferring " + directory + "/" +
+                            ( "Error transferring " + dirS + "/" +
                             file.getName() );
                     }
                 } // for ( File file : files )
             } // if ( files != null && ! files.isEmpty() )
 
             // Now, look for particles.star file only one directory down...
-            //files = FileUtils.listFiles ( dir, starfile_ext, true );
-            String[] subdirs = dir.list ( new FilenameFilter()
+            String[] subdirs = dirF.list ( new FilenameFilter()
                 {
                     @Override
                     public boolean accept ( File current, String name )
@@ -482,15 +461,15 @@ public class Transfer2DataManager
 
             for ( String subdir : subdirs )
             {
-                //log.debug ( "MONA : subdir = " + subdir );
+                log.debug ( "MONA : subdir = " + subdir );
                 File file = new File ( full_path + "/" + subdir +
                     "/particles.star" );
-                //log.debug ( "MONA : file = " + file );
+                log.debug ( "MONA : file = " + file );
                 if ( file.exists() )
                 {
                     log.debug ( "particles.star exists!" );
-                    dir = new File ( full_path + "/" + subdir );
-                    //log.debug ( "MONA : dir = " + dir );
+                    dirF = new File ( full_path + "/" + subdir );
+                    //log.debug ( "MONA : dirF = " + dirF );
 
                     String label = file.toString().substring
                         ( label_start_index );
@@ -521,7 +500,7 @@ public class Transfer2DataManager
             } // for ( String subdir : subdirs )
         } // for ( String directory : directories )
 
-        //log.debug ( "MONA : saved = " + saved );
+        log.debug ( "MONA : saved = " + saved );
         // If nothing saved, then delete the directories uploaded!
         if ( saved == 0 )
         {
@@ -530,7 +509,7 @@ public class Transfer2DataManager
             //log.debug ( "MONA : paths = " + paths );
             for ( File path : paths )
             {
-                //log.debug ( "MONA: deleting path " + path );
+                log.debug ( "MONA: deleting path " + path );
                 try
                 {
                     FileUtils.deleteDirectory ( path );
@@ -558,59 +537,6 @@ public class Transfer2DataManager
         return;
     }
 
-    /*
-     * Save the given TransferRecord's file(s)
-     * @return - number of files saved (>= 0 )
-     */
-    private int saveFiles ( TransferRecord tr, String destination_path,
-        Folder folder )
-    {
-        //log.debug ( "MONA : Transfer2DataManager.saveFiles()" );
-        if ( tr == null || destination_path == null ||
-            destination_path.trim().equals ( "" ) || folder == null )
-            return ( 0 );
-
-        int saved = 0;
-        String file = tr.getFileNames();
-        //log.debug ( "MONA : file = " + file );
-
-        if ( file != null && ! file.trim().equals ( "" ) )
-        {
-            String files[] = file.split ( "\\|" );
-            //log.debug ( "MONA : files = " + files );
-            String path_file = "";
-
-            if ( files != null && files.length > 0 )
-            {
-                UserDataItem dataItem = null;
-
-                try
-                {
-                    for ( String filename : files )
-                    {
-                        path_file = destination_path + filename;
-                        //log.debug ( "MONA : path_file = " + path_file );
-                        dataItem = new UserDataItem ( destination_path +
-                            filename, folder );
-                        dataItem.setLabel ( filename );
-                        dataItem.setEnclosingFolder ( folder );
-                        dataItem.save();
-                        saved++;
-                    }
-                }
-
-                catch ( Exception e )
-                {
-                    log.error
-                        ( "System Error : cannot save Globus transferred file " +
-                          path_file + "(" + e + ")" );
-                }
-            }
-        }
-
-        return ( saved );
-    }
-    
     
     /*
      * Save the given TransferRecord's file(s)
@@ -620,11 +546,12 @@ public class Transfer2DataManager
      * @param files - list of star files to save
      * @return - number of files saved (>= 0 )
      */
-    private void saveFiles2 ( Long tr_id, String destination_path,
+    private void saveFiles ( Long tr_id, String destination_path,
         Folder folder, List<String> files )
     {
-        //log.debug ( "MONA : Transfer2DataManager.saveFiles2()" );
-        //log.debug ( "MONA : destination_path = " + destination_path );
+        log.debug ( "MONA : Transfer2DataManager.saveFiles()" );
+        log.debug ( "MONA : destination_path = " + destination_path );
+        log.debug ( "MONA : files = " + files );
 
         if ( tr_id == null || tr_id.longValue() <= 0L ||
             destination_path == null ||
@@ -645,7 +572,7 @@ public class Transfer2DataManager
             try
             {
                 size = FileUtils.sizeOf ( file );
-                ////log.debug ( "MONA : size = " + size );
+                //log.debug ( "MONA : size = " + size );
                 data_item = new UserDataDirItem ( folder, tr_id, filename,
                     size );
                 //log.debug ( "MONA : data_item = " + data_item );
@@ -674,12 +601,101 @@ public class Transfer2DataManager
         return;
     }
     
-    private String[] getList ( String s )
-    {
-    	if ( s != null && ! s.trim().equals ( "" ) )
-    		return ( s.split ( "\\|" ) );
-    	else
-    		return null;
-    }
-    
+	private ArrayList<String> removeChildFiles
+		( String[] files, ArrayList dirs )
+	{
+        log.debug ( "MONA : entered removeChildFiles" );
+		if ( files == null )
+			return ( null );
+		else if ( dirs == null )
+			return ( new ArrayList<String> ( Arrays.asList ( files ) ) );
+
+		String dir, file;
+		Iterator<String> dir_itr = dirs.iterator();
+		ArrayList<String> new_files =
+			new ArrayList<String> ( Arrays.asList ( files ) );
+
+		while( dir_itr.hasNext() )
+		{
+			dir = dir_itr.next();
+			//log.debug ( "MONA : dir = " + dir );
+			for ( int i = 0; i < new_files.size(); )
+			{
+				//log.debug ( "MONA : new_files size 1 = " + new_files.size() );
+				//log.debug ( "MONA : i = " + i );
+				file = new_files.get ( i );
+				//log.debug ( "MONA : file = " + file );
+				if ( file.startsWith ( dir ) )
+				{
+					log.debug ( "MONA : removing " + file );
+					new_files.remove ( i );
+					//log.debug ( "MONA : new_files size 2 = " + new_files.size() );
+				}
+				else
+					i++;
+			}
+		}
+
+		if ( new_files.size() > 0 )
+			return ( new_files );	
+		else
+			return ( null );
+	}
+
+	/**
+	 * Examples of how the directories may be ordered:
+	 * CtfFind|CtfFind/job003|CtfFind/job065|CtfFind/job087|CtfFind/job003/micrographs|CtfFind/job065/movies2|CtfFind/job087/movies2
+	 * tmp_filtered/micrographs|tmp_filtered
+	 * 
+	 **/
+	private ArrayList<String> removeSubdirectories ( String[] dirs )
+	{
+        log.debug ( "MONA : entered removeSubdirectories" );
+
+		if ( dirs == null )
+			return null;
+		else if ( dirs.length < 2 )
+			return ( new ArrayList<String> ( Arrays.asList ( dirs ) ) );
+
+		// Ok, we have at least 2 directories...
+
+		String d1, d2;
+		ArrayList<String> new_dirs =
+			new ArrayList<String> ( Arrays.asList ( dirs ) );
+		log.debug ( "MONA : new_dirs = " + new_dirs );
+
+        for ( int i2 = 1, i1 = i2 - 1; i1 < new_dirs.size(); )
+		{
+			//log.debug ( "MONA : size 1 = " + new_dirs.size() );
+			//log.debug ( "MONA : i1 = " + i1 + " " + new_dirs.get ( i1 ) );
+			//log.debug ( "MONA : i2 = " + i2 + " " + new_dirs.get ( i2 ) );
+
+			d1 = new_dirs.get ( i1 );
+			d2 = new_dirs.get ( i2 );
+
+			if ( d2.startsWith ( d1 ) )
+			{
+				//log.debug ( "MONA : removing i2 : " + d2 );
+				new_dirs.remove ( i2 );
+			} 
+			else if ( d1.startsWith ( d2 ) )
+			{
+				//log.debug ( "MONA : removing i1 = " + d1 );
+				new_dirs.remove ( i1 );
+			}
+			else
+				i2++;
+			//log.debug ( "MONA : size 2 = " + new_dirs.size() );
+
+			if ( i2 >= new_dirs.size() )
+			{
+				//log.debug ( "MONA : incrementing i1 & i2" );
+				i1++;
+				i2 = i1 + 1;
+			}
+		}
+		log.debug ( "MONA : final new_dirs = " + new_dirs );
+
+		return ( new_dirs );
+	}
 }

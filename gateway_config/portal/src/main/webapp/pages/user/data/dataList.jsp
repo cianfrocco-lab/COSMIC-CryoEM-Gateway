@@ -12,7 +12,7 @@
 		and 3D volumes using the Globus data transfer service. You can use
 		your web browser to upload small, individual files.</p>
 
-		<p><span class="text-danger">Warning: Data are deleted after 5
+		<p><span class="text-danger">Warning: Data are deleted after 21
 			days.</span> Questions? Please email
 			<s:property value="%{adminEmail}"/></p>
 

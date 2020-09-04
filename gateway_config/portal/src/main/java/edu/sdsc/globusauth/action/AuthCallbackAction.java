@@ -67,10 +67,12 @@ public class AuthCallbackAction extends FolderManager {
     }
 
     public String globuslogin() throws Exception {
+        //logger.debug ( "MONA: entered AuthCallbackAction.globuslogin()" );
         // Handles the interaction with Globus Auth and does oauth flow
 
         // checks for errors, if so redirects back to home
         Enumeration<String> paramNames = request.getParameterNames();
+        //logger.debug ( "MONA: paramNames = " + paramNames );
         if (paramNames != null) {
             while (paramNames.hasMoreElements()) {
                 if (paramNames.nextElement().contains(OauthConstants.ERROR)) {
@@ -93,6 +95,7 @@ public class AuthCallbackAction extends FolderManager {
         String dataset_endpoint_base = config.getProperty(OauthConstants.DATASET_ENDPOINT_BASE);
         String dataset_endpoint_name = config.getProperty(OauthConstants.DATASET_ENDPOINT_NAME);
         String endpoint_activation_uri = config.getProperty(OauthConstants.ENDPOINT_ACTIVATION_URI);
+        //logger.debug ( "MONA: endpoint_activation_uri = " + endpoint_activation_uri );
 
         // creates builder for flow object, necessary for oauth flow
         AuthorizationCodeFlow.Builder flowBuilder =
@@ -100,6 +103,7 @@ public class AuthCallbackAction extends FolderManager {
                         new NetHttpTransport(), jsonFactory, token_server_url,
                         new BasicAuthentication(client_id, client_secret), client_id, auth_uri)
                         .setScopes(scopes);
+        //logger.debug ( "MONA: flowBuilder = " + flowBuilder );
 
         // checks if user logged in or signed up, if signed up then adds "?signup=1" to the url
         if (Boolean.valueOf(request.getParameter(OauthConstants.SIGNUP))) {
@@ -115,6 +119,7 @@ public class AuthCallbackAction extends FolderManager {
         // flow
 
         paramNames = request.getParameterNames();
+        //logger.debug ( "MONA: paramNames = " + paramNames );
         boolean codename_check = false;
         if (paramNames != null) {
             while (paramNames.hasMoreElements()) {
@@ -124,6 +129,7 @@ public class AuthCallbackAction extends FolderManager {
                 }
             }
         }
+        //logger.debug ( "MONA: codename_check = " + codename_check );
 
         if (!codename_check) {
 
@@ -145,12 +151,14 @@ public class AuthCallbackAction extends FolderManager {
             // If we do have a "code" param, we're coming back from Globus Auth
             // and can start the process of exchanging an auth code for a token.
             String passed_state = request.getParameter(OauthConstants.STATE);
+            //logger.debug ( "MONA: passed_state = " + passed_state );
             //logger.info("Passed state: "+passed_state);
             // Makes sure the state as the browser is sent back matches the one set when sent out from the
             // client
             if (!passed_state.isEmpty() && passed_state.equals(getSession().get(OauthConstants.OAUTH2_STATE))) {
 
                 String code = request.getParameter(OauthConstants.CODE);
+                //logger.debug ( "MONA: code = " + code );
                 TokenResponse tokenResponse = null;
                 Boolean isErrorFree = true;
                 // reportUserMessage("Got authorization code: " + code);
@@ -165,6 +173,7 @@ public class AuthCallbackAction extends FolderManager {
                 }
 
                 boolean redirect_flag = true;
+                //logger.debug ( "MONA: isErrorFree = " + isErrorFree );
                 if (isErrorFree) {
 
                     getSession().remove(OauthConstants.OAUTH2_STATE);
@@ -186,6 +195,7 @@ public class AuthCallbackAction extends FolderManager {
                     String username = (String) id_token.getPayload().get(OauthConstants.PREFERRED_USERNAME);
                     String email = (String) id_token.getPayload().get(OauthConstants.EMAIL);
                     String identity = (String) id_token.getPayload().get(OauthConstants.SUB);
+                    //logger.debug ( "MONA: identity = " + identity );
                     String linkusername = null;
 
                     // Step 3: Create the Credential object, which stores the Auth Token
@@ -375,14 +385,18 @@ public class AuthCallbackAction extends FolderManager {
                         return "profileredirect";
                     } else {
                         //update transfer record
+                        //logger.debug ( "MONA: dest_endpoint_name = " + getSession().get ( OauthConstants.DEST_ENDPOINT_NAME ) );
                         List<String> trlist = profileManager.loadRecord(profile.getUserId());
+                        //logger.debug ( "MONA: trlist = " + trlist );
                         if (trlist != null && trlist.size() > 0) {
                             String dest_path = dataset_endpoint_base +
                                     profile.getLinkUsername() + "/";
                             TransferAction txaction = new TransferAction(accesstoken,username);
                             for (String taskid: trlist) {
                                 TransferRecord tr = txaction.updateTask(taskid, null);
-                                profileManager.updateRecord(tr, dest_path);
+                                profileManager.updateRecord ( tr, dest_path,
+                                    ( String ) getSession().get
+                                    ( OauthConstants.DEST_ENDPOINT_NAME ) );
                             }
                         }
                         //return SUCCESS;
@@ -445,13 +459,6 @@ public class AuthCallbackAction extends FolderManager {
                     ( "database.globusRoot" );
                 //logger.debug ( "MONA: globusRoot = " + globusRoot );
 
-                /* Following code used java.io.File which did not allow group
-                 * write permission which we need...
-                File dir = new File ( globusRoot + "/" + username );
-                //logger.debug ( "MONA: dir = " + dir );
-                dir.mkdir();
-                */
-
                 // Create the user's top-level Globus data directory with
                 // no access for world.  If there is a problem creating the
                 // directory, will display message to user AND email adminAddr
@@ -459,23 +466,23 @@ public class AuthCallbackAction extends FolderManager {
                 {
                     Set<PosixFilePermission> perms =
                         PosixFilePermissions.fromString ( "rwxrwx---" );
-                    logger.debug ( "MONA: perms = " + perms );
+                    //logger.debug ( "MONA: perms = " + perms );
                     FileAttribute<Set<PosixFilePermission>> fileAttributes =
                         PosixFilePermissions.asFileAttribute ( perms );
                     //logger.debug ( "MONA: fileAttributes = " + fileAttributes );
                     //logger.debug ( "MONA: fileAttributes.name = " + fileAttributes.name() );
                     Path path = Paths.get ( globusRoot + "/" + username );
-                    logger.debug ( "MONA: path = " + path );
+                    //logger.debug ( "MONA: path = " + path );
                     Files.createDirectory ( path, fileAttributes );
-                    logger.debug ( "MONA: mkdir done!" );
+                    //logger.debug ( "MONA: mkdir done!" );
                     Set<PosixFilePermission> tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
-                    logger.debug ( "MONA: tmpperms 1 = " + tmpperms );
+                    //logger.debug ( "MONA: tmpperms 1 = " + tmpperms );
                     Path tmppath = Files.setPosixFilePermissions ( path, perms );
-                    logger.debug ( "MONA: tmppath = " + tmppath );
+                    //logger.debug ( "MONA: tmppath = " + tmppath );
                     tmpperms = Files.getPosixFilePermissions ( tmppath, LinkOption.NOFOLLOW_LINKS );
-                    logger.debug ( "MONA: tmpperms 2 = " + tmpperms );
+                    //logger.debug ( "MONA: tmpperms 2 = " + tmpperms );
                     tmpperms = Files.getPosixFilePermissions ( path, LinkOption.NOFOLLOW_LINKS );
-                    logger.debug ( "MONA: tmpperms 3 = " + tmpperms );
+                    //logger.debug ( "MONA: tmpperms 3 = " + tmpperms );
                 } 
                 catch ( IOException e )
                 {
