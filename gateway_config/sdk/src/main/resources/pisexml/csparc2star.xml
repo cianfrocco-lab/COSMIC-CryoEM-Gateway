@@ -72,14 +72,6 @@
 	  </attributes>	  
 	</parameter>
 	
-<!-- Files to transfer back -->
-	<parameter type="Results">
-	  <name>stderr.txt</name>
-	  <attributes>
-	    <filenames>stderr</filenames>
-	  </attributes>
-	</parameter>
-
     <parameter type="Results">
         <name>STAR file output</name>
         <attributes>

@@ -16,7 +16,7 @@
     <br>
     <hr class="hr-bluedots">
     -->
-    <h5>Upload 3D volumes here (and files smaller than 200 MB)</h5>
+    <h5>Upload 3D volumes here</h5>
 <s:form action="pasteData" theme="simple" method="POST" enctype="multipart/form-data" cssClass="form-horizontal" role="form">
   <%--
   <div class="form-group">

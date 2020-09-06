@@ -104,7 +104,22 @@
 			</vlist>
         </attributes>
     </parameter>
-	
+
+	<parameter type="Integer" ismandatory="1">
+        <name>batchsize</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Batch size used for processing (default=6). Decrease value if job is crashing due to memory crash (e.g. for 512 box size, use value of 5)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-b $value"</code>
+            </format>
+			<vdef>
+                <value>6</value>
+            </vdef>
+        </attributes>
+    </parameter>	
+		
 <!-- Files to transfer back -->
 	<parameter type="Results">
       <name>Sharpened map</name>
