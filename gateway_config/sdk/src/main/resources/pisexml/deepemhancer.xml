@@ -70,6 +70,18 @@
 	  </attributes>	  
 	</parameter>
 
+	<parameter type="InFile" issimple="1">
+        <name>half2</name>
+        <attributes>
+            <group>1</group>
+            <prompt>(Recommended) If half map used as selected input, it is recommended that you also include other half map here.</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-i2 $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
     <parameter type="Excl" issimple="1" ismandatory="1">
         <name>model</name>
         <attributes>
