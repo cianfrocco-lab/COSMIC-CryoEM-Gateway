@@ -112,13 +112,6 @@ Mike -->
 	</parameter>
  -->
 
-	<parameter type="Results">
-	  <name>tmplog</name>
-	  <attributes>
-	    <filenames>_tmplog</filenames>
-	  </attributes>
-	</parameter>
-
 <!-- visible input parameters -->	
 
     <parameter type="Integer" issimple="1" ismandatory="1">

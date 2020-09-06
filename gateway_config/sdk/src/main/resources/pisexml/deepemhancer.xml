@@ -70,6 +70,18 @@
 	  </attributes>	  
 	</parameter>
 
+	<parameter type="InFile" issimple="1">
+        <name>half2</name>
+        <attributes>
+            <group>1</group>
+            <prompt>(Recommended) If half map used as selected input, it is recommended that you also include other half map here.</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-i2 $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
     <parameter type="Excl" issimple="1" ismandatory="1">
         <name>model</name>
         <attributes>
@@ -92,7 +104,22 @@
 			</vlist>
         </attributes>
     </parameter>
-	
+
+	<parameter type="Integer" ismandatory="1">
+        <name>batchsize</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Batch size used for processing (default=6). Decrease value if job is crashing due to memory crash (e.g. for 512 box size, use value of 5)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-b $value"</code>
+            </format>
+			<vdef>
+                <value>6</value>
+            </vdef>
+        </attributes>
+    </parameter>	
+		
 <!-- Files to transfer back -->
 	<parameter type="Results">
       <name>Sharpened map</name>
