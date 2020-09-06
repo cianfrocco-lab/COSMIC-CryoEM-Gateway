@@ -831,7 +831,7 @@ if jobtype == 'deepemhancer':
         cmd='''module load cuda/9.2
 source /share/apps/compute/anaconda/etc/profile.d/conda.sh
 conda activate /projects/cosmic2/conda/deepEMhancer_env
-%s -o %s -g 0,1,2,3
+%s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
 ''' %(command,outfile)
         runhours=4
         runminutes = math.ceil(60 * runhours)
