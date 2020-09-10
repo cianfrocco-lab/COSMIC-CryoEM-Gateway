@@ -332,6 +332,7 @@
         <action name="saveFolder" class="org.ngbw.web.actions.FolderManager" method="save">
             <result name="list" type="redirectAction">home</result> 
             <result name="display" type="redirectAction">home</result>
+			<result name="error">/pages/user/folder/folderForm.jsp</result>
             <result name="input">/pages/user/folder/folderForm.jsp</result>
 			<allowed-methods>cancel</allowed-methods>
         </action>
