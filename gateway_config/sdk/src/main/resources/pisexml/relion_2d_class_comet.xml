@@ -103,14 +103,12 @@ Mike -->
 	</parameter>
 	
 <!-- Files to transfer back -->
-<!--
 	<parameter type="Results">
 	  <name>stderr.txt</name>
 	  <attributes>
 	    <filenames>stderr</filenames>
 	  </attributes>
 	</parameter>
- -->
 
 <!-- visible input parameters -->	
 

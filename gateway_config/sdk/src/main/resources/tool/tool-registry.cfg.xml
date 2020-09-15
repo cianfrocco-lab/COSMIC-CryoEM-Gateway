@@ -123,6 +123,17 @@
                 </OutputParameters>
             </Tool>
 			-->
+			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
+                toolresource="comet-gpu"
+                configfile="pisexml/cryodrgn.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="RELION_MULTIBODY_COMET" name="Relion Multibody refinement"
                 toolresource="comet-gpu"
             	configfile="pisexml/relion_multibody_comet.xml"

@@ -743,6 +743,8 @@ if 'micassess' in args['commandline']:
 	jobtype='micassess'
 if 'deepemhancer' in args['commandline']:
         jobtype='deepemhancer'
+if 'cryodrgn' in args['commandline']:
+	jobtype='cryodrgn'
 
 if jobtype == 'micassess':
 	formatted_starname=prepareMicassess(args['commandline'],jobdir)
@@ -824,6 +826,149 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         os.fsync(FO.fileno())
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'cryodrgn': 
+	command=args['commandline']
+	#Parsing commandline: 
+	#cryodrgn --angpix .91 --qdim 256 --D 128 --invert --players 3 --zdim 1 --consensus run_data_30k.star --qlayers 3 --pdim 256 -n 50  --i "cryodrgn/Extract/job042/particles_30k.star"
+
+	cmdline=command.split()
+	totEntries=len(cmdline)
+	counter=0
+	while counter < totEntries: 
+		entry=cmdline[counter]
+		if entry == '--angpix': 
+			angpix=cmdline[counter+1]
+		if entry == '--qdim':
+			qdim=cmdline[counter+1]
+		if entry == '--D':
+			newboxsize=cmdline[counter+1]
+		if entry == '--invert':
+			invert=True
+		if entry == '--players': 
+			players=cmdline[counter+1]
+		if entry == '--zdim': 
+			zdim=cmdline[counter+1]
+		if entry == '--consensus':
+			pose_ctf=cmdline[counter+1]
+		if entry == '--qlayers': 
+			qlayers=cmdline[counter+1]
+		if entry == '--pdim':
+			pdim=cmdline[counter+1]
+		if entry == '-n':
+			epochs=cmdline[counter+1]
+		if entry == '--origbox':
+			orig_boxsize=cmdline[counter+1]
+		if entry == '--i': 
+			starfile=cmdline[counter+1]
+		counter=counter+1	
+
+	#Get datapath data
+        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+	usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+
+        #Get userdirectory data and write to log file
+        userdir=GLOBUSTRANSFERSDIR + '/'+usernamedir
+        
+	starfilename=starfile.split('/')
+	cosmic2foldername=starfilename[0].strip('"')
+	del starfilename[0]
+	starfilename='/'.join(starfilename).strip('"')
+	#/projects/cosmic2/gatewaydev/globus_transfers/mcianfro@umich.edu/"cryodrgn/Extract/job042/particles_30k.star"
+	#starfilename=Extract/job042/particles_30k.star
+	#userdir=/projects/cosmic2/gatewaydev/globus_transfers/mcianfro@umich.edu/
+	#cosmic2foldername=cryodrgn
+
+	cmd="ln -s '%s/%s/'* ." %(userdir,cosmic2foldername)
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()	
+	
+	cmd='''module load cuda/9.2
+source /share/apps/compute/anaconda/etc/profile.d/conda.sh
+conda activate /projects/cosmic2/conda/cryodrgn\n'''
+
+	#Downsample
+	cmd=cmd+'''cryodrgn downsample %s -D %i -o particles.%i.mrcs --chunk 40000 >> stdout.txt 2>>stderr.txt\n''' %(starfilename,int(newboxsize),int(newboxsize))
+
+	#Pose reconfig
+	cmd=cmd+'''cryodrgn parse_pose_star %s -o pose.pkl -D %s  >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize)
+
+	#CTF info
+	cmd=cmd+'''cryodrgn parse_ctf_star %s -D %s --Apix %s -o ctf.pkl  >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize,angpix)
+
+	#VAE 
+	invertcmd=''
+	if invert is True:
+		invertcmd='--invert-data'
+	cmd=cmd+'cryodrgn train_vae particles.%i.txt --poses pose.pkl --ctf ctf.pkl --zdim %s -n %s --qdim %s %s --qlayers %s --pdim %s --players %s -o cryodrgn  >> stdout.txt 2>>stderr.txt\n' %(int(newboxsize),zdim,epochs,qdim,invertcmd,qlayers,pdim,players)
+
+	#Analysis
+	cmd=cmd+'cryodrgn analyze cryodrgn %i --Apix %s >> stdout.txt 2>>stderr.txt\n' %(int(epochs)-1,angpix)
+	cmd=cmd+'zip -r cosmic2-cryodrgn.zip cryodrgn\n'
+
+	o1.write(cmd)
+
+	runhours=12
+        runminutes = math.ceil(60 * runhours)
+        partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+#SBATCH --gres=gpu:1
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,6,jobdir,cmd)
+        runfile = "./batch_command.run"
+	statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
 
 if jobtype == 'deepemhancer':
         command=args['commandline']

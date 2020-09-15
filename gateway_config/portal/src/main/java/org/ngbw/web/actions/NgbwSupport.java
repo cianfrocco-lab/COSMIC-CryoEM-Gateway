@@ -85,7 +85,7 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 	public static final String IPLANT_LOGOUT = "iplant_logout";
 
 	// maximum length of displayed text items
-	public static final int TEXT_LENGTH = 40;
+	public static final int TEXT_LENGTH = 400;
 
 	// tools we don't want to see
 	public static final String POVRAY = "POVRAY";
