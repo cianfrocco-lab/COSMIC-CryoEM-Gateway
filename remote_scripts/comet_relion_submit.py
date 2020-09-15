@@ -907,7 +907,7 @@ conda activate /projects/cosmic2/conda/cryodrgn\n'''
 
 	o1.write(cmd)
 
-	runhours=4
+	runhours=12
         runminutes = math.ceil(60 * runhours)
         partition='gpu-shared'
         hours, minutes = divmod(runminutes, 60)
