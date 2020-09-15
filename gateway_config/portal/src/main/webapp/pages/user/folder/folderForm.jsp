@@ -29,4 +29,5 @@
       </div>
     </div>
   </s:form>
+  <s:property value="actionMessages"/>
 </body>

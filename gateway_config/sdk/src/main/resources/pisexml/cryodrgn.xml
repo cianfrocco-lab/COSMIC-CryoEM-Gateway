@@ -123,14 +123,14 @@ Mike -->
         <name>starfile</name>
         <attributes>
             <group>1</group>
-            <prompt>Consensus refinement STAR/.cs file</prompt>
+            <prompt>Consensus refinement STAR file</prompt>
             <format>
                 <language>perl</language>
                 <code>"--consensus $value"</code>
             </format>
             <ctrls>
                 <ctrl>
-                    <message>Please provide a consensus refinement STAR or .cs file</message>
+                    <message>Please provide a consensus refinement STAR file</message>
                     <language>perl</language>
                     <code>!$starfile</code>
                 </ctrl>
