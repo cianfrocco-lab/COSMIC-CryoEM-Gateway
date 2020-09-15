@@ -111,7 +111,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			-->
 			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
                 toolresource="COMET"
                 configfile="pisexml/particle_picking_ctf_motion.xml"
@@ -123,6 +122,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			-->
 			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
                 toolresource="comet-gpu"
                 configfile="pisexml/cryodrgn.xml"
