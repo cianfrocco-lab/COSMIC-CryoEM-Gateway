@@ -134,7 +134,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="RELION_MULTIBODY_COMET" name="Relion Multibody refinement"
+			<Tool id="RELION_MULTIBODY_COMET" name="RELION Multibody refinement"
                 toolresource="comet-gpu"
             	configfile="pisexml/relion_multibody_comet.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -157,7 +157,7 @@
                 </OutputParameters>
             </Tool>
 
-			<Tool id="RELION_2D_CLASS_COMET" name="Relion 2D classification on Comet"
+			<Tool id="RELION_2D_CLASS_COMET" name="RELION 2D classification on Comet"
 				toolresource="comet-gpu"
 				configfile="pisexml/relion_2d_class_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -168,7 +168,7 @@
 				<OutputParameters>
 				</OutputParameters>
 			</Tool>
-			<Tool id="RELION_3D_INITIAL_MODEL_COMET" name="Relion 3D initial model calculation on Comet"
+			<Tool id="RELION_3D_INITIAL_MODEL_COMET" name="RELION 3D initial model calculation on Comet"
                 toolresource="comet-gpu"
                 configfile="pisexml/relion_3d_initial_model_comet.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -179,7 +179,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="RELION_3D_CLASS_COMET" name="Relion 3D classification on Comet"
+			<Tool id="RELION_3D_CLASS_COMET" name="RELION 3D classification on Comet"
 				toolresource="comet-gpu"
 				configfile="pisexml/relion_3d_class_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -191,7 +191,7 @@
 				</OutputParameters>
 			</Tool>
             <Tool id="RELION_3D_REFINE_COMET"
-                name="Relion 3D refinement on Comet"
+                name="RELION 3D refinement on Comet"
 				toolresource="comet-gpu"
 				configfile="pisexml/relion_3d_refine_comet.xml"
 				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
