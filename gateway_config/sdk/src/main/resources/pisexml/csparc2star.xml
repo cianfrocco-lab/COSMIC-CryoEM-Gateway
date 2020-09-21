@@ -9,7 +9,7 @@
     <version>0.5</version>
     <description>Convert cryoSPARC file to STAR file for RELION using csparc2star.py from pyem software package</description>
     <authors>Daniel Asarnow</authors>
-    <reference>Asarnow D. "UCSF pyem"</reference>
+    <reference>https://github.com/asarnow/pyem</reference>
     <category>Conversion</category>
     <doclink>https://github.com/asarnow/pyem</doclink>
   </head>
@@ -41,7 +41,6 @@
 				 "runhours=1\\n" . 
                  "ChargeFactor=1.0\\n" .
 			     "ntasks-per-node=1\\n" .
-				 "node_exclusive=1\\n" .
                  "cores_per_node=1\\n" .
 				 "nodes=1\\n"
 				</code>
