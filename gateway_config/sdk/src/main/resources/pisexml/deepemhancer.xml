@@ -6,10 +6,10 @@
 <pise>
   <head>
     <title>DeepEMhancer</title>
-    <version>1.0</version>
+    <version>0.13</version>
     <description>Non-linear post-processing of cryo-EM maps for local sharpening-like post-processing and automatic masking/denoising.</description>
     <authors>Sanchez-Garcia R, Gomez-Blanco J, Cuervo A, Carazo JM, Sorzano COS, Vargas J.</authors>
-    <reference>Sanchez-Garcia R, Gomez-Blanco J, Cuervo A, Carazo JM, Sorzano COS, Vargas J. "DeepEMhancer: a deep learning solution for cryo-EM volume post-processing" bioRxiv (2020)</reference>
+    <reference>https://www.biorxiv.org/content/10.1101/2020.06.12.148296v3</reference>
     <category>Validation and Analysis</category>
     <doclink>https://github.com/rsanchezgarc/deepEMhancer</doclink>
   </head>
@@ -38,9 +38,9 @@
 				<language>perl</language>
 				<code>
 <!-- RUN THESE JOBS ON Comet -->
+				 "gpu=1\\n" .
 				 "runhours=3\\n" . 
-			     "ntasks-per-node=1\\n" .
-				 "node_exclusive=1\\n" .
+			     "ntasks-per-node=6\\n" .
 				 "nodes=1\\n"
 				</code>
 			</format>

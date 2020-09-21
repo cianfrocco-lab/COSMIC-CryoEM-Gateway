@@ -73,7 +73,6 @@ Mike -->
                  "runhours=12\\n" .
                  "ChargeFactor=1.0\\n" .
 				 "ntasks-per-node=1\\n" .
-				 "node_exclusive=1\\n" .
 				 "nodes=1\\n"
 				</code>
 			</format>
@@ -272,6 +271,21 @@ Mike -->
                 <code>"--players $value"</code>
             </format>
         </attributes>
+    </parameter>
+
+	<parameter type="Switch">
+        <name>sgd</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Check box to refine poses with gradient descent (--do-pose-sgd)</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --do-pose-sgd " : ""</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+       </attributes>
     </parameter>
 
     <parameter type="Switch">

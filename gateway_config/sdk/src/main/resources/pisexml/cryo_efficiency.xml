@@ -9,7 +9,7 @@
     <version>1.1.1</version>
     <description>Calculate efficiency for 3D reconstruction to determine if Euler angle coverage is evenly distributed</description>
     <authors>Naydenova and Russo</authors>
-    <reference>Naydenova, K and Russo, CJ "Measuring the effects of particle orientation to improve the efficiency of electron cryomicroscopy" Nature Communications (2017)</reference>
+    <reference>https://pubmed.ncbi.nlm.nih.gov/28931821/</reference>
     <category>Validation and Analysis</category>
     <doclink>https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF/index.html</doclink>
   </head>

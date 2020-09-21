@@ -5,9 +5,9 @@
 <!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
 <pise>
   <head>
-    <title>Relion 3D Multibody refinement</title>
+    <title>RELION 3D Multibody refinement</title>
     <version>3.1</version>
-    <description>Iteratively refine masked regions separately within a structure Relion</description>
+    <description>Iteratively refine masked regions separately within a structure RELION</description>
     <authors>S. H. W. Scheres</authors>
 <!--
     <reference>Scheres, S. H. W. (2012) RELION: Implementation of a Bayesian approach to cryo-EM structure determination. Journal of Structural Biology 180, 519-530</reference>
@@ -73,9 +73,9 @@ Mike -->
                  "gpu=4\\n" .
                  "runhours=12\\n" .
                  "ChargeFactor=1.0\\n" .
-				 "ntasks-per-node=15\\n" .
+				 "ntasks-per-node=24\\n" .
 				 "node_exclusive=1\\n" .
-				 "nodes=10\\n"
+				 "nodes=1\\n"
 				</code>
 			</format>
 			<group>1</group>

@@ -6,10 +6,10 @@
 <pise>
   <head>
     <title>MicAssess</title>
-    <version>1.0</version>
+    <version>0.1</version>
     <description>Automatically assess micrograph quality with deep learning.</description>
     <authors>Yilai Li and Michael Cianfrocco</authors>
-    <reference>Li, Y. et al. (2019) High-throughput cryo-EM enabled by user-free preprocessing routines</reference>
+    <reference>https://pubmed.ncbi.nlm.nih.gov/32294468/</reference>
     <category>Automated assessment tools</category>
     <doclink>https://www.biorxiv.org/content/10.1101/2019.12.20.885541v1.full</doclink>
   </head>
@@ -71,6 +71,29 @@
 	    <group>90</group>
 	  </attributes>	  
 	</parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>thresh</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Threshold for classification. Default is 0.1. Higher number will cause more good micrographs being classified as bad.</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-t $value"</code>
+            </format>
+            <vdef>
+                <value>0.1</value>
+            </vdef>
+			<ctrls>
+                <ctrl>
+                    <message>Please enter a value > 0 for the threshold</message>
+                    <language>perl</language>
+                    <code>$thresh &lt; 0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
 
 <!--
 
