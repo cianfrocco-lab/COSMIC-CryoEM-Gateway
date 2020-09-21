@@ -99,9 +99,8 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--
 			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
-                toolresource="COMET"
+                toolresource="comet-gpu"
                 configfile="pisexml/auto_micassess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
@@ -111,7 +110,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
+			<!--<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
                 toolresource="COMET"
                 configfile="pisexml/particle_picking_ctf_motion.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
