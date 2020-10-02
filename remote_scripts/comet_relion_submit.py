@@ -39,6 +39,8 @@ def prepareMicassess(inputline,jobdir):
         for eindex in range(len(testargs)):
             if testargs[eindex] == '-i':
                 inputZipFile = '%s' %(testargs[eindex + 1])
+	    if testargs[eindex] == '-t':
+		threshold='%s' %(testargs[eindex + 1])
         if inputZipFile == None:
             print "Error, could not parse inputZipFile in (%s)" % inputline
             log(statusfile, "can't get inputZipFile, submit_job is returning 1\n")
@@ -122,7 +124,9 @@ def prepareMicassess(inputline,jobdir):
 	if newstarname[0] == '/':
 		newstarname=newstarname[1:] 
 
-	return newstarname
+	shutil.copyfile(starfilename,newstarname)
+
+	return newstarname,threshold
 
 def preparePreprocessingRun(inputline,jobdir):
 
@@ -221,16 +225,19 @@ def preparePreprocessingRun(inputline,jobdir):
         cmd="ln -s '%s/'* ." %(DirToSymLink)
 	subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
 
+	#Copy starfile to current directory
+	shutil.copyfile(starfilename,newstarname.split('/')[-1])
+
 	#Get email
 	jobproperties_dict = getProperties('_JOBINFO.TXT')
         mailuser = jobproperties_dict['email']
 
 	#Format pipeline.sh script
-	with open(os.path.join('/home/yilaili/codes/Automatic-preprocessing-COSMIC2/', 'pipeline.sh'), 'r') as f:
+	with open(os.path.join('/home/cosmic2/software_dependencies/Automatic-preprocessing-COSMIC2/', 'pipeline.sh'), 'r') as f:
 	        with open(os.path.join(pwd, 'pipeline.sh'), 'w') as new_f:
         	    for line in f:
                 	new_line = line.replace('$$input_dir', starfiledirname)\
-	                .replace('$$input_star', starfilename.split('/')[-1])\
+	                .replace('$$input_star', newstarname.split('/')[-1])\
         	        .replace('$$user_email', mailuser)\
                 	.replace('$$CS', cs)\
 	                .replace('$$HT', kev)\
@@ -747,7 +754,7 @@ if 'cryodrgn' in args['commandline']:
 	jobtype='cryodrgn'
 
 if jobtype == 'micassess':
-	formatted_starname=prepareMicassess(args['commandline'],jobdir)
+	formatted_starname,threshold=prepareMicassess(args['commandline'],jobdir)
 	runhours=1
 	runminutes = math.ceil(60 * runhours)
 	partition='gpu-shared'
@@ -809,13 +816,13 @@ else
     fi
 fi
 unset __conda_setup
-conda activate cryoassess 
-python /home/cosmic2/software_dependencies/Automatic-cryoEM-preprocessing/micassess.py -i %s -m ~/software_dependencies/model_files/micassess_051419.h5 -o %s_micassess_good.star 
+conda activate /projects/cosmic2/conda/cryoassess 
+python /home/cosmic2/software_dependencies/Automatic-cryoEM-preprocessing/micassess.py -i %s -t %s -m ~/software_dependencies/model_files/micassess_051419.h5 -o %s_micassess_good.star 
 zip -r MicAssess.zip MicAssess/
 zip -r /projects/cosmic2/meta-data/%s-micassess.zip MicAssess/
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'],jobdir,formatted_starname,formatted_starname[:-5],randomString(40))
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,formatted_starname,threshold,formatted_starname[:-5],randomString(40))
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
