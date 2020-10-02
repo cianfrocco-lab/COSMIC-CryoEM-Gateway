@@ -836,31 +836,47 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 
 if jobtype == 'cryodrgn': 
 	command=args['commandline']
-	#Parsing commandline: 
-	#cryodrgn --angpix .91 --qdim 256 --D 128 --invert --players 3 --zdim 1 --consensus run_data_30k.star --qlayers 3 --pdim 256 -n 50  --i "cryodrgn/Extract/job042/particles_30k.star"
-
+	uninvert=False
+	relion31=False
 	cmdline=command.split()
 	totEntries=len(cmdline)
 	counter=0
+	checkpoint=''
+	indexfile=''
+	nowindow=False
 	while counter < totEntries: 
 		entry=cmdline[counter]
+		if entry == '--w':
+                        ampcontrast=cmdline[counter+1]
+		if entry == '--cs':
+                        cs=cmdline[counter+1]
+		if entry == '-b': 
+			batch=cmdline[counter+1]
+		if entry == '--relion31':
+			relion31=True
+		if entry == '--load':
+			checkpoint=cmdline[counter+1]
+		if entry == '--no-window':
+			nowindow=True
+		if entry == '--ind':
+			indexfile=cmdline[counter+1]
 		if entry == '--angpix': 
 			angpix=cmdline[counter+1]
-		if entry == '--qdim':
+		if entry == '--enc-dim':
 			qdim=cmdline[counter+1]
 		if entry == '--D':
 			newboxsize=cmdline[counter+1]
-		if entry == '--invert':
-			invert=True
-		if entry == '--players': 
+		if entry == '--uninvert-data':
+			uninvert=True
+		if entry == '--dec-layers': 
 			players=cmdline[counter+1]
 		if entry == '--zdim': 
 			zdim=cmdline[counter+1]
 		if entry == '--consensus':
 			pose_ctf=cmdline[counter+1]
-		if entry == '--qlayers': 
+		if entry == '--enc-layers': 
 			qlayers=cmdline[counter+1]
-		if entry == '--pdim':
+		if entry == '--dec-dim':
 			pdim=cmdline[counter+1]
 		if entry == '-n':
 			epochs=cmdline[counter+1]
@@ -868,7 +884,13 @@ if jobtype == 'cryodrgn':
 			orig_boxsize=cmdline[counter+1]
 		if entry == '--i': 
 			starfile=cmdline[counter+1]
+		if entry == '--kev':
+			kev=cmdline[counter+1]
 		counter=counter+1	
+
+	relion31cmd=''
+	if relion31 is True:
+		relion31cmd='--relion31'
 
 	#Get datapath data
         pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
@@ -881,10 +903,6 @@ if jobtype == 'cryodrgn':
 	cosmic2foldername=starfilename[0].strip('"')
 	del starfilename[0]
 	starfilename='/'.join(starfilename).strip('"')
-	#/projects/cosmic2/gatewaydev/globus_transfers/mcianfro@umich.edu/"cryodrgn/Extract/job042/particles_30k.star"
-	#starfilename=Extract/job042/particles_30k.star
-	#userdir=/projects/cosmic2/gatewaydev/globus_transfers/mcianfro@umich.edu/
-	#cosmic2foldername=cryodrgn
 
 	cmd="ln -s '%s/%s/'* ." %(userdir,cosmic2foldername)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()	
@@ -894,23 +912,36 @@ source /share/apps/compute/anaconda/etc/profile.d/conda.sh
 conda activate /projects/cosmic2/conda/cryodrgn\n'''
 
 	#Downsample
-	cmd=cmd+'''cryodrgn downsample %s -D %i -o particles.%i.mrcs --chunk 40000 >> stdout.txt 2>>stderr.txt\n''' %(starfilename,int(newboxsize),int(newboxsize))
+	cmd=cmd+'''cryodrgn downsample %s -D %i -o particles.%i.mrcs --chunk 40000 %s >> stdout.txt 2>>stderr.txt\n''' %(starfilename,int(newboxsize),int(newboxsize),relion31cmd)
 
 	#Pose reconfig
-	cmd=cmd+'''cryodrgn parse_pose_star %s -o pose.pkl -D %s  >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize)
+	pose31=''
+	if relion31 is True: 
+		pose31=' --Apix %s' %(angpix)
+	cmd=cmd+'''cryodrgn parse_pose_star %s -o pose.pkl -D %s %s %s >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize,relion31cmd,pose31)
 
 	#CTF info
-	cmd=cmd+'''cryodrgn parse_ctf_star %s -D %s --Apix %s -o ctf.pkl  >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize,angpix)
+	cmd=cmd+'''cryodrgn parse_ctf_star %s -D %s --Apix %s --cs %s -w %s --kv %s -o ctf.pkl %s  >> stdout.txt 2>>stderr.txt\n''' %(pose_ctf,orig_boxsize,angpix,cs,ampcontrast,kev,relion31cmd)
 
 	#VAE 
 	invertcmd=''
-	if invert is True:
-		invertcmd='--invert-data'
-	cmd=cmd+'cryodrgn train_vae particles.%i.txt --poses pose.pkl --ctf ctf.pkl --zdim %s -n %s --qdim %s %s --qlayers %s --pdim %s --players %s -o cryodrgn  >> stdout.txt 2>>stderr.txt\n' %(int(newboxsize),zdim,epochs,qdim,invertcmd,qlayers,pdim,players)
+	if uninvert is True:
+		invertcmd='--uninvert-data'
+	indexcmd=''
+	checkpointcmd=''
+	nowindowcmd=''
+	if nowindow is True:
+		nowindowcmd='--no-window'
+	if len(checkpoint)>0:
+		checkpointcmd='--load %s' %(checkpoint)
+	if len(indexfile)>0:
+		indexcmd='--ind %s' %(indexfile)
+	cmd=cmd+'cryodrgn train_vae particles.%i.txt --poses pose.pkl --ctf ctf.pkl --zdim %s -n %s --enc-dim %s %s --enc-layers %s --dec-dim %s --dec-layers %s -b %i -o cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i %s %s %s %s >> stdout.txt 2>>stderr.txt\n' %(int(newboxsize),zdim,epochs,qdim,invertcmd,qlayers,pdim,players,int(batch),int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs),indexcmd,checkpointcmd,nowindowcmd,relion31cmd)
 
 	#Analysis
-	cmd=cmd+'cryodrgn analyze cryodrgn %i --Apix %s >> stdout.txt 2>>stderr.txt\n' %(int(epochs)-1,angpix)
-	cmd=cmd+'zip -r cosmic2-cryodrgn.zip cryodrgn\n'
+	cmd=cmd+'cryodrgn analyze cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i %i --Apix %s >> stdout.txt 2>>stderr.txt\n' %(int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs),int(epochs)-1,angpix)
+	cmd=cmd+'cp %s cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i/\n' %(starfilename,int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs))
+	cmd=cmd+'zip -r cosmic2-cryodrgn.zip cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i\n' %(int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs))
 
 	o1.write(cmd)
 

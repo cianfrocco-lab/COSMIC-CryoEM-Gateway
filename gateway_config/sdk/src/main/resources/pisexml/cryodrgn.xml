@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>cryoDRGN - Deep Reconstructing Generative Networks for cryo-EM heterogeneous reconstruction</title>
-    <version>0.2.1</version>
+    <version>0.3.0b</version>
     <description>Perform structural analysis of 3D reconstructions using deep learning</description>
     <authors>E. Zhong, T. Bepler, B. Berger, J.H. Davis </authors>
 <!--
@@ -18,34 +18,6 @@
   </head>
 
   <command>cryodrgn</command>
-<!-- 
-Per our conversation earlier today, I’m sending along a comet submission script for the analysis routine that will be a part of the gateway. 
-
-First, you can look at an example submission script that I typically have used (‘relion_refine_submission.txt’). The cluster input variables are standard, 
-and then there is a single command that will run using MPI. 
-
-The barebones version of the command line input is the following (‘relion_refine_submission_base.txt’). I’ve bolded and underlined the areas that users 
-will have to input: 
-
-ibrun -v relion_refine_mpi  —o /path/to/working/directory/[output] -*auto_refine -*split_random_halves —i /path/to/working/directory/[input file] 
--*particle_diameter [user provided] —angpix [user provided] —ref /path/to/working/directory/[user provided] -*ini_high [user provided] -*ctf 
--*flatten_solvent -*zero_mask -*oversampling 1 -*healpix_order 2 -*auto_local_healpix_order 4 -*offset_range [user provided] -*offset_step [user provided] 
-—sym [user provided] -*low_resol_join_halves 40 -*norm -*scale  -*j 1 -*memory_per_thread 4
-
-A list of variables that I would change for these test run (or at least an initial list of variables):
-—o Output file basename
-—i Input file
-—particle_diameter Diameter of particle (Angstroms)
-—angpix Pixel size of data (A/pix)
-—ref 3D model to use as template 
-—ini_high Initial filter for 3D volume
-—offset_range Pixel search range 
-—offset_step Pixel search range step size
-—sym Symmetry of sample 
-I’m not sure what the next steps are for building out this command, but this is a definite start. There will be a few added changes to the submission command based upon users data, which we will incorporate into the gateway job template page.
-
-Let me know what else I can do to help!
-Mike -->
 
 <parameters>
 <!-- command name: this parameter precedes all instruction strings -->
@@ -168,7 +140,7 @@ Mike -->
         <name>angpix</name>
         <attributes>
             <group>1</group>
-            <prompt>Pixel size of data, in Angstroms/pixel</prompt>
+            <prompt>Pixel size of original data, in Angstroms/pixel</prompt>
             <format>
                 <language>perl</language>
                 <code>"--angpix $value"</code>
@@ -183,21 +155,88 @@ Mike -->
         </attributes>
     </parameter>
 
-    <parameter type="Integer" issimple="1" ismandatory="1">
-        <name>zdim</name>
+	<parameter type="Switch" issimple="1">
+        <name>relion31</name>
         <attributes>
             <group>1</group>
-            <prompt>Dimension of latent variable (--zdim) (fast=1; slow=10)</prompt>
+            <prompt>Check box if STAR file is from RELION v. 3.1</prompt>
             <format>
-				<language>perl</language>
-				<code>"--zdim $value"</code>
+                <language>perl</language>
+                <code>($value) ? " --relion31" : ""</code>
             </format>
             <vdef>
-				<value>1</value>
+                <value>0</value>
             </vdef>
+       </attributes>
+    </parameter>
+
+	<parameter type="Excl" issimple="1" ismandatory="1">
+        <name>kev</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Accelerating voltage (keV)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--kev $value"</code>
+            </format>
+            <vdef>
+                <value>300</value>
+            </vdef>
+            <vlist>
+                <value>300</value>
+                <label>300</label>
+                <value>200</value>
+                <label>200</label>
+                <value>120</value>
+                <label>120</label>
+            </vlist>
         </attributes>
     </parameter>
-	
+
+	<parameter type="Float" issimple="1">
+        <name>cs</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Sherical aberration (Cs)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--cs $value"</code>
+            </format>
+            <vdef>
+				<value>2.7</value>
+			</vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a value >= 0 for the spherical aberration value</message>
+                    <language>perl</language>
+                    <code>$apix &lt; 0.0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>weight</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Amplitude contrast ratio</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--w $value"</code>
+            </format>
+			<vdef>
+				<value>0.07</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a value >= 0 for the amplitude contrast</message>
+                    <language>perl</language>
+                    <code>$weight &lt; 0.0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
     <parameter type="Integer" issimple="1" ismandatory="1">
 	    <name>epochs</name>
 	    <attributes>
@@ -213,62 +252,116 @@ Mike -->
 	    </attributes>
     </parameter>
 
-	<parameter type="Integer" ismandatory="1">
+	<parameter type="Integer" issimple="1" ismandatory="1">
         <name>qdim</name>
         <attributes>
             <group>1</group>
-            <prompt>Advanced: Number of nodes in hidden layers for encoder (--qdim)</prompt>
+            <prompt>Number of nodes in hidden layers for encoder (--enc-dim)</prompt>
             <vdef>
                 <value>256</value>
             </vdef>
             <format>
                 <language>perl</language>
-                <code>"--qdim $value"</code>
+                <code>"--enc-dim $value"</code>
             </format>
         </attributes>
     </parameter>
 
-	<parameter type="Integer" ismandatory="1">
+	<parameter type="Integer" issimple="1" ismandatory="1">
         <name>qlayers</name>
         <attributes>
             <group>1</group>
-            <prompt>Advanced: Number of hidden layers for encoder (--qlayers)</prompt>
+            <prompt>Number of hidden layers for encoder (--enc-layers)</prompt>
             <vdef>
                 <value>3</value>
             </vdef>
             <format>
                 <language>perl</language>
-                <code>"--qlayers $value"</code>
+                <code>"--enc-layers $value"</code>
             </format>
         </attributes>
     </parameter>
 
-	<parameter type="Integer" ismandatory="1">
+	<parameter type="Integer" issimple="1" ismandatory="1">
         <name>pdim</name>
         <attributes>
             <group>1</group>
-            <prompt>Advanced: Number of nodes in hidden layers for decoder (--pdim)</prompt>
+            <prompt>Number of nodes in hidden layers for decoder (--dec-dim)</prompt>
             <vdef>
                 <value>256</value>
             </vdef>
             <format>
                 <language>perl</language>
-                <code>"--pdim $value"</code>
+                <code>"--dec-dim $value"</code>
             </format>
         </attributes>
     </parameter>
 
-	<parameter type="Integer" ismandatory="1">
+	<parameter type="Integer" issimple="1" ismandatory="1">
         <name>players</name>
         <attributes>
             <group>1</group>
-            <prompt>Advanced: Number of hidden layers for decoder (--players)</prompt>
+            <prompt>Number of hidden layers for decoder (--dec-layers)</prompt>
             <vdef>
                 <value>3</value>
             </vdef>
             <format>
                 <language>perl</language>
-                <code>"--players $value"</code>
+                <code>"--dec-layers $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="Integer" ismandatory="1">
+        <name>batch</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Minibatch size (-b)</prompt>
+            <vdef>
+                <value>8</value>
+            </vdef>
+            <format>
+                <language>perl</language>
+                <code>"-b $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="Integer" ismandatory="1">
+        <name>zdim</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Dimension of latent variable (--zdim) (zdim=8 works well for most cases)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--zdim $value"</code>
+            </format>
+            <vdef>
+                <value>8</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile">
+        <name>load</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Checkpoint file - initialize training from a checkpoint (--load)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--load $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile">
+        <name>index</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Index file - filter particle stack by these indices (--ind)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--ind $value"</code>
             </format>
         </attributes>
     </parameter>
@@ -288,14 +381,14 @@ Mike -->
        </attributes>
     </parameter>
 
-    <parameter type="Switch">
-        <name>relion31</name>
+	<parameter type="Switch">
+        <name>window</name>
         <attributes>
             <group>1</group>
-            <prompt>Optional: Check box if STAR file is from RELION v. 3.1</prompt>
+            <prompt>Advanced: Turn off real space windowing of dataset (--no-window)</prompt>
             <format>
                 <language>perl</language>
-                <code>($value) ? " --relion31" : ""</code>
+                <code>($value) ? " --no-window " : ""</code>
             </format>
             <vdef>
                 <value>0</value>
@@ -307,13 +400,13 @@ Mike -->
 	    <name>invert</name>
 	    <attributes>
 		    <group>1</group>
-		    <prompt>Optional: Invert contrast (needed if particles are white on black background)</prompt>
+		    <prompt>Optional: Re-invert contrast (needed if particles are black on white background)</prompt>
 		    <format>
 			    <language>perl</language>
-			    <code>($value) ? " --invert" : ""</code>
+			    <code>($value) ? " --uninvert-data" : ""</code>
 		    </format>
             <vdef>
-                <value>1</value>
+                <value>0</value>
             </vdef>
 	    </attributes>
     </parameter>
