@@ -142,7 +142,7 @@ public class ProfileManager extends NgbwSupport
         //if ( destination_path.startsWith ( globusRoot ) )
         if ( destination_name.equals ( gateway_endpoint_name ) )
         {
-            destination_path = globusRoot + destination_path;
+            //destination_path = globusRoot + destination_path;
             log.debug ( "MONA: new destination_path = " + destination_path );
             log.debug ( "MONA: transferring TO gateway" );
             TransferRecord old_tr = null;
