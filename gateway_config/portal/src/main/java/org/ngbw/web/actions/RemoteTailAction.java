@@ -3,6 +3,7 @@ package org.ngbw.web.actions;
 import org.ngbw.sdk.database.Task;
 import org.ngbw.sdk.WorkbenchSession;
 import org.apache.log4j.Logger;
+import org.ngbw.sdk.common.util.BaseValidator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,7 +71,7 @@ public class RemoteTailAction extends ManageTasks
 		return is;
 	}
 
-	public String getInputLine() 
+	public String getInputLine() throws Exception
 	{
 		execute();
 		//ValueStack stack = ActionContext.getContext().getValueStack();
@@ -83,22 +84,22 @@ public class RemoteTailAction extends ManageTasks
 	@SkipValidation
 	private InputStream getTheData(String inputPath)  throws Exception
 	{
-		logger.debug("start of getTheData()");
+		//logger.debug("start of getTheData()");
 		Task task = null;
 		String[] taskId = (String[])getParameters().get(ID);
-		logger.debug("got taskId");
+		//logger.debug("got taskId");
 		if (taskId != null && taskId.length > 0) 
 		{
 			setCurrentTask(getSelectedTask(Long.parseLong(taskId[0])));
-			logger.debug("setCurrentTask done");
+			//logger.debug("setCurrentTask done");
 		} 
 		if ((task = getCurrentTask()) == null) 
 		{
 			throw new Exception("No task selected.");
 		}
-		logger.debug("before getWorkbenchSession()");
+		//logger.debug("before getWorkbenchSession()");
 		WorkbenchSession session = getWorkbenchSession();
-		logger.debug("before getFileFromWorkingDirectory");
+		//logger.debug("before getFileFromWorkingDirectory");
 		//return getWorkbenchSession().getFileFromWorkingDirectory(task, inputPath);
 		//WorkingDirectory wd = session.getWorkingDirectory(task);
 		return session.getFileFromWorkingDirectory(task, inputPath);
@@ -117,18 +118,27 @@ public class RemoteTailAction extends ManageTasks
 	}
 
 	//method for downloading file
-	public String execute() 
+	public String execute() throws Exception
 	{
-		logger.debug("start of execute() inputPath: (" + inputPath + ")");
+		//logger.debug("start of execute() inputPath: (" + inputPath + ")");
 		try
 		{
+			if ( !BaseValidator.isSimplePathFilename( inputPath )) {
+				logger.warn ( "path '" + inputPath + "' is not an acceptable filename.  Filenames are restricted due to security concerns." );
+				throw new Exception (
+					"inputPath " + inputPath +
+					" has a string that contains " +
+					"characters other than ascii letters, numbers, single period, underscore and backslash" );
+			} else {
+				logger.debug("path '" + inputPath + "' is valid");
+			}
 			is = null;
 			is = getTheData(inputPath);
-			logger.debug("got is");
+			//logger.debug("got is");
 			InputStreamReader isr = new InputStreamReader(is);
-			logger.debug("got isr");
+			//logger.debug("got isr");
 			BufferedReader br = new BufferedReader(isr);
-			logger.debug("got br");
+			//logger.debug("got br");
 			line = "";
 			String newline = null;
 			br.mark(10000000);
@@ -155,16 +165,16 @@ public class RemoteTailAction extends ManageTasks
 /*
 */
 			while (newline == null) {
-				logger.debug("br.readline() null, newline: (" + newline + ")");
+				//logger.debug("br.readline() null, newline: (" + newline + ")");
 				TimeUnit.SECONDS.sleep(5);
 				newline = br.readLine();
 			}
 			while (newline != null) {
-				logger.debug("newline: (" + newline + ")");
+				//logger.debug("newline: (" + newline + ")");
 				if (currentline >= initialindex) {
 					line = line + newline + "\n";
 				}
-				logger.debug("got a line");
+				//logger.debug("got a line");
 				if (currentline >= streamcount - 1) {
 					break;
 				}

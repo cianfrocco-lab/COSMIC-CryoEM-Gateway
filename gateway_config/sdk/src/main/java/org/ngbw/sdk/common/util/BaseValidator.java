@@ -77,7 +77,7 @@ public class BaseValidator {
      */
 	public static boolean isSimplePathFilename(String filename)
 	{
-		if (filename == null || filename.length() > MAX_FILENAME)
+		if (filename == null || filename.length() > MAX_FILENAME || filename.matches(".*\\.\\..*"))
 		{
 			return false;
 		}
