@@ -59,6 +59,7 @@ public class ManageTasks extends DataManager
 	// task stage constants
 	public static final String READY = "READY";
 	public static final String COMPLETED = "COMPLETED";
+	private String CURRENT_SUBDIR = "CURRENT_SUBDIR";
 
 	/*================================================================
 	 * Properties
@@ -71,6 +72,22 @@ public class ManageTasks extends DataManager
 	private Task outputTask;
 	private Map<String, List<TaskInputSourceDocument>> input;
 	private Map<String, List<TaskOutputSourceDocument>> output;
+	private Map<String, Object> userSession;
+
+	public String execute() throws Exception{
+		//logger.info ( "start of ManageTasks.execute()" );
+		String[] taskId = (String[])getParameters().get(ID);
+		userSession = getSession();
+		userSession.put(CURRENT_SUBDIR, "");
+		if (taskId != null && taskId.length > 0) {
+			setCurrentTask(getSelectedTask(Long.parseLong(taskId[0])));
+			//logger.info ( "execute() returning success" );
+			return "success";
+		} else {
+			//logger.info ( "execute() returning failure taskId: (" + taskId + ") taskId.length: (" + taskId.length + ")" );
+			return "failure";
+		}
+	}
 	
 	/*================================================================
 	 * Action methods
@@ -147,6 +164,17 @@ public class ManageTasks extends DataManager
 		}
 	}
 
+	public String getTaskWorkingDirectoryPath() {
+		//logger.info ( "entered ManageTasks.getWorkingDirectoryPath(Task task)" );
+		try {
+			Task task = getCurrentTask();
+			String path = getWorkbenchSession().getWorkingDirectoryPath(task);
+			return path;
+		} catch (Throwable error) {
+			reportCaughtError(error, "Error getting path of working directory for selected task.");
+			return null;
+		}
+	}
 
 	@SkipValidation
 	public String displayParameters() {
@@ -667,6 +695,8 @@ public class ManageTasks extends DataManager
         //logger.info ( "MONA: entered ManageTasks.getWorkingDirectoryList()" );
 		try
 		{
+			userSession = getSession();
+			userSession.put(CURRENT_SUBDIR, "");
 			return getWorkbenchSession().listWorkingDirectory(task);
 		}
 		catch (Throwable error)

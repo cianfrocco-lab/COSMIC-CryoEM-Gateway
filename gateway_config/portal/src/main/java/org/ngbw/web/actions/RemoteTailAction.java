@@ -58,6 +58,8 @@ public class RemoteTailAction extends ManageTasks
 	private String inputPath;
 	public String getInputPath() { return inputPath; }
 	public void setInputPath(String inputPath) {this.inputPath = inputPath; }
+	private Map<String, Object> userSession;
+	private String CURRENT_SUBDIR = "CURRENT_SUBDIR";
 /*
 	public static final String ID = "id";
 	// session attribute key constants
@@ -132,8 +134,17 @@ public class RemoteTailAction extends ManageTasks
 			} else {
 				logger.debug("path '" + inputPath + "' is valid");
 			}
+			userSession = getSession();
+			String currentsubdir = (String) userSession.get(CURRENT_SUBDIR);
+			//logger.debug("currentsubdir: (" + currentsubdir + ")");
+			String workingdirectory = getTaskWorkingDirectoryPath();
+			//logger.debug("workingdirectory: (" + workingdirectory + ")");
+			//String fullpath = workingdirectory + currentsubdir + "/" + inputPath;
+			String fullpath = currentsubdir + "/" + inputPath;
+			//logger.debug("fullpath: (" + fullpath + ")");
 			is = null;
-			is = getTheData(inputPath);
+			//is = getTheData(inputPath);
+			is = getTheData(fullpath);
 			//logger.debug("got is");
 			InputStreamReader isr = new InputStreamReader(is);
 			//logger.debug("got isr");

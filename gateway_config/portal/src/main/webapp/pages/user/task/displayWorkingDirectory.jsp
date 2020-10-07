@@ -14,7 +14,20 @@
 		<th>Last Modified</th>
 	</thead>
 	<s:iterator value="workingDirectoryList" id="file">
-		<s:if test="%{file.isDirectory}">
+		<s:if test="%{#file.isDirectory==true}">
+                        <tr>
+                                <td>
+                                     <s:property value="%{#file.filename}"/>
+                                </td>
+                                <td>
+                                        <s:url id="durl" action="displaysubdir">
+                                                <s:param name="inputPath" value="%{#file.filename}"/>
+                                        </s:url>
+                                        <s:a href="%{durl}">Enter Subdir</s:a>
+                                </td>
+                                <td><s:property value="%{#file.size}"/></td>
+                                <td><s:date name="%{#file.mtime}"/></td>
+                        </tr>
 		</s:if>
 		<s:else>
 			<tr>
@@ -31,9 +44,6 @@
 						<s:param name="inputPath" value="%{#file.filename}"/>
 					</s:url>
 					<s:a href="%{durl}">Live Preview</s:a>
-<!--
-						<s:property value="%{#file.filename}"/>
- -->
 				</td>
 				<td><s:property value="%{#file.size}"/></td>
 				<td><s:date name="%{#file.mtime}"/></td>

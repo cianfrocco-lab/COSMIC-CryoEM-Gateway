@@ -150,6 +150,11 @@
             <result>/pages/user/home.jsp</result>
         </action>
 
+        <action name="displaysubdir" class="org.ngbw.web.actions.SubDirectoryAction" method="execute">
+            <result name="success">/pages/user/task/displayWorkingDirectory.jsp</result>
+            <result name="displayWorkingDirectory">/pages/user/task/displayWorkingDirectory.jsp</result>
+        </action>
+
 
         <action name="taskupdate" class="org.ngbw.web.actions.TaskUpdate">
             <interceptor-ref name="defaultStack"/>
