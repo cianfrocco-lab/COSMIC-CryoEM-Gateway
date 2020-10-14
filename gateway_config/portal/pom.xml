@@ -20,8 +20,8 @@
 		<treedraw.phy.fi/>
 		<treedraw.tmpdir/>
 		<!-- <struts.version>2.3.34</struts.version> -->
-		<struts.version>2.5.13</struts.version>
-		<struts.version>2.3.35</struts.version>
+		<!-- <struts.version>2.5.13</struts.version> -->
+		<struts.version>[2.3.35,)</struts.version>
 		<jstl.version>1.1.2</jstl.version>
 		<struts.menu.version>2.4.3</struts.menu.version>
 	</properties>
@@ -369,11 +369,13 @@
 
 		<!-- cyoun: globus integration work { -->
 		<!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-oauth2 -->
+        <!--
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-oauth2</artifactId>
 			<version>v2-rev120-1.22.0</version>
 		</dependency>
+        -->
 		<!-- https://mvnrepository.com/artifact/org.apache.oltu.oauth2/org.apache.oltu.oauth2.client -->
 		<dependency>
 			<groupId>org.apache.oltu.oauth2</groupId>
