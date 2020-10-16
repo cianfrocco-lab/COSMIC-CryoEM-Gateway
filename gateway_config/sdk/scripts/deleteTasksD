@@ -9,7 +9,7 @@ LOG=log4j.configuration=deleteTasks_log4j.xml
 # Delete tasks created by rest users, 60 days after the day the task was created.
 # If you set debug=true, just tells you what it would delete, but doesn't actually delete.
 #PROPERTIES="-D$LOG -D$STDOUT -Dage=60 -Ddebug=false -DrestOnly=true"
-PROPERTIES="-D$LOG -D$STDOUT -Dage=14 -Ddebug=true -DrestOnly=false"
+PROPERTIES="-D$LOG -D$STDOUT -Dage=21 -Ddebug=true -DrestOnly=false"
 
 RUN="python $SDK_VERSIONS/daemonize $PROPERTIES $COMMAND"
 

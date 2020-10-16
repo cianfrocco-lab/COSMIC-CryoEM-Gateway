@@ -752,6 +752,145 @@ if 'deepemhancer' in args['commandline']:
         jobtype='deepemhancer'
 if 'cryodrgn' in args['commandline']:
 	jobtype='cryodrgn'
+if 'smappoi.py' in args['commandline']:
+	jobtype='hrtm'
+
+if jobtype == 'hrtm': 
+
+	command=args['commandline']
+        cmdline=command.split()
+
+	totEntries=len(cmdline)
+        counter=0
+	#smappoi.py --cc 2.7 --angpix 1 --cif 6ek0_LSU.cif --w 0.07 --a_i 0.000050 --angle_inc 1.875 --t_sample 100 --deltaE 0.7 --df_inc 50 --cs 2.7 --b_factor 0 --kev 300 --
+	while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--cs':
+                        cs=cmdline[counter+1]
+                if entry == '--cc':
+                        cc=cmdline[counter+1]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+                if entry == '--cif':
+                        inputcif=cmdline[counter+1]
+                if entry == '--w':
+                        ampcontrast=cmdline[counter+1]
+                if entry == '--a_i':
+                        a_i=cmdline[counter+1]
+                if entry == '--angle_inc':
+                        angle_inc=cmdline[counter+1]
+                if entry == '--t_sample':
+                        t_sample=cmdline[counter+1]
+                if entry == '--deltaE':
+                        deltaE=cmdline[counter+1]
+                if entry == '--df_inc':
+                        df_inc=cmdline[counter+1]
+                if entry == '--b_factor':
+                        b_factor=cmdline[counter+1]
+                if entry == '--kev':
+                        kev=cmdline[counter+1]
+		if entry == '--i':
+			mrcfile=cmdline[counter+1].strip('"')
+		if entry == '--aPerPix_search':
+			aperpix_search=cmdline[counter+1]
+                counter=counter+1
+
+	outdirname='hrtm-output'
+
+	aperpix_search_add=''
+	if float(aperpix_search)>0:
+		aperpix_search_add='aPerPix_search %f\n' %(float(aperpix_search))
+
+	#Write parameter file
+	parfile='hrtm_params.txt'
+	p=open(parfile,'w')
+	p.write('''# the fxn to run:
+function search_global\n''')
+	p.write('''# The image:
+imageFile %s
+aPerPix %s
+defocus ddff1 ddff2 aaaang
+T_sample %s\n''' %(mrcfile,angpix,t_sample))
+	p.write('''# The reference structure:
+structureFile %s\n''' %(inputcif))
+	p.write('''# Microscope specs:
+V_acc %i
+Cs %f
+Cc %f
+deltaE %s
+a_i %s\n''' %(int(kev)*1000,float(cs)/1000,float(cc)/1000,deltaE,a_i))
+	p.write('''# search specs:
+nCores 4
+outputDir %s
+df_inc %s
+angle_inc %s
+%s''' %(outdirname,df_inc,angle_inc,aperpix_search_add))
+	p.close()
+
+	runhours=8
+        runminutes = math.ceil(60 * runhours)
+        partition='gpu'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])	
+	text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+#SBATCH --gres=gpu:4
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+cp /home/cosmic2/software_dependencies/hrtm/compute.cfg .
+python /home/cosmic2/software_dependencies/hrtm/run_ctffind4.py hrtm_params.txt >>stdout.txt 2>stderr.txt
+/home/cosmic2/software_dependencies/hrtm/smappoi_run.sh hrtm_params_ctf.txt >>stdout.txt 2>stderr.txt
+zip -r hrtm-output.zip hrtm-output
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'],1,4,6,jobdir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
 if jobtype == 'micassess':
 	formatted_starname,threshold=prepareMicassess(args['commandline'],jobdir)
@@ -940,7 +1079,7 @@ conda activate /projects/cosmic2/conda/cryodrgn\n'''
 
 	#Analysis
 	cmd=cmd+'cryodrgn analyze cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i %i --Apix %s >> stdout.txt 2>>stderr.txt\n' %(int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs),int(epochs)-1,angpix)
-	cmd=cmd+'cp %s cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i/\n' %(starfilename,int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs))
+	cmd=cmd+'python /home/cosmic2/software_dependencies/cryodrgn_scripts/parse_cryodrgn_output.py cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i/\n' %(int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs))
 	cmd=cmd+'zip -r cosmic2-cryodrgn.zip cryodrgn_vae_zdim%i_encDim%i_encLayers%i_decDim%i_decLayers%i_epochs%i\n' %(int(zdim),int(qdim),int(qlayers),int(pdim),int(players),int(epochs))
 
 	o1.write(cmd)

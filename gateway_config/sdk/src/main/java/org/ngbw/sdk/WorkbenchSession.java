@@ -761,6 +761,10 @@ public class WorkbenchSession {
 		}
 	}
 
+	public String getWorkingDirectoryPath(Task task) throws Exception {
+		return getWorkingDirectory(task).getWorkingDirectoryPath();
+	}
+
 	public List<FileHandler.FileAttributes> listWorkingDirectory(Task task) throws Exception
 	{
 		return getWorkingDirectory(task).listWorkingDirectory();
