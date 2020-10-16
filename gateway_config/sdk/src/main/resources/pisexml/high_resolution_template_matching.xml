@@ -1,0 +1,294 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>High resolution template matching</title>
+    <version>2.1C</version>
+    <description>Detect atomic-resolution structures in cryoEM micrographs.</description>
+    <authors>J Peter Rickgauer, Nikolaus Grigorieff, Winfried Denk</authors>
+    <reference>https://elifesciences.org/articles/25648/</reference>
+    <category>High resolution template matching</category>
+    <doclink>https://elifesciences.org/articles/25648</doclink>
+  </head>
+
+  <command>high_resolution_template_matching</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"smappoi.py"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "runhours=3\\n" . 
+                 "ChargeFactor=1.0\\n" .
+			     "ntasks-per-node=4\\n" .
+				 "node_exclusive=1\\n" .
+                 "cores_per_node=24\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>MRC input micrograph</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>'--i "$value"'</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+	<parameter type="InFile" issimple="1" ismandatory="1">
+        <name>cif</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Reference atomic model (.cif format)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--cif $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float" ismandatory="1" issimple="1">
+        <name>angpix</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Pixel size of micrograph in Angstroms/pixel</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--angpix $value"</code>
+            </format>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
+                    <language>perl</language>
+                    <code>$angpix &lt; 0.01</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Excl" issimple="1" ismandatory="1">
+        <name>kev</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Accelerating voltage (keV)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--kev $value"</code>
+            </format>
+            <vdef>
+                <value>300</value>
+            </vdef>
+            <vlist>
+                <value>300</value>
+                <label>300</label>
+                <value>200</value>
+                <label>200</label>
+                <value>120</value>
+                <label>120</label>
+            </vlist>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>cs</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Sherical aberration (Cs)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--cs $value"</code>
+            </format>
+            <vdef>
+				<value>2.7</value>
+			</vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a value >= 0 for the spherical aberration value</message>
+                    <language>perl</language>
+                    <code>$apix &lt; 0.0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>cc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Chromatic aberration (Cc)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--cc $value"</code>
+            </format>
+            <vdef>
+                <value>2.7</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a value >= 0 for the chromatic aberration value</message>
+                    <language>perl</language>
+                    <code>$apix &lt; 0.0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>weight</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Amplitude contrast ratio</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--w $value"</code>
+            </format>
+			<vdef>
+				<value>0.07</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter a value >= 0 for the amplitude contrast</message>
+                    <language>perl</language>
+                    <code>$weight &lt; 0.0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float">
+        <name>t_sample</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Estimated sample thickness (nm)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--t_sample $value"</code>
+            </format>
+            <vdef>
+                <value>100</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float">
+        <name>b_factor</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: B-factor to assume for atomic model coordinates in scattering potential(Angstroms^2)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--b_factor $value"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+        </attributes>
+    </parameter>	
+	
+	<parameter type="Float">
+        <name>deltaE</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Energy spread of the electron source (eV)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--deltaE $value"</code>
+            </format>
+            <vdef>
+                <value>0.7</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float">
+        <name>a_i</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Illumination aperture half-angle (radians)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--a_i $value"</code>
+            </format>
+            <vdef>
+                <value>0.000050</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float">
+        <name>df_inc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Increment to search between defocus planes (nm)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--df_inc $value"</code>
+            </format>
+            <vdef>
+                <value>50</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="Float">
+        <name>angle_inc</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Angular increment between rotations for atomic model (degrees)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--angle_inc $value"</code>
+            </format>
+            <vdef>
+                <value>1.875</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+<!-- Files to transfer back -->
+	<parameter type="Results">
+	  <name>Error log file</name>
+	  <attributes>
+	    <filenames>stderr</filenames>
+	  </attributes>
+	</parameter>
+</parameters>
+
+</pise>
