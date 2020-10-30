@@ -754,6 +754,458 @@ if 'cryodrgn' in args['commandline']:
 	jobtype='cryodrgn'
 if 'smappoi.py' in args['commandline']:
 	jobtype='hrtm'
+if 'localbfactor' in args['commandline']:
+        jobtype='local_bfactor_estimation'
+if 'locspiral' in args['commandline']:
+        jobtype='locspiral'
+if 'local_bfactor_sharpen' in args['commandline']:
+	jobtype='local_bfactor_sharpen'
+if 'loc_occupancy' in args['commandline']:
+	jobtype='loc_occupancy'
+
+if jobtype == 'loc_occupancy': 
+	command=args['commandline']
+	#localbfactor --angpix .82 --bfactor_max 2.96 --bw 4.8 --i2 emd_10418_half_map_2.mrc --noise 0.95 --bfactor_min 15 --numpoints 10 --thresh 0.0153 --i "emd_10418_half_map_1.mrc"
+      	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--bfactor_max':
+                        maxres=cmdline[counter+1]
+                if entry == '--bfactor_min':
+                        minres=cmdline[counter+1]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+ 		if entry == '--bw':
+                        bandwidth=cmdline[counter+1]
+		if entry == '--i': 
+			half1map=cmdline[counter+1].strip('"')
+		if entry == '--i2':
+			half2map=cmdline[counter+1]
+		if entry == '--thresh':
+			thresh=cmdline[counter+1]
+		if entry == '--threshcompare': 
+			noisethresh=cmdline[counter+1]
+		counter=counter+1
+	#get inputs
+	 
+	runscript='runLocOccupancy.m' 
+	o1=open(runscript,'w')
+	o1.write('''clear all
+close all
+
+addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+parpool('local',24)
+
+vol1 = ReadMRC('%s');
+vol2 = ReadMRC('%s');
+vol = 0.5*(vol1+vol2);
+clear vol1 vol2;
+WriteMRC(vol,%s,'%s_combined.mrc');
+
+mask = vol > %s; 
+mask = bwareaopen(mask,25,6);
+WriteMRC(mask,%s,'mask.mrc');
+[map] = locOccupancy(vol,mask,%s,%s,%s,%s,%s);
+WriteMRC(map,%s,'%s_locOccupancy.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
+	o1.close()
+	cmd='''module load matlab 
+matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='compute'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'local_bfactor_sharpen': 
+	command=args['commandline']
+	#localbfactor --angpix .82 --bfactor_max 2.96 --bw 4.8 --i2 emd_10418_half_map_2.mrc --noise 0.95 --bfactor_min 15 --numpoints 10 --thresh 0.0153 --i "emd_10418_half_map_1.mrc"
+      	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--bfactor_max':
+                        maxres=cmdline[counter+1]
+                if entry == '--bfactor_min':
+                        minres=cmdline[counter+1]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+ 		if entry == '--bw':
+                        bandwidth=cmdline[counter+1]
+		if entry == '--i': 
+			half1map=cmdline[counter+1].strip('"')
+		if entry == '--i2':
+			half2map=cmdline[counter+1]
+		if entry == '--thresh':
+			thresh=cmdline[counter+1]
+		if entry == '--noise': 
+			noisethresh=cmdline[counter+1]
+		counter=counter+1
+	#get inputs
+	 
+	runscript='runLocBfactor.m' 
+	o1=open(runscript,'w')
+	o1.write('''clear all
+close all
+
+addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+parpool('local',24)
+
+vol1 = ReadMRC('%s');
+vol2 = ReadMRC('%s');
+vol = 0.5*(vol1+vol2);
+clear vol1 vol2;
+WriteMRC(vol,%s,'%s_combined.mrc');
+
+mask = vol > %s; 
+mask = bwareaopen(mask,25,6);
+WriteMRC(mask,%s,'mask.mrc');
+[map W] = locBSharpen(vol,mask,%s,%s,%s,%s,%s);
+WriteMRC(map,%s,'%s_locBfactor.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
+	o1.close()
+	cmd='''module load matlab 
+matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='compute'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'locspiral': 
+	command=args['commandline']
+	#localbfactor --angpix .82 --bfactor_max 2.96 --bw 4.8 --i2 emd_10418_half_map_2.mrc --noise 0.95 --bfactor_min 15 --numpoints 10 --thresh 0.0153 --i "emd_10418_half_map_1.mrc"
+      	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--bfactor_max':
+                        maxres=cmdline[counter+1]
+                if entry == '--bfactor_min':
+                        minres=cmdline[counter+1]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+ 		if entry == '--bw':
+                        bandwidth=cmdline[counter+1]
+		if entry == '--i': 
+			half1map=cmdline[counter+1].strip('"')
+		if entry == '--i2':
+			half2map=cmdline[counter+1]
+		if entry == '--thresh':
+			thresh=cmdline[counter+1]
+		if entry == '--noise': 
+			noisethresh=cmdline[counter+1]
+		counter=counter+1
+	#get inputs
+	 
+	runscript='runLocSpiral.m' 
+	o1=open(runscript,'w')
+	o1.write('''clear all
+close all
+
+addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+parpool('local',24)
+
+vol1 = ReadMRC('%s');
+vol2 = ReadMRC('%s');
+vol = 0.5*(vol1+vol2);
+clear vol1 vol2;
+WriteMRC(vol,%s,'%s_combined.mrc');
+
+mask = vol > %s; 
+mask = bwareaopen(mask,25,6);
+WriteMRC(mask,%s,'mask.mrc');
+[map W] = locSpiral(vol,mask,%s,%s,%s,%s,%s);
+WriteMRC(map,%s,'%s_locSpiralMap.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
+	o1.close()
+	cmd='''module load matlab 
+matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='compute'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'local_bfactor_estimation': 
+	command=args['commandline']
+	#localbfactor --angpix .82 --bfactor_max 2.96 --bw 4.8 --i2 emd_10418_half_map_2.mrc --noise 0.95 --bfactor_min 15 --numpoints 10 --thresh 0.0153 --i "emd_10418_half_map_1.mrc"
+      	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--bfactor_max':
+                        maxres=cmdline[counter+1]
+                if entry == '--bfactor_min':
+                        minres=cmdline[counter+1]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+ 		if entry == '--bw':
+                        bandwidth=cmdline[counter+1]
+		if entry == '--i': 
+			half1map=cmdline[counter+1].strip('"')
+		if entry == '--i2':
+			half2map=cmdline[counter+1]
+		if entry == '--noise':
+			noisethresh=cmdline[counter+1]
+		if entry == '--numpoints':
+			numpoints=cmdline[counter+1]
+		if entry == '--thresh':
+			thresh=cmdline[counter+1]
+		counter=counter+1
+	#get inputs
+	 
+	runscript='localBfactor_estimation.m' 
+	o1=open(runscript,'w')
+	o1.write('''clear all
+close all
+
+addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+parpool('local',24)
+
+vol1 = ReadMRC('%s');
+vol2 = ReadMRC('%s');
+vol = 0.5*(vol1+vol2);
+clear vol1 vol2;
+WriteMRC(vol,%s,'%s_combined.mrc');
+
+mask = vol > %s; 
+mask = bwareaopen(mask,25,6);
+
+[AMap BMap noise Mod resSquare] = locBFactor(vol,mask,%s,%s,%s,%s,%s,%s);
+WriteMRC(BMap*4,%s,'%s_local_bfactorMap.mrc');	
+WriteMRC(AMap,%s,'%s_local_bfactorAMap.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,minres,maxres,numpoints,noisethresh,bandwidth,angpix,half1map[:-4],angpix,half1map[:-4]))
+	o1.close()
+	cmd='''module load matlab 
+matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='compute'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
 
 if jobtype == 'hrtm': 
 
