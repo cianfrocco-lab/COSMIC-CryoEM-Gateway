@@ -99,6 +99,50 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="LOCAL_BFACTOR_ESTIMATION" name="Estimate local B-Factors for 3D reconstructions"
+                toolresource="COMET"
+                configfile="pisexml/local_bfactor_estimation.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="LOCSPIRAL" name="LocSpiral Map Enhancement"
+                toolresource="COMET"
+                configfile="pisexml/locspiral.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="LOCAL_BFACTOR_SHARPEN" name="LocBfactor Map Enhancement"
+                toolresource="COMET"
+                configfile="pisexml/local_bfactor_sharpen.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="LOC_OCCUPANCY" name="LocOccupancy Map Analysis"
+                toolresource="COMET"
+                configfile="pisexml/loc_occupancy.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
                 toolresource="comet-gpu"
                 configfile="pisexml/auto_micassess.xml"
@@ -110,9 +154,21 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
+			<!--
+			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
                 toolresource="COMET"
                 configfile="pisexml/particle_picking_ctf_motion.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool> 
+			<Tool id="HIGH_RESOLUTION_TEMPLATE_MATCHING" name="High resolution template matching"
+                toolresource="comet-gpu"
+                configfile="pisexml/high_resolution_template_matching.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
