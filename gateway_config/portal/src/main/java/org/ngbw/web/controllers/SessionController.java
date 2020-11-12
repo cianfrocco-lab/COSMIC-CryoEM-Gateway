@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.ngbw.sdk.common.util.SendError;
 import org.ngbw.sdk.UserAuthenticationException;
 import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchSession;
@@ -606,8 +607,11 @@ public class SessionController
             // log in newly registered user
             if (result.isValid())
             {
-                logger.info("User account \"" + username + "\" (role \"" + role.toString()
-                            + "\") successfully created.");
+                logger.info ( "User account \"" + username + "\" (role \"" +
+                    role.toString() + "\") successfully created." );
+
+                // This call will send email to admin to notify of new account
+                SendError.send ( "New account was created for " + username );
 
                 login(username, password);
             }
