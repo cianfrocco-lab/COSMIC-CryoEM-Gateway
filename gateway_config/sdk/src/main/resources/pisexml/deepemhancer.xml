@@ -105,6 +105,18 @@
         </attributes>
     </parameter>
 
+	<parameter type="InFile" issimple="1">
+        <name>mask</name>
+        <attributes>
+            <group>1</group>
+            <prompt>(Optional) Provide mask for sharpening</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-m $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
 	<parameter type="Integer" ismandatory="1">
         <name>batchsize</name>
         <attributes>
