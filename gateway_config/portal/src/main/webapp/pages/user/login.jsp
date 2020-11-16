@@ -9,6 +9,18 @@
 <%-- BEGIN MAIN CONTENT AREA --%>
   <div class="col-xs-10">
 
+	<!-- Please leave the following warning section here for future uses -->
+    <!-- maintenance warning -->
+     <div class="alert alert-danger" role="alert">
+         <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
+             aria-hidden="true"></span>
+        <span class="sr-only">Warning:</span>
+        The COSMIC<sup>2</sup> Science Gateway will be down for general
+		system maintenance<br>
+		&nbsp;&nbsp;&nbsp;&nbsp; on Tuesday, November 17, 2020 between 16:30
+		and 23:30 Pacific Time.</font>
+     </div>
+
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
       <h3><p>This is a science gateway for cryo-EM structure determination.</p></h3>
@@ -29,7 +41,7 @@
 </div>
 
 <%-- previous CIPRES user login... --%>
-<%--
+<%-- Please leave code here in case we ever want to re-enable it!
   <s:url id="registerUrl" action="register"/>
   <s:url id="guestUrl" action="guestLogin"/>
   <s:url id="forgotPasswordUrl" action="forgotPassword" method="input" includeParams="none"/>

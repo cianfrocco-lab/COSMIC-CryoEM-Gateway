@@ -762,6 +762,96 @@ if 'local_bfactor_sharpen' in args['commandline']:
 	jobtype='local_bfactor_sharpen'
 if 'loc_occupancy' in args['commandline']:
 	jobtype='loc_occupancy'
+if '3dfscrun' in args['commandline']:
+	jobtype='3dfsc'
+
+if jobtype == '3dfsc':
+	command=args['commandline']
+	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--angpix':
+                        angpix=cmdline[counter+1]
+                if entry == '--i': 
+                        half1map=cmdline[counter+1].strip('"')
+                if entry == '--i2':
+                        half2map=cmdline[counter+1]
+                counter=counter+1
+
+	#../ThreeDFSC/ThreeDFSC_Start.py --halfmap1=T40_map1_Masked_144.mrc --halfmap2=T40_map2_Masked_144.mrc --fullmap=130K-T40.mrc --apix=1.31 --ThreeDFSC=T40-3DFSC
+	cmd='''source /share/apps/compute/anaconda/etc/profile.d/conda.sh
+source /home/cosmic2/software_dependencies/relion/relion-3.1-cpu.sh
+conda activate 3DFSC_2
+module load relion 
+/home/cosmic2/software_dependencies/phenix-1.18.2-3874/phenix-1.18.2-3874/build/bin/phenix.fmodel %s scattering_table=electron high_resolution=%f generate_fake_p1_symmetry=True >> stdout.txt 2>> stderr.txt
+/home/cosmic2/software_dependencies/phenix-1.18.2-3874/phenix-1.18.2-3874/build/bin/phenix.mtz2map %s.mtz include_fmodel=True >> stdout.txt 2>> stderr.txt
+/home/cosmic2/software_dependencies/scripts/resize_map_according_to_other_mapDims.py %s_fmodel.ccp4:mrc %s %s_newbox.mrc >> stdout.txt 2>> stderr.txt
+/home/cosmic2/software_dependencies/Anisotropy/ThreeDFSC/ThreeDFSC_Start.py --halfmap1=%s --halfmap2=%s_newbox.mrc --fullmap=%s --apix=%s --ThreeDFSC=3DFSC-output > stdout.txt 2> stderr.txt
+zip -r 3DFSC-output.zip 3DFSC-output/
+''' %(half2map,float(angpix)*2,half2map,half2map,half1map,half2map[:-4],half1map,half2map[:-4],half1map,angpix)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,6,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+		
 
 if jobtype == 'loc_occupancy': 
 	command=args['commandline']
@@ -1602,7 +1692,28 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 if jobtype == 'deepemhancer':
         command=args['commandline']
 	outfile='%s_deepEMhancer-sharpened.mrc' %(command.split()[-1].strip('"')[:-4])
-        cmd='''module load cuda/9.2
+       	cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+	maskflag=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '-m':
+                        maskflag=1
+                counter=counter+1
+
+	if maskflag == 1: 
+		command=''
+		counter=0
+		while counter < totEntries:
+                	entry=cmdline[counter]
+                	if entry == '-p':
+                        	counter=counter+2
+			if entry != '-p':
+				command=command+' %s '%(cmdline[counter])
+                		counter=counter+1
+
+	cmd='''module load cuda/9.2
 source /share/apps/compute/anaconda/etc/profile.d/conda.sh
 conda activate /projects/cosmic2/conda/deepEMhancer_env
 %s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
