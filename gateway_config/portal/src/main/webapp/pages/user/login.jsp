@@ -10,7 +10,7 @@
   <div class="col-xs-10">
 
 	<!-- Please leave the following warning section here for future uses -->
-    <!-- maintenance warning -->
+    <!-- maintenance warning
      <div class="alert alert-danger" role="alert">
          <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
              aria-hidden="true"></span>
@@ -20,6 +20,7 @@
 		&nbsp;&nbsp;&nbsp;&nbsp; on Tuesday, November 17, 2020 between 16:30
 		and 23:30 Pacific Time.</font>
      </div>
+     -->
 
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
