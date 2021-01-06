@@ -88,7 +88,7 @@ public class JSONACLAPIClient
     public JSONACLAPIClient ( String epid )
         throws AccessException, IllegalArgumentException
     {
-        //logger.info ( "MONA: entered JSONACLAPIClient constructor 1!" );
+        //logger.info ( "MONA: entered JSONACLAPIClient constructor!" );
 
         if ( epid == null || epid.trim().isEmpty() )
             throw new IllegalArgumentException
@@ -172,6 +172,10 @@ public class JSONACLAPIClient
      **/
     public int setupACL ( String user_uuid, String user_directory )
     {
+        //logger.debug ( "MONA: entered setupACL" );
+        //logger.debug ( "MONA: user_uuid = " + user_uuid );
+        //logger.debug ( "MONA: user_directory = " + user_directory );
+
         if ( user_uuid == null || user_uuid.trim().isEmpty() ||
             user_directory == null || user_directory.trim().isEmpty() )
             return ( -1 );
@@ -191,8 +195,6 @@ public class JSONACLAPIClient
             //document.put ( "notify_email", null );
  
             JSONObject request_properties = new JSONObject ();
-            request_properties.put ( "Content-Type", this.FORMAT_JSON );
-            request_properties.put ( "Accept", this.FORMAT_JSON );
             request_properties.put ( "Content-Length", "" +
                 document.toString().length() );
 
@@ -236,7 +238,9 @@ public class JSONACLAPIClient
     /**
      * Base function to send a request; if accessToken is set, will add it to
      * request but Authorization can be overwritten if that key is in the
-     * request_properties parameter
+     * request_properties parameter.  Will default to application/json for
+     * both Content-Type and Accept header but can be overwritten in the 
+     * request_properties.
      *
      * @param method - should be either "GET" or "POST"; if null or not "POST",
      *                 will be set to "GET"
@@ -303,8 +307,13 @@ public class JSONACLAPIClient
 
         // If we already have an access token, use it; can be overwritten
         // if Authorization key is provided in the request_properties parameter
+        //logger.info ( "MONA: accessToken = " + accessToken );
         if ( this.accessToken != null && ! this.accessToken.trim().isEmpty() )
             c.setRequestProperty ( "Authorization", "Bearer " + this.accessToken );
+
+        // Default values but can be overwritten by request_properties
+        c.setRequestProperty ( "Content-Type", this.FORMAT_JSON );
+        c.setRequestProperty ( "Accept", this.FORMAT_JSON );
 
         // Now add the other request properties, if any...
         if ( request_properties != null && request_properties.length() > 0 )
@@ -513,8 +522,6 @@ public class JSONACLAPIClient
                 ( ( client_id + ":" + client_secret ).getBytes ( StandardCharsets.UTF_8 ) );
             //logger.debug ( "MONA: auth = " + auth );
             JSONObject request_properties = new JSONObject ();
-            request_properties.put ( "Content-Type",
-                "application/x-www-form-urlencoded; charset=UTF-8" );
             request_properties.put ( "Authorization", auth );
             String payload =
                 "grant_type=client_credentials&scope=urn:globus:auth:scope:transfer.api.globus.org:all";
