@@ -11,6 +11,7 @@ public final class OauthConstants {
     public static final String SCOPES = "scopes";
     public static final String AUTH_URI = "auth_uri";
     public static final String TOKEN_SERVER_URL = "token_server_url";
+    public static final String ENDPOINT_URL = "endpoint_uri";
     public static final String CLIENT_ID = "client_id";
     public static final String CLIENT_SECRET = "client_secret";
     public static final String SIGNUP = "signup";
