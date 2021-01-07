@@ -27,9 +27,7 @@
       <h3><p>This is a science gateway for cryo-EM structure determination.</p></h3>
       <br>
       <h4><p>Please login below using your university credentials and you are
-          ready to go!</p>
-          <p>If you are a new user and want to upload particle stacks, please email us at cosmic2support@umich.edu
-          when you are ready to upload particles using Globus.</p></h4>
+          ready to go!</p></h4>
       <br>
 
     <s:url id="loginUrl" action="login"/>
