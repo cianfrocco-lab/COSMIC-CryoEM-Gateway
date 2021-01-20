@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import os
-import sets
 import time
 import tarfile
 import stat
@@ -23,7 +22,7 @@ def jobInQueue():
 #login3.stampede(37)$ squeue -u `whoami` | grep `whoami`
 #           4850526 development neuron_M  nsguser CG       5:15      7 c557-302,c558-[003,301,603],c560-[604,701,802]
 #login3.stampede(38)$
-    output_rows = output.split("\n")
+    output_rows = output.decode().split("\n")
     jobs = []
     for row in output_rows:
         r = row.split()
@@ -46,15 +45,15 @@ def main(argv=None):
     # finished)
     queryJobs = sys.stdin.readlines()
     queryJobs = [ x.strip() for x in queryJobs if x.strip() != '']
-    sys.stderr.write("queryJobs (%s)\n" % (string.join(queryJobs,','),))
+    sys.stderr.write("queryJobs (%s)\n" % (','.join(queryJobs),))
     queryJobsLists = []
     for qj in queryJobs:
-        qj_list = string.split(qj,',')
+        qj_list = qj.split(',')
         queryJobsLists.append(qj_list)
 
     try:
         queuedJobs = jobInQueue()
-    except SystemError, theException:
+    except SystemError as theException:
         print >> sys.stderr, "Caught exception:", theException 
         return 1
 
@@ -62,11 +61,11 @@ def main(argv=None):
     finishedJobs = []
     for queryJobsList in queryJobsLists:
         if len(list(set(queryJobsList) - (set(queuedJobs)))) == len(queryJobsList):
-            finishedJobs.append(string.join(queryJobsList,','))
+            finishedJobs.append(','.join(queryJobsList))
         else:
             sys.stderr.write("%s" % (set(queryJobsList) - (set(queuedJobs)),))
     for j in finishedJobs:
-        print j
+        print(j)
     sys.stderr.write("end of checkjobs.py\n")
 '''
     # assume that the modeldir is the only dir in the working dir
