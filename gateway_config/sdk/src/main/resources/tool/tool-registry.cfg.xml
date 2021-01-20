@@ -71,6 +71,44 @@
 				<Parameter key="workspace" value="${comet.workspace}"/>
 			</Parameters>
 		</ToolResource>
+		<ToolResource id="expanse" type="REMOTE_SHELL" 
+			class="org.ngbw.sdk.tool.DefaultToolResource"
+			filehandler="org.ngbw.sdk.tool.SSHFileHandler" 
+			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
+			<Parameters>
+                <Parameter key="cancel" value="${expanse.cancel}"  />
+                <Parameter key="accountGroup" value="teragrid"  />
+                <Parameter key="chargeNumber" value="${cipres.charge.number}"/>
+                <Parameter key="chargeCode" value="${cipres.charge.number}"/>
+                <Parameter key="check" value="${expanse.check}"  />
+                <Parameter key="coresPerNode" value="1"  />
+				<Parameter key="fileHost" value="${expanse.fileHost}" />
+                <Parameter key="login" value="${expanse.login}" />
+                <Parameter key="rc" value="${expanse.rc}"  />
+                <Parameter key="runner" value="org.ngbw.sdk.common.util.SSHExecProcessRunner" />
+                <Parameter key="submit" value="${expanse.submit}"  />
+				<Parameter key="workspace" value="${expanse.workspace}"/>
+			</Parameters>
+		</ToolResource>
+		<ToolResource id="expanse-gpu" type="REMOTE_SHELL" 
+			class="org.ngbw.sdk.tool.DefaultToolResource"
+			filehandler="org.ngbw.sdk.tool.SSHFileHandler" 
+			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
+			<Parameters>
+                <Parameter key="cancel" value="${expanse.cancel}"  />
+                <Parameter key="accountGroup" value="teragrid"  />
+                <Parameter key="chargeNumber" value="${cipres.charge.number}"/>
+                <Parameter key="chargeCode" value="${cipres.charge.number}"/>
+                <Parameter key="check" value="${expanse.check}"  />
+                <Parameter key="coresPerNode" value="1"  />
+				<Parameter key="fileHost" value="${expanse.fileHost}" />
+                <Parameter key="login" value="${expanse.login}" />
+                <Parameter key="rc" value="${expanse.rc}"  />
+                <Parameter key="runner" value="org.ngbw.sdk.common.util.SSHExecProcessRunner" />
+                <Parameter key="submit" value="${expanse.submit}"  />
+				<Parameter key="workspace" value="${expanse.workspace}"/>
+			</Parameters>
+		</ToolResource>
 	</ToolResources>
 	<ToolGroups>
 		<ToolGroup id="XSEDE" disable="${teragrid.tools.disable}">
@@ -86,6 +124,20 @@
 				</OutputParameters>
 			</Tool>
 			-->
+		</ToolGroup>
+		<ToolGroup id="expanse" isdefault="1">
+			<Tool id="SLEEP"
+				name="sleep on Expanse GPU"
+                configfile="pisexml/sleep.xml"
+                toolresource="expanse-gpu"
+				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+				<InputParameters>
+					<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+				</InputParameters>
+				<OutputParameters>
+				</OutputParameters>
+			</Tool>
 		</ToolGroup>
 		<ToolGroup id="COMET" isdefault="1">
 			<Tool id="CRYO_EFFICIENCY" name="Efficiency of 3D reconstruction"
@@ -143,6 +195,17 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="THREED_FSC" name="3DFSC"
+                toolresource="COMET"
+                configfile="pisexml/threed_fsc.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="AUTO_MICASSESS" name="Automatically assess micrographs with deep learning"
                 toolresource="comet-gpu"
                 configfile="pisexml/auto_micassess.xml"
@@ -154,7 +217,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--
 			<Tool id="PARTICLE_PICKING_CTF_MOTION" name="Automatic preprocessing pipeline using deep learning"
                 toolresource="COMET"
                 configfile="pisexml/particle_picking_ctf_motion.xml"
@@ -177,7 +239,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			-->
 			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
                 toolresource="comet-gpu"
                 configfile="pisexml/cryodrgn.xml"
