@@ -113,10 +113,16 @@ public class TaskInitiate
             task.setRunOnGpu(isJobRunningOnGPU(rc.getSchedulerProperties()));
 			log.debug("rc.getSchedulerProperties(): (" + rc.getSchedulerProperties() + "(");
 
-            Long resourceConversionId =
+			Long resourceConversionId = SchedulerProperties.getResourceConversionId(rc.getSchedulerProperties(), null);
+            if (resourceConversionId == null) {
+            	resourceConversionId =
                     (task.isRunOnGpu())?
                     Workbench.getInstance().getGPUresourceConversionId() :
                     Workbench.getInstance().getCPUresourceConversionId();
+				log.debug("got resourceConversionId (" + resourceConversionId +") from build.properties");
+			} else {
+				log.debug("got resourceConversionId (" + resourceConversionId +") from tool xml file");
+			}
 
 			log.debug("resourceConversionId: (" + resourceConversionId + "(");
             task.setResourceConversionId(resourceConversionId);
