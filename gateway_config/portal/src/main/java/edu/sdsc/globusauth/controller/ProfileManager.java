@@ -100,10 +100,10 @@ public class ProfileManager extends NgbwSupport
     public Transfer2DataManager updateRecord
         ( TransferRecord tr, String destination_path, String destination_name )
     {
-        log.debug ( "MONA: entered ProfileManager.updateRecord()" );
+        //log.debug ( "MONA: entered ProfileManager.updateRecord()" );
         //log.debug ( "MONA: tr = " + tr );
-        log.debug ( "MONA: destination_path = " + destination_path );
-        log.debug ( "MONA: destination_name = " + destination_name );
+        //log.debug ( "MONA: destination_path = " + destination_path );
+        //log.debug ( "MONA: destination_name = " + destination_name );
         //log.debug ( "MONA: tr.getSrcEndpointname = " + tr.getSrcEndpointname() );
         //log.debug ( "MONA: tr.getTaskId = " + tr.getTaskId() );
         //log.debug ( "MONA: tr.getStatus = " + tr.getStatus() );
@@ -117,13 +117,13 @@ public class ProfileManager extends NgbwSupport
             OauthUtils.getConfig ( OauthConstants.OAUTH_PORPS );
         String gateway_endpoint_name =
             config.getProperty ( OauthConstants.DATASET_ENDPOINT_NAME );
-        log.debug ( "MONA: gateway_endpoint_name = " + gateway_endpoint_name );
+        //log.debug ( "MONA: gateway_endpoint_name = " + gateway_endpoint_name );
         String globusRoot =
             Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
-        log.debug ( "MONA: globusRoot = " + globusRoot );
+        //log.debug ( "MONA: globusRoot = " + globusRoot );
         String status = tr.getStatus();
-        log.debug ( "MONA: status = " + status );
+        //log.debug ( "MONA: status = " + status );
         Transfer2DataManager tdm = new Transfer2DataManager();
 
         if ( globusRoot == null )
@@ -143,8 +143,8 @@ public class ProfileManager extends NgbwSupport
         if ( destination_name.equals ( gateway_endpoint_name ) )
         {
             destination_path = globusRoot + destination_path;
-            log.debug ( "MONA: new destination_path = " + destination_path );
-            log.debug ( "MONA: transferring TO gateway" );
+            //log.debug ( "MONA: new destination_path = " + destination_path );
+            //log.debug ( "MONA: transferring TO gateway" );
             TransferRecord old_tr = null;
 
             // First get the old transfer record...
@@ -199,7 +199,7 @@ public class ProfileManager extends NgbwSupport
         // log.info("Update record (taskid): "+tr.getTaskId());
         try
         {
-            log.debug ( "MONA: updating transfer record status = " + status );
+            //log.debug ( "MONA: updating transfer record status = " + status );
             updateTransferRecord ( tr.getTaskId(), status,
                 tr.getCompletionTime(), tr.getFilesTransferred(),
                 tr.getFaults(), tr.getDirectories(), tr.getFiles(),
