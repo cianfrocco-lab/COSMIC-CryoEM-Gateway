@@ -1858,7 +1858,7 @@ if jobtype == 'cryoef':
                 infile=''.join(infile)
                 outfile='%s.star' %(infile)
 		csparc2star='''module load singularity
-singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s''' %(originfile,outfile)
+singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s >> stdout.txt 2>>stderr.txt''' %(originfile,outfile)
 		infile=outfile
 
 	if '.star' in command: 
