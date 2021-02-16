@@ -23,8 +23,14 @@
                 <paramfile>scheduler.conf</paramfile>
                 <format>
                     <language>perl</language>
+                    <!-- for 41.14, hardcode resource conversion id into
+                         scheduler properties, in accord with
+                         resource_conversion table
+(1,'comet-gpu',14),(2,'comet',1),(3,'expanse-gpu',32),(4,'expanse',1)
+                    -->
                     <code>
                         "gpu=4\\n" .
+                        "resourceconversionid=3\\n" .
                         "ChargeFactor=1.0\\n" .
                         "ntasks-per-node=3\\n" .
                         "nodes=1\\n" .
