@@ -830,7 +830,7 @@ cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
-sleep 300 >>stdout.txt 2>>stderr.txt
+sleep 120 >>stdout.txt 2>>stderr.txt
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
         %(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir)
