@@ -33,6 +33,7 @@
             </Parameters>
         </ToolResource>
         -->
+<!--
 		<ToolResource id="COMET" type="REMOTE_SHELL" 
 			class="org.ngbw.sdk.tool.DefaultToolResource"
 			filehandler="org.ngbw.sdk.tool.SFTPFileHandler" 
@@ -71,6 +72,7 @@
 				<Parameter key="workspace" value="${comet.workspace}"/>
 			</Parameters>
 		</ToolResource>
+ -->
 		<ToolResource id="expanse" type="REMOTE_SHELL" 
 			class="org.ngbw.sdk.tool.DefaultToolResource"
 			filehandler="org.ngbw.sdk.tool.SSHFileHandler" 
@@ -126,6 +128,7 @@
 			-->
 		</ToolGroup>
 		<ToolGroup id="expanse" isdefault="1">
+			<!--
 			<Tool id="SLEEP"
 				name="sleep on Expanse GPU"
                 configfile="pisexml/sleep.xml"
@@ -138,7 +141,102 @@
 				<OutputParameters>
 				</OutputParameters>
 			</Tool>
+			-->
+<!--
+			<Tool id="RELION_2D_CLASS" name="RELION 2D classification on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/relion_2d_class_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+ -->
+			<Tool id="DEEPEMHANCER"
+                name="DeepEMhancer - non-linear post-processing with deep learning"
+                toolresource="expanse-gpu"
+                configfile="pisexml/deepemhancer_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="LOCAL_BFACTOR_ESTIMATION" name="Estimate local B-Factors for 3D reconstructions"
+                toolresource="expanse"
+                configfile="pisexml/local_bfactor_estimation_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+            <Tool id="LOCSPIRAL" name="LocSpiral Map Enhancement"
+                toolresource="expanse"
+                configfile="pisexml/locspiral_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+            <Tool id="LOCAL_BFACTOR_SHARPEN" name="LocBfactor Map Enhancement"
+                toolresource="expanse"
+                configfile="pisexml/local_bfactor_sharpen_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+            <Tool id="LOC_OCCUPANCY" name="LocOccupancy Map Analysis"
+                toolresource="expanse"
+                configfile="pisexml/loc_occupancy_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="CRYO_EFFICIENCY" name="Efficiency of 3D reconstruction"
+                toolresource="expanse"
+                configfile="pisexml/cryo_efficiency_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+<!--
+			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
+                toolresource="expanse"
+                configfile="pisexml/csparc2star_expanse.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+ -->
 		</ToolGroup>
+<!--
 		<ToolGroup id="COMET" isdefault="1">
 			<Tool id="CRYO_EFFICIENCY" name="Efficiency of 3D reconstruction"
                 toolresource="COMET"
@@ -330,6 +428,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+ -->
             <!-- Only for debugging (works) (:
 			<Tool id="SLEEP"
 				name="sleep on Comet"
@@ -355,7 +454,7 @@
 				<OutputParameters>
 				</OutputParameters>
 			</Tool>
-			-->
 		</ToolGroup>
+			-->
 	</ToolGroups>
 </ToolRegistry>
