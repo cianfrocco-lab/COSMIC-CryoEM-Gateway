@@ -1858,7 +1858,7 @@ if jobtype == 'cryoef':
                 infile=''.join(infile)
                 outfile='%s.star' %(infile)
 		csparc2star='''module load singularity
-singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s''' %(originfile,outfile)
+singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s >> stdout.txt 2>>stderr.txt''' %(originfile,outfile)
 		infile=outfile
 
 	if '.star' in command: 
@@ -1982,7 +1982,7 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 5 %s --scratch_dir /scratch/$USER/$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
+mpirun -np %i %s --j 5 %s  >>stdout.txt 2>>stderr.txt
 %s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
