@@ -262,7 +262,7 @@ def prepareRelionRun(args):
         gpuextra3='relion/3.0.5_gpu'
         #Get input file
         #inputZipFile=inputline.split()[returnEntryNumber(inputline,'--i')].strip('"')
-        elements = string.split(inputline, '"')
+        elements = inputline.split('"') #string.split(inputline, '"')
         testargs = []
         for eindex in range(len(elements)):
             if eindex % 2 == 0:
@@ -295,14 +295,20 @@ def prepareRelionRun(args):
         #outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
         
         #Get current working directory on comet
-        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+        pwd=os.getcwd() #subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
 
         #Get username
-        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
-        ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
+        tmplog.write("%s" %(pwd))
+        tmplog.write("cat %s/_JOBINFO.TXT | grep Name="%(pwd))
+        for jobline in open('%s/_JOBINFO.TXT' %(pwd),'r'): 
+            if "Name" in jobline: 
+                usernamedir=jobline.split('=')[-1].strip()
+                tmplog.write("          %s     " %(usernamedir))
+                #subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+        #ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
 
         #Get userdirectory data and write to log file
-        tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
+        #tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
         userdir=GLOBUSTRANSFERSDIR + '/'+usernamedir
         tmplog.write('\n'+userdir)
 
@@ -2068,14 +2074,19 @@ if jobtype == 'relion':
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus=4
 #SBATCH --no-requeue
-date 
-export OMP_NUM_THREADS=5
+module purge
+module load slurm
+module load gpu
+module load openmpi
+module load relion
+export OMP_NUM_THREADS=8
+export OMPI_MCA_btl_openib_allow_ib=1
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 8 %s --scratch_dir /scratch/$USER/$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
+mpirun -np %i %s --j 8 %s --scratch_dir /scratch/$USER/job_$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
 %s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
