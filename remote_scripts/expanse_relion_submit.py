@@ -1837,7 +1837,8 @@ conda activate /projects/cosmic2/conda/deepEMhancer_env
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-#SBATCH --gres=gpu:4
+##SBATCH --gres=gpu:4
+#SBATCH --gpus=4
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 date 
