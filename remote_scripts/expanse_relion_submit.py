@@ -889,7 +889,7 @@ zip -r 3DFSC-output.zip 3DFSC-output/
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -965,7 +965,10 @@ if jobtype == 'loc_occupancy':
         o1.write('''clear all
 close all
 
-addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+myCluster = parcluster('local')
+myCluster.NumWorkers = 24
+saveProfile(myCluster);
 parpool('local',24)
 
 vol1 = ReadMRC('%s');
@@ -984,7 +987,7 @@ WriteMRC(map,%s,'%s_locOccupancy.mrc');''' %(half1map,half2map,angpix,half1map[:
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
-        partition='compute'
+        partition='shared'
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         nodes=1
@@ -1000,7 +1003,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1021,8 +1024,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load cpu 
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -1075,7 +1077,10 @@ if jobtype == 'local_bfactor_sharpen':
         o1.write('''clear all
 close all
 
-addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+myCluster = parcluster('local')
+myCluster.NumWorkers = 24
+saveProfile(myCluster);
 parpool('local',24)
 
 vol1 = ReadMRC('%s');
@@ -1094,7 +1099,7 @@ WriteMRC(map,%s,'%s_locBfactor.mrc');''' %(half1map,half2map,angpix,half1map[:-4
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
-        partition='compute'
+        partition='shared'
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         nodes=1
@@ -1110,7 +1115,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1131,8 +1136,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load cpu 
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -1185,7 +1189,10 @@ if jobtype == 'locspiral':
         o1.write('''clear all
 close all
 
-addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+myCluster = parcluster('local')
+myCluster.NumWorkers = 24
+saveProfile(myCluster);
 parpool('local',24)
 
 vol1 = ReadMRC('%s');
@@ -1204,7 +1211,7 @@ WriteMRC(map,%s,'%s_locSpiralMap.mrc');''' %(half1map,half2map,angpix,half1map[:
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
-        partition='compute'
+        partition='shared'
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         nodes=1
@@ -1220,7 +1227,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1241,8 +1248,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load cpu 
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -1297,7 +1303,10 @@ if jobtype == 'local_bfactor_estimation':
         o1.write('''clear all
 close all
 
-addpath('/home/cosmic2/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
+myCluster = parcluster('local')
+myCluster.NumWorkers = 24
+saveProfile(myCluster);
 parpool('local',24)
 
 vol1 = ReadMRC('%s');
@@ -1317,7 +1326,7 @@ WriteMRC(AMap,%s,'%s_local_bfactorAMap.mrc');''' %(half1map,half2map,angpix,half
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
-        partition='compute'
+        partition='shared'
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
         nodes=1
@@ -1333,7 +1342,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1354,8 +1363,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load cpu
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -1467,7 +1475,7 @@ angle_inc %s
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])        
@@ -1534,7 +1542,7 @@ if jobtype == 'micassess':
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')    
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1724,7 +1732,7 @@ conda activate /projects/cosmic2/conda/cryodrgn\n'''
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1793,9 +1801,11 @@ if jobtype == 'deepemhancer':
                                 command=command+' %s '%(cmdline[counter])
                                 counter=counter+1
 
-        cmd='''module load cuda/9.2
-source /share/apps/compute/anaconda/etc/profile.d/conda.sh
-conda activate /projects/cosmic2/conda/deepEMhancer_env
+        cmd='''module load gpu
+module load cuda10.2/toolkit
+module load anaconda
+source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 %s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
 ''' %(command,outfile)
         runhours=4
@@ -1816,7 +1826,7 @@ conda activate /projects/cosmic2/conda/deepEMhancer_env
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1837,7 +1847,7 @@ conda activate /projects/cosmic2/conda/deepEMhancer_env
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-#SBATCH --gres=gpu:4
+#SBATCH --gpus=4
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 date 
@@ -1863,8 +1873,10 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 if jobtype == 'csparc2star':
         command=args['commandline']
         outfile=command.split()[-1].split('.')[0]+'.star'
-        cmd='''module load singularity
-singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python %s %s''' %(command,outfile)
+        cmd='''module load anaconda 
+source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/expanse/conda/pyem
+%s %s >> stdout 2>>stderr.txt''' %(command,outfile)
         runhours=8
         runminutes = math.ceil(60 * runhours)
         partition='shared'
@@ -1883,7 +1895,7 @@ singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /o
                 if 'User\ Name=' in line:
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')        
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1904,8 +1916,9 @@ singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /o
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=1
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load slurm 
+module load cpu 
+module load singularitypro
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -1938,7 +1951,7 @@ if jobtype == 'cryoef':
                 infile=''.join(infile)
                 outfile='%s.star' %(infile)
                 csparc2star='''module load singularity
-singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s''' %(originfile,outfile)
+singularity exec /expanse/projects/cosmic2/singularity/ubuntu-pyem-v6.simg /opt/miniconda2/bin/python /cosmic2-software/pyem/csparc2star.py %s %s''' %(originfile,outfile)
                 infile=outfile
 
         if '.star' in command: 
@@ -1965,7 +1978,7 @@ singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /o
                 if 'User\ Name=' in line: 
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -1986,8 +1999,11 @@ singularity exec /home/cosmic2/software_dependencies/pyem/ubuntu-pyem-v6.simg /o
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=1
 #SBATCH --no-requeue
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+module load cpu 
+module load slurm 
+module load shared
+module load DefaultModules
+module load gcc
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -2030,7 +2046,7 @@ if jobtype == 'relion':
                 if 'User\ Name=' in line: 
                         username=line.split('=')[-1].strip()
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
         ntaskspernode = int(properties_dict['ntasks-per-node'])
@@ -2049,12 +2065,9 @@ if jobtype == 'relion':
 #SBATCH -A %s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-#SBATCH --cpus-per-task=6
+#SBATCH --cpus-per-task=8
+#SBATCH --gpus=4
 #SBATCH --no-requeue
-#SBATCH --gres=gpu:4
-module load cuda/9.2
-module load intelmpi/2018.1.163
-source /home/cosmic2/software_dependencies/relion/relion-3.1-gpu.sh
 date 
 export OMP_NUM_THREADS=5
 cd '%s/'
@@ -2062,11 +2075,11 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 #/home/cosmic2/COSMIC-CryoEM-Gateway/remote_scripts/monitor_relion_job.py %s %s $SLURM_JOBID %s & 
 pwd > stdout.txt 2>stderr.txt
-mpirun -np %i %s --j 5 %s --scratch_dir /scratch/$USER/$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
+mpirun -np %i %s --j 8 %s --scratch_dir /scratch/$USER/$SLURM_JOB_ID >>stdout.txt 2>>stderr.txt
 %s/transfer_output_relion.py %s '%s' %s stdout.txt stderr.txt '%s' %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], nodes,4,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,REMOTESCRIPTSDIR,username,out_destination,outdir,relion_command,newstarname)
+        %(partition,jobname, runtime, mailuser, args['account'], nodes,5,jobdir,outdir.split('_cosmic')[0],outdir,numiters,mpi_to_use,relion_command,gpuextra2,REMOTESCRIPTSDIR,username,out_destination,outdir,relion_command,newstarname)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -2114,7 +2127,7 @@ if jobtype == 'pipeline':
                         username=line.split('=')[-1].strip()
 
         jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Comet Supercomputer at SDSC.\n\n')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
         jobstatus.write('Job currently in queue\n\n')
         jobstatus.close()
 
