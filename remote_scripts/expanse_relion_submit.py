@@ -1253,6 +1253,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=48G
 #SBATCH --no-requeue
 module load cpu 
 date 
@@ -1809,7 +1810,6 @@ if jobtype == 'deepemhancer':
 
         cmd='''module load gpu
 module load cuda10.2/toolkit
-module load anaconda
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
 conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 %s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
@@ -1854,8 +1854,6 @@ conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
 #SBATCH --gpus=4
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
