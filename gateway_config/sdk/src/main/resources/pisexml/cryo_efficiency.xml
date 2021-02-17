@@ -23,7 +23,7 @@
 	  <attributes>
 	    <format>
 		  <language>perl</language>
-		  <code>"/home/cosmic2/software_dependencies/cryoEF/cryoEF_v1.1.0/PreCompiled/centos5.11/cryoEF"</code>
+		  <code>"/home/cosmic2/software/ccpem-1.5.0/bin/cryoEF"</code>
 		</format>
 		<group>0</group>
 	  </attributes>
