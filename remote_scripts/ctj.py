@@ -1,4 +1,4 @@
-#!/opt/python/bin/python3
+#!/usr/bin/env python3
 # use the API instead of xdusage
 # https://xsede-xdcdb-api.xsede.org/
 import os
