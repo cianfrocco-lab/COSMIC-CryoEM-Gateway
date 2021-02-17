@@ -128,10 +128,9 @@
 			-->
 		</ToolGroup>
 		<ToolGroup id="expanse" isdefault="1">
-<!--
 			<Tool id="RELION_2D_CLASS" name="RELION 2D classification on Expanse"
                 toolresource="expanse-gpu"
-                configfile="pisexml/relion_2d_class_expanse.xml"
+                configfile="pisexml/relion_2d_class.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
@@ -140,7 +139,51 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
- -->
+			<Tool id="RELION_3D_CLASS" name="RELION 3D classification on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/relion_3d_class.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="RELION_3D_INITIAL_MODEL" name="RELION 3D initial model calculation on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/relion_3d_initial_model.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="RELION_3D_REFINE"
+                name="RELION 3D refinement on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/relion_3d_refine.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="RELION_MULTIBODY" name="RELION Multibody refinement on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/relion_multibody.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="DEEPEMHANCER"
                 name="DeepEMhancer - non-linear post-processing with deep learning"
                 toolresource="expanse-gpu"
