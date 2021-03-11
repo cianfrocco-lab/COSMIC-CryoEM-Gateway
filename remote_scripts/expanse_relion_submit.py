@@ -96,19 +96,15 @@ def prepareMicassess(inputline,jobdir):
         rlno1.close()
         #newstarname='%s'%(starfiledirname)+'/'+'%s'%(inputZipFile.split('/')[-1])
         newstarname='%s'%(inputZipFile.split('/')[-1])
+        tmplog.write('\nstarfiledirname='+starfiledirname+'\n')
         tmplog.write('\nnewstarname='+newstarname+'\n')
 
-        workingStarDirName=starfilename
+        workingStarDirName=starfilename #Extract/job023/particles.star
         fullStarDir=starfilename.split('/')
         del fullStarDir[-1]
-        fullStarDir='/'.join(fullStarDir)
+        fullStarDir='/'.join(fullStarDir) #Extract/job023/
         counter=1
-
-        workingStarDirName=starfilename
-        fullStarDir=starfilename.split('/')
-        del fullStarDir[-1]
-        fullStarDir='/'.join(fullStarDir)
-        counter=1
+        tmplog.write('\nfullStarDir='+fullStarDir+'\n')
         while counter<=len(starfiledirname.split('/')):
                 checkDir=starfiledirname.split('/')[-counter]
                 if fullStarDir.split('/')[-1] == checkDir:
@@ -316,8 +312,12 @@ def prepareRelionRun(args):
         starfilename=userdir+'/'+'%s' %(inputZipFile)
         tmplog.write('\n'+'starfilename:   '+starfilename)
 
+        newstarname=inputZipFile.split('/')
+        del newstarname[0]
+        newstarname='/'.join(newstarname)
+        '''
         #Get relative path from starfile 
-        ##Read star file header to get particle name
+        #Read star file header to get particle name
         rlno1=open(starfilename,'r')
         colnum=-1
         for rln_line in rlno1:
@@ -328,7 +328,6 @@ def prepareRelionRun(args):
         if colnum<0:
                 print("Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting")
                 sys.exit()
-
         rlno1=open(starfilename,'r')
         for rln_line in rlno1:
                 if len(rln_line.split()) >= 10:
@@ -340,22 +339,25 @@ def prepareRelionRun(args):
 
         newstarname='%s'%(starfiledirname)+'/'+'%s'%(inputZipFile.split('/')[-1])
         tmplog.write('\nnewstarname='+newstarname+'\n')
-
+        tmplog.write('\nstarfiledirname='+starfiledirname+'\n')
         workingStarDirName=starfilename
         fullStarDir=starfilename.split('/')
         del fullStarDir[-1]
         fullStarDir='/'.join(fullStarDir)
         counter=1
+        tmplog.write('\nfullStarDir='+fullStarDir+'\n')
         while counter<=len(starfiledirname.split('/')):
                 checkDir=starfiledirname.split('/')[-counter]
+                tmplog.write('\n'+checkDir+'\n')
+                tmplog.write('\n'+fullStarDir.split('/')[-1]+'\n')
                 if fullStarDir.split('/')[-1] == checkDir:
                         fullStarDir=fullStarDir.split('/')
                         del fullStarDir[-1]
                         fullStarDir='/'.join(fullStarDir)
                 counter=counter+1
-
+        '''
         #Symlink directory: 
-        DirToSymLink=fullStarDir
+        DirToSymLink=userdir+'/'+inputZipFile.split('/')[0]   #fullStarDir
         tmplog.write('\n'+'symlink'+DirToSymLink)
         cmd="ln -s '%s/'* ." %(DirToSymLink)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
@@ -1669,8 +1671,12 @@ if jobtype == 'cryodrgn':
                 relion31cmd='--relion31'
 
         #Get datapath data
-        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+        pwd=os.getcwd()
+        #pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+        for jobline in open('%s/_JOBINFO.TXT' %(pwd),'r'):
+            if "Name" in jobline:
+                usernamedir=jobline.split('=')[-1].strip()
+                #usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
 
         #Get userdirectory data and write to log file
         userdir=GLOBUSTRANSFERSDIR + '/'+usernamedir
@@ -1683,9 +1689,10 @@ if jobtype == 'cryodrgn':
         cmd="ln -s '%s/%s/'* ." %(userdir,cosmic2foldername)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()        
         
-        cmd='''module load cuda/9.2
-source /share/apps/compute/anaconda/etc/profile.d/conda.sh
-conda activate /projects/cosmic2/conda/cryodrgn\n'''
+        cmd='''module load gpu 
+module load cuda10.2/toolkit
+source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/expanse/conda/cryodrgn/\n'''
 
         #Downsample
         cmd=cmd+'''cryodrgn downsample %s -D %i -o particles.%i.mrcs --chunk 40000 %s >> stdout.txt 2>>stderr.txt\n''' %(starfilename,int(newboxsize),int(newboxsize),relion31cmd)
@@ -1760,9 +1767,7 @@ conda activate /projects/cosmic2/conda/cryodrgn\n'''
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
-#SBATCH --gres=gpu:1
-export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
-export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+#SBATCH --gpus=1
 date 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
