@@ -30,6 +30,12 @@
             <s:textfield cssClass="form-control" name="profile.institution" value="%{#session.institution}"/>
         </div>
     </div>
+    <div class="form-group">
+        <label class="col-xs-2 control-label">Globus ID</label>
+        <div class="col-xs-10">
+            <s:textfield cssClass="form-control" name="profile.globusid" value="%{#session.link_username}" disabled="true" />
+        </div>
+    </div>
     <div class="form-group form-buttons">
         <div class="col-xs-12">
             <s:submit value="Update Profile" cssClass="btn btn-primary"/>

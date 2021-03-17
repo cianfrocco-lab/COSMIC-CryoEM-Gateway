@@ -1,7 +1,6 @@
 package edu.sdsc.globusauth.action;
 
 import edu.sdsc.globusauth.controller.ProfileManager;
-//import edu.sdsc.globusauth.model.OauthProfile;
 import org.ngbw.sdk.database.OauthProfile;
 import edu.sdsc.globusauth.util.OauthConstants;
 import org.apache.log4j.Logger;
@@ -14,6 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  * Created by cyoun on 10/8/16.
+ * Updated by Mona Wong
  */
 public class ProfileAction extends SessionManager {
 
@@ -34,8 +34,12 @@ public class ProfileAction extends SessionManager {
         //User profile information. Assocated with a Globus Auth identity.
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
             String identity_id = (String) getSession().get(OauthConstants.PRIMARY_IDENTITY);
-            logger.info("Profile: "+identity_id);
+            //logger.info("Profile: "+identity_id);
             OauthProfile db_profile = profileManager.load(identity_id);
+            //logger.info("db_profile: "+db_profile);
+            //logger.info("getIdentityId: "+db_profile.getIdentityId());
+            //logger.info("getUsername: "+db_profile.getUsername());
+            //logger.info("getLinkUsername: "+db_profile.getLinkUsername());
             if (db_profile == null) {
                 profileManager.addProfile(profile);
             } else {
@@ -43,6 +47,8 @@ public class ProfileAction extends SessionManager {
                 getSession().put(OauthConstants.FIRST_NAME, db_profile.getFirstname());
                 getSession().put(OauthConstants.LAST_NAME, db_profile.getLastname());
                 getSession().put(OauthConstants.INSTITUTION,db_profile.getInstitution());
+                getSession().put(OauthConstants.LINK_USERNAME,
+                    db_profile.getLinkUsername());
             }
             return SUCCESS;
         } else if (request.getMethod().equals(OauthConstants.HTTP_POST)) {
