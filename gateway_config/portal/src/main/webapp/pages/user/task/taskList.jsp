@@ -9,7 +9,7 @@
   </s:a>
   <h2>Tasks</h2>
   <div class="callout">
-    <b>Current CPU Hr Usage: <span class="red"><s:property value="%{getCPUHours()}"/></span></b>
+    <b>Current SU Hr Usage: <span class="red"><s:property value="%{getCPUHours()}"/></span></b>
     <s:a cssClass="btn btn-link" href="javascript:popitup('%{staticSite}/help/cpu_help')">Explain this?</s:a>
     <br>
     <s:if test="%{currentTabSize != 1}">

@@ -4,7 +4,7 @@
 <!---->
 <div class="callout">
   You may edit your task using the tabs above.<br>
-  Current CPU Hr Usage: <s:property value="%{getCPUHours()}"/>
+  Current SU Hr Usage: <s:property value="%{getCPUHours()}"/>
   <s:a href="javascript:popitup('%{staticSite}/help/cpu_help')">Explain this?</s:a>
 </div>
 <s:form action="createTask" theme="simple" cssClass="form-horizontal" role="form">
