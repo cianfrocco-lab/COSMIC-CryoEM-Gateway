@@ -396,7 +396,7 @@ public class TransferAction extends NgbwSupport {
         }
 
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
-	    //logger.info("Source Endpoint activation....");
+	        //logger.info("Source Endpoint activation....");
 			try
 			{
             	String result = activationProcess ( username, globusRoot,
@@ -605,7 +605,7 @@ public class TransferAction extends NgbwSupport {
                 }
             } else {
 				if(ep_status.get("is_globus_connect")) {
-					if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
+					 if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
                     	reportUserError ( "Warning, the endpoint, " +
                             dispname + ", is not connected or paused." );
 						return "failure";
@@ -846,6 +846,7 @@ public class TransferAction extends NgbwSupport {
         //return false;
     }
 
+    /*
     public boolean myproxyActivation(String endpointId)
             throws IOException, JSONException, GeneralSecurityException, APIError, NullPointerException {
 		//logger.debug ( "MONA: entered myproxyActivation()" );
@@ -879,7 +880,9 @@ public class TransferAction extends NgbwSupport {
         }
         return true;
     }
+    */
 
+    /*
     public boolean delegateProxyActivation(String endpointId) throws Exception {
 		//logger.debug ( "MONA: entered delegateProxyActivation()" );
         String proxy_chain = createProxyFromFile(endpointId);
@@ -908,10 +911,12 @@ public class TransferAction extends NgbwSupport {
         }
         return true;
     }
+    */
 
     /* Doesn't work as XSEDE does NOT allow community account to authenticate
      * using this mechanism
      */
+    /*
     public boolean activateCAProxy ( String endpointId ) throws Exception
     {
 		//logger.debug ( "MONA: entered activateCAProxy()" );
@@ -949,6 +954,7 @@ public class TransferAction extends NgbwSupport {
         }
         return true;
     }
+    */
 
     /**
      * Deactivate the given endpoint
@@ -993,6 +999,7 @@ public class TransferAction extends NgbwSupport {
         return pub_key;
     }
 
+    /*
     private String getPublicKey2(JSONTransferAPIClient c, String endpointId)
             throws IOException, JSONException, GeneralSecurityException, APIError {
 		logger.debug ( "MONA: entered getPublicKey2()" );
@@ -1017,6 +1024,7 @@ public class TransferAction extends NgbwSupport {
         }
         return pub_key;
     }
+    */
 
     private void pipeStream(InputStream input, OutputStream output) throws IOException {
         byte buffer[] = new byte[1024];
@@ -1030,6 +1038,7 @@ public class TransferAction extends NgbwSupport {
         output.flush();
     }
 
+    /*
     private String createProxyFromFile(String endpointId) throws Exception {
 		//logger.debug ( "MONA: entered createProxyFromFile()" );
 		//logger.debug ( "MONA: endpointId = " + endpointId );
@@ -1082,7 +1091,9 @@ public class TransferAction extends NgbwSupport {
         //logger.info(sb.toString());
         return sb.toString();
     }
+    */
 
+    /*
     private String createProxyFromFile2(JSONTransferAPIClient client, String endpointId) throws Exception {
 		//logger.debug ( "MONA: entered createProxyFromFile2()" );
 		//logger.debug ( "MONA: endpointId = " + endpointId );
@@ -1135,6 +1146,7 @@ public class TransferAction extends NgbwSupport {
         //logger.info(sb.toString());
         return sb.toString();
     }
+    */
 
     private void addActivationItem(String name, String ui_name, String type,
                                    String value, JSONArray items)
@@ -1301,8 +1313,7 @@ public class TransferAction extends NgbwSupport {
                     + "/ls";
 		    //logger.debug ( "MONA: resource = " + resource );
             JSONTransferAPIClient.Result r = client.getResult(resource, params);
-            //logger.info("Contents of " + path + " on "
-            //        + endpointId + ":");
+            //logger.info("Contents of " + path + " on " + endpointId + ":");
 
 		    //logger.debug ( "MONA: r.document = " + r.document );
             JSONArray fileArray = r.document.getJSONArray("DATA");
