@@ -44,7 +44,7 @@ public class DynamicTreeAction extends NgbwSupport {
         client = new JSONTransferAPIClient(username, null, null);
         client.setAuthenticator(authenticator);
 
-        logger.info("Node ID: "+id);
+        //logger.info("Node ID: "+id);
         generateTree(id);
         return SUCCESS;
     }
@@ -60,8 +60,7 @@ public class DynamicTreeAction extends NgbwSupport {
             String resource = BaseTransferAPIClient.endpointPath(endpointId)
                     + "/ls";
             JSONTransferAPIClient.Result r = client.getResult(resource, params);
-            logger.info("Contents of " + path + " on "
-                    + endpointId + ":");
+            //logger.info("Contents of " + path + " on " + endpointId + ":");
 
             JSONArray fileArray = r.document.getJSONArray("DATA");
             files = new ArrayList<>();
@@ -95,8 +94,8 @@ public class DynamicTreeAction extends NgbwSupport {
             nodeId = nodeId + "/";
         }
 
-        logger.info("SRC Endpoint ID: "+s_epid);
-        logger.info("SRC Path: "+s_eppath);
+        //logger.info("SRC Endpoint ID: "+s_epid);
+        //logger.info("SRC Path: "+s_eppath);
         List<FileMetadata> files = get_filelist(s_epid,s_eppath,s_dispname);
 
         for(FileMetadata fm:files) {
