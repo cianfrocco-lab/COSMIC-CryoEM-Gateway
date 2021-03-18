@@ -99,15 +99,19 @@ public class JSONACLAPIClient
         this.endpointID = epid;
         this.baseTransferURL = config.getProperty
             ( OauthConstants.ENDPOINT_URL ) + "/" + this.endpointID + "/";
+        //logger.info ( "MONA: baseTransferURL = " + this.baseTransferURL );
 
         if ( ! initAccessToken() )
             throw new AccessException ( "Cannot get access token" );
     }
 
+    /* This function will retrieve the access list; it is useful for
+     * testing/debugging
+     */
     public JSONArray accessList()
     {
         //logger.info ( "MONA: entered accessList()" );
-        //logger.info ( "MONA: endpoint_id = " + endpoint_id );
+        //logger.info ( "MONA: endpointID = " + endpointID );
 
         if ( this.endpointID == null || this.endpointID.trim().isEmpty() )
             return ( null );
@@ -198,8 +202,11 @@ public class JSONACLAPIClient
             request_properties.put ( "Content-Length", "" +
                 document.toString().length() );
 
+            //logger.debug ( "MONA: POST to " + this.baseTransferURL + action );
+            //logger.debug ( "MONA: document = " + document.toString() );
             list = request ( "POST", this.baseTransferURL + action,
                 document.toString(), null, null );
+            //logger.debug ( "MONA: list = " + list );
 
             if ( list != null && list.get ( "code" ) == "Created" )
                 return ( 1 );
@@ -359,8 +366,16 @@ public class JSONACLAPIClient
         //logger.info ( "MONA: message = " + statusMessage );
         //logger.info ( "MONA: headers = " + c.getHeaderFields() );
 
-        if ( statusCode >= 400 )
+        BufferedReader br = null;
+
+        // If response is ok...
+        if ( 100 <= statusCode && statusCode < 400 )
+            br = new BufferedReader ( new InputStreamReader
+                ( c.getInputStream(), "utf-8" ) );
+        else
         {
+            // Else there is an error response
+            
             String errorHeader = null;
             Map<String, List<String>> headers = c.getHeaderFields();
             if (headers.containsKey("X-Transfer-API-Error")) {
@@ -369,24 +384,35 @@ public class JSONACLAPIClient
             }
             throw constructAPIError(statusCode, statusMessage, errorHeader,
                                     c.getErrorStream());
+            /* for debugging, in case want to see error output
+            br = new BufferedReader ( new InputStreamReader
+                ( c.getErrorStream() ) );
+            */
         }
 
         JSONObject response_data = null;
 
+        /*
         try ( BufferedReader br = new BufferedReader
             ( new InputStreamReader ( c.getInputStream(), "utf-8" ) ) )
+        */
+        if ( br != null )
         {
             StringBuilder response = new StringBuilder();
             String responseLine = null;
             while ( ( responseLine = br.readLine()) != null )
                 response.append ( responseLine.trim() );
 
-            response_data = new JSONObject ( response.toString() );
+            try
+            {
+                response_data = new JSONObject ( response.toString() );
+                //logger.debug ( "MONA: response_data = " + response_data );
+            }
+            catch ( Exception e )
+            {
+                logger.error ( e );
+            }
         }
-        catch ( Exception e )
-        {
-            logger.error ( e );
-        };
 
         return ( response_data );
     }
@@ -461,7 +487,7 @@ public class JSONACLAPIClient
             Iterator valuesIt = valueList.iterator();
             while (valuesIt.hasNext()) {
                 //System.out.println(pair.getKey() + ": " + valuesIt.next());
-                logger.debug ( "MONA: result = " + pair.getKey() + ": " + valuesIt.next() );
+                //logger.debug ( "MONA: result = " + pair.getKey() + ": " + valuesIt.next() );
             }
         }
 
@@ -516,8 +542,13 @@ public class JSONACLAPIClient
         try
         {
             String client_id = config.getProperty ( OauthConstants.CLIENT_ID );
+            //logger.debug ( "MONA: client_id = " + client_id );
             String client_secret =
                 config.getProperty ( OauthConstants.CLIENT_SECRET );
+            /*
+            logger.debug ( "MONA: cs = " + client_secret.substring ( 0, 5 ) +
+                " " + client_secret.substring ( 25 ) );
+            */
             String auth = "Basic " + Base64.getEncoder().encodeToString
                 ( ( client_id + ":" + client_secret ).getBytes ( StandardCharsets.UTF_8 ) );
             //logger.debug ( "MONA: auth = " + auth );
