@@ -315,8 +315,7 @@ def prepareRelionRun(args):
         newstarname=inputZipFile.split('/')
         del newstarname[0]
         newstarname='/'.join(newstarname)
-        '''
-        #Get relative path from starfile 
+        '''#Get relative path from starfile 
         #Read star file header to get particle name
         rlno1=open(starfilename,'r')
         colnum=-1
@@ -355,17 +354,67 @@ def prepareRelionRun(args):
                         del fullStarDir[-1]
                         fullStarDir='/'.join(fullStarDir)
                 counter=counter+1
-        '''
         #Symlink directory: 
         DirToSymLink=userdir+'/'+inputZipFile.split('/')[0]   #fullStarDir
         tmplog.write('\n'+'symlink'+DirToSymLink)
         cmd="ln -s '%s/'* ." %(DirToSymLink)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
-        
+       
+        '''
+
+        #3/29/21
+        #Get relative path from starfile 
+        #Read star file header to get particle name
+        rlno1=open(starfilename,'r')
+        colnum=-1
+        for rln_line in rlno1:
+                if '_rlnImageName' in rln_line:
+                        colnum=int(rln_line.split()[-1].split('#')[-1])-1
+        rlno1.close()
+
+        if colnum<0:
+                print("Incorrect format of star file. Could not find _rlnImageName in star file header information. Exiting")
+                sys.exit()
+        rlno1=open(starfilename,'r')
+        checker=0
+        while checker==0:
+                for rln_line in rlno1:
+                        if '@' in rln_line:
+                                particlename=rln_line.split()[colnum].split('@')[-1]
+                                checker=1
+        rlno1.close()
+
+        particlenameDir=particlename.split('/')[0]
+
+        starfilenameDir=''
+        checker=0
+        for path in starfilename.split('/'):
+                if path == particlenameDir:
+                        checker=1
+                if checker==0:
+                        starfilenameDir=starfilenameDir+'/'+path
+    
+        newstarname=''
+        checker=0
+        for path in starfilename.split('/'):
+                if path == particlenameDir:
+                        checker=1
+                if checker==1:
+                        if len(newstarname)>0:
+                                newstarname=newstarname+'/'+path
+
+                        if len(newstarname)==0: 
+                                newstarname=path
+
         pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
         o1=open('_tmp2.txt','w')
         o1.write('%s\n'%(pwd))
         o1.close()
+
+        DirToSymLink=starfilenameDir   #fullStarDir
+        tmplog.write('\n'+'symlink'+DirToSymLink)
+        cmd="ln -s '%s/'* ." %(DirToSymLink)
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
 
         if not os.path.exists('%s' %(newstarname)):
         #Print error since could not find input star file
@@ -869,16 +918,25 @@ if jobtype == '3dfsc':
                 counter=counter+1
 
         #../ThreeDFSC/ThreeDFSC_Start.py --halfmap1=T40_map1_Masked_144.mrc --halfmap2=T40_map2_Masked_144.mrc --fullmap=130K-T40.mrc --apix=1.31 --ThreeDFSC=T40-3DFSC
-        cmd='''source /share/apps/compute/anaconda/etc/profile.d/conda.sh
-source /home/cosmic2/software_dependencies/relion/relion-3.1-cpu.sh
+        #source /expanse/projects/cosmic2/expanse/software_dependencies/EMAN-1.9/eman.bashrc
+            
+        
+        cmdold='''source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
 conda activate 3DFSC_2
-module load relion 
-/home/cosmic2/software_dependencies/phenix-1.18.2-3874/phenix-1.18.2-3874/build/bin/phenix.fmodel %s scattering_table=electron high_resolution=%f generate_fake_p1_symmetry=True >> stdout.txt 2>> stderr.txt
-/home/cosmic2/software_dependencies/phenix-1.18.2-3874/phenix-1.18.2-3874/build/bin/phenix.mtz2map %s.mtz include_fmodel=True >> stdout.txt 2>> stderr.txt
-/home/cosmic2/software_dependencies/scripts/resize_map_according_to_other_mapDims.py %s_fmodel.ccp4:mrc %s %s_newbox.mrc >> stdout.txt 2>> stderr.txt
-/home/cosmic2/software_dependencies/Anisotropy/ThreeDFSC/ThreeDFSC_Start.py --halfmap1=%s --halfmap2=%s_newbox.mrc --fullmap=%s --apix=%s --ThreeDFSC=3DFSC-output > stdout.txt 2> stderr.txt
-zip -r 3DFSC-output.zip 3DFSC-output/
-''' %(half2map,float(angpix)*2,half2map,half2map,half1map,half2map[:-4],half1map,half2map[:-4],half1map,angpix)
+source /expanse/projects/cosmic2/expanse/software_dependencies/phenix-installer-1.19.2-4158-intel-linux-2.6-x86_64-centos6/phenix/phenix-1.19.2-4158/phenix_env.sh
+/expanse/projects/cosmic2/expanse/software_dependencies/phenix-installer-1.19.2-4158-intel-linux-2.6-x86_64-centos6/phenix/phenix-1.19.2-4158/build/bin/phenix.fmodel %s scattering_table=electron high_resolution=%f generate_fake_p1_symmetry=True >> stdout.txt 2>> stderr.txt
+/expanse/projects/cosmic2/expanse/software_dependencies/phenix-installer-1.19.2-4158-intel-linux-2.6-x86_64-centos6/phenix/phenix-1.19.2-4158/build/bin/phenix.mtz2map %s.mtz include_fmodel=True >> stdout.txt 2>> stderr.txt
+/expanse/projects/cosmic2/expanse/software_dependencies/scripts/resize_map_according_to_other_mapDims_RELION.py %s_fmodel.ccp4 %s %s_newbox.mrc %s >> stdout.txt 2>> stderr.txt
+/expanse/projects/cosmic2/expanse/software_dependencies/Anisotropy/ThreeDFSC/ThreeDFSC_Start.py --halfmap1=%s --halfmap2=%s_newbox.mrc --fullmap=%s --apix=%s --ThreeDFSC=3DFSC-output >> stdout.txt 2>> stderr.txt
+zip -r 3DFSC-output.zip Results_3DFSC-output/
+''' %(half2map,float(angpix)*2,half2map,half2map,half1map,half2map[:-4],angpix,half1map,half2map[:-4],half1map,angpix)
+        cmd='''source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+conda activate 3DFSC_2
+source /expanse/projects/cosmic2/expanse/software_dependencies/EMAN-1.9/eman.bashrc
+/expanse/projects/cosmic2/expanse/software_dependencies/scripts/resize_map_according_to_other_mapDims_EMAN.py %s %s %s_newbox.mrc %s >> stdout.txt 2>> stderr.txt
+/expanse/projects/cosmic2/expanse/software_dependencies/Anisotropy/ThreeDFSC/ThreeDFSC_Start.py --halfmap1=%s --halfmap2=%s_newbox.mrc --fullmap=%s --apix=%s --ThreeDFSC=3DFSC-output >> stdout.txt 2>> stderr.txt
+zip -r 3DFSC-output.zip Results_3DFSC-output/
+''' %(half1map,half2map,half2map[:-4],angpix,half1map,half2map[:-4],half1map,angpix)
         runhours=1
         runminutes = math.ceil(60 * runhours)
         partition='shared'
@@ -916,11 +974,13 @@ zip -r 3DFSC-output.zip 3DFSC-output/
 #SBATCH -A %s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-#SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=24G
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
-date 
+date
+module load cpu gcc openmpi
+module load relion/3.1.1
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
@@ -928,7 +988,7 @@ pwd > stdout.txt 2>stderr.txt
 %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,1,6,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,jobdir,cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
