@@ -184,10 +184,33 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="RELION_POSTPROCESS"
+                name="RELION Postprocess on Expanse"
+                toolresource="expanse"
+                configfile="pisexml/relion_postprocess.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="DEEPEMHANCER"
                 name="DeepEMhancer - non-linear post-processing with deep learning"
                 toolresource="expanse-gpu"
                 configfile="pisexml/deepemhancer.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
+                toolresource="expanse-gpu"
+                configfile="pisexml/cryodrgn.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
@@ -243,6 +266,17 @@
 			<Tool id="CRYO_EFFICIENCY" name="Efficiency of 3D reconstruction"
                 toolresource="expanse"
                 configfile="pisexml/cryo_efficiency.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="THREED_FSC" name="3DFSC"
+                toolresource="expanse"
+                configfile="pisexml/threed_fsc.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
