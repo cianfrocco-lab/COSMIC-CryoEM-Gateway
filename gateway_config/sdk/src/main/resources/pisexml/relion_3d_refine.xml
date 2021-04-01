@@ -206,7 +206,7 @@ Mike -->
         <name>flatten_solvent</name>
         <attributes>
             <group>1</group>
-            <prompt>Apply mask to reference during refinement? (Use solvent-flattned FSCs? --flatten_solvent) </prompt>
+            <prompt>Apply mask to reference during refinement? (Use solvent-flattened FSCs? --flatten_solvent) </prompt>
             <format>
                 <language>perl</language>
                 <code>($value) ? " --flatten_solvent" : ""</code>
