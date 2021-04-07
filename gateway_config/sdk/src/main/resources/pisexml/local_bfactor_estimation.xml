@@ -89,13 +89,6 @@
                 <language>perl</language>
                 <code>"--angpix $value"</code>
             </format>
-            <ctrls>
-                <ctrl>
-                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
-                    <language>perl</language>
-                    <code>$angpix &lt; 0.01</code>
-                </ctrl>
-            </ctrls>
         </attributes>
     </parameter>
 
@@ -108,13 +101,6 @@
                 <language>perl</language>
                 <code>"--thresh $value"</code>
             </format>
-            <ctrls>
-                <ctrl>
-                    <message>Please enter a float > 0.00 for the pixel size (in Angstroms/pix)</message>
-                    <language>perl</language>
-                    <code>$thresh &lt; 0.01</code>
-                </ctrl>
-            </ctrls>
         </attributes>
     </parameter>
 
@@ -189,6 +175,20 @@
         </attributes>
     </parameter>
 
+	<parameter type="Switch">
+        <name>highmem</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Advanced: Check box if your job is crashing because of memory issues (box size >500 pixels).</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --highmem" : ""</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+        </attributes>
+    </parameter>
 <!-- Files to transfer back -->
 	<parameter type="Results">
       <name>Local B-factor estimation maps</name>
