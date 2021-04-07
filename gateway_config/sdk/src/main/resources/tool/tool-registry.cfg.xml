@@ -184,6 +184,18 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="RELION_POSTPROCESS"
+                name="RELION Postprocess on Expanse"
+                toolresource="expanse"
+                configfile="pisexml/relion_postprocess.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="DEEPEMHANCER"
                 name="DeepEMhancer - non-linear post-processing with deep learning"
                 toolresource="expanse-gpu"
@@ -196,6 +208,19 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<!--
+			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
+                toolresource="expanse-gpu"
+                configfile="pisexml/cryodrgn.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			-->
 			<Tool id="LOCAL_BFACTOR_ESTIMATION" name="Estimate local B-Factors for 3D reconstructions"
                 toolresource="expanse"
                 configfile="pisexml/local_bfactor_estimation.xml"
@@ -252,6 +277,17 @@
                 </OutputParameters>
             </Tool>
 			<!--
+			    <Tool id="THREED_FSC" name="3DFSC"
+                toolresource="expanse"
+                configfile="pisexml/threed_fsc.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			
 			<Tool id="SLEEP"
 				name="sleep on Expanse GPU"

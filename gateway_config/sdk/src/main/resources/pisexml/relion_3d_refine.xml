@@ -88,6 +88,28 @@ Mike -->
         <filenames>stderr</filenames>
       </attributes>
     </parameter>
+
+	<parameter type="Results">
+      <name>Unsharpened map</name>
+      <attributes>
+        <filenames>run_class001.mrc</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Half map 1</name>
+      <attributes>
+        <filenames>run_half1_class001_unfil.mrc</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Half map 2</name>
+      <attributes>
+        <filenames>run_half2_class001_unfil.mrc</filenames>
+      </attributes>
+    </parameter>
+
 <!-- create the non-configurable command line -->
 	<parameter ishidden="1" type="String">
 		<name>relion_commandline</name>
@@ -162,6 +184,36 @@ Mike -->
                 <language>perl</language>
                 <code>"--solvent_mask $value"</code>
             </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="Switch">
+        <name>zero_particle</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Mask individual particles with zeros? (--zero_mask) </prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --zero_mask" : ""</code>
+            </format>
+            <vdef>
+                <value>1</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+	<parameter type="Switch">
+        <name>flatten_solvent</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Apply mask to reference during refinement? (Use solvent-flattened FSCs? --flatten_solvent) </prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --flatten_solvent" : ""</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
         </attributes>
     </parameter>
 

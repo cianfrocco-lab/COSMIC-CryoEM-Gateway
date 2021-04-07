@@ -813,6 +813,8 @@ if 'pipeline' in args['commandline']:
         jobtype='pipeline'
 if 'relion_refine_mpi' in args['commandline']: 
         jobtype='relion'
+if 'relion_postprocess' in args['commandline']:
+        jobtype='postprocess'
 if 'cryoEF' in args['commandline']:
         jobtype='cryoef'
 if 'csparc2star.py' in args['commandline']:
@@ -1015,8 +1017,11 @@ if jobtype == 'loc_occupancy':
         cmdline=command.split()
         totEntries=len(cmdline)
         counter=0
+        mem='24G'
         while counter < totEntries:
                 entry=cmdline[counter]
+                if entry == '--highmem':
+                        mem='240G'
                 if entry == '--bfactor_max':
                         maxres=cmdline[counter+1]
                 if entry == '--bfactor_min':
@@ -1127,7 +1132,11 @@ if jobtype == 'local_bfactor_sharpen':
         cmdline=command.split()
         totEntries=len(cmdline)
         counter=0
+        mem='24G'
         while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--highmem':
+                        mem='240G'
                 entry=cmdline[counter]
                 if entry == '--bfactor_max':
                         maxres=cmdline[counter+1]
@@ -1211,6 +1220,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=%s
 #SBATCH --no-requeue
 module load cpu 
 date 
@@ -1221,7 +1231,7 @@ pwd > stdout.txt 2>stderr.txt
 %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,mem,jobdir,cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -1239,8 +1249,13 @@ if jobtype == 'locspiral':
         cmdline=command.split()
         totEntries=len(cmdline)
         counter=0
+        mem='24G'
+        ntasks=24
         while counter < totEntries:
                 entry=cmdline[counter]
+                if entry == '--highmem':
+                        mem='240G'
+                        ntasks=5
                 if entry == '--bfactor_max':
                         maxres=cmdline[counter+1]
                 if entry == '--bfactor_min':
@@ -1267,9 +1282,9 @@ close all
 
 addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
 myCluster = parcluster('local')
-myCluster.NumWorkers = 24
+myCluster.NumWorkers = %s
 saveProfile(myCluster);
-parpool('local',24)
+parpool('local',%s)
 
 vol1 = ReadMRC('%s');
 vol2 = ReadMRC('%s');
@@ -1281,7 +1296,7 @@ mask = vol > %s;
 mask = bwareaopen(mask,25,6);
 WriteMRC(mask,%s,'mask.mrc');
 [map W] = locSpiral(vol,mask,%s,%s,%s,%s,%s);
-WriteMRC(map,%s,'%s_locSpiralMap.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
+WriteMRC(map,%s,'%s_locSpiralMap.mrc');''' %(ntasks,ntasks,half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
         o1.close()
         cmd='''module load matlab 
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
@@ -1323,7 +1338,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
-#SBATCH --mem=48G
+#SBATCH --mem=%s
 #SBATCH --no-requeue
 module load cpu 
 date 
@@ -1334,7 +1349,7 @@ pwd > stdout.txt 2>stderr.txt
 %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,ntasks,1,mem,jobdir,cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -1352,8 +1367,11 @@ if jobtype == 'local_bfactor_estimation':
         cmdline=command.split()
         totEntries=len(cmdline)
         counter=0
+        mem='24G'
         while counter < totEntries:
                 entry=cmdline[counter]
+                if entry == '--highmem':
+                        mem='240G'
                 if entry == '--bfactor_max':
                         maxres=cmdline[counter+1]
                 if entry == '--bfactor_min':
@@ -1440,6 +1458,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=%s 
 module load cpu
 date 
 cd '%s/'
@@ -1449,7 +1468,7 @@ pwd > stdout.txt 2>stderr.txt
 %s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,24,1,mem,jobdir,cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -1946,6 +1965,97 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         os.fsync(FO.fileno())
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'postprocess':
+        command=args['commandline']
+        cmdline=command.split()
+        #if adhoc_bfac then remove autob_lowres. If NOT adhoc_bfac then add --auto_bfac and keep autob_lowres
+        totEntries=len(cmdline)
+        counter=0
+        adhocBflag=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--adhoc_bfac':
+                        adhocBflag=1
+                counter=counter+1
+
+        if adhocBflag == 1:
+                command=''
+                counter=0
+                while counter < totEntries:
+                        entry=cmdline[counter]
+                        if entry == '--autob_lowres':
+                                counter=counter+2
+                        if entry != '--autob_lowres':
+                                command=command+' %s '%(cmdline[counter])
+                                counter=counter+1
+        if adhocBflag == 0:
+                command=command+' --auto_bfac'
+
+        cmd='''module load cpu gcc openmpi
+module load relion/3.1.1
+mkdir postprocess 
+%s >>stdout.txt 2>>stderr.txt
+''' %(command)
+        runhours=1
+        runminutes = math.ceil(60 * runhours)
+        partition='compute'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --no-requeue
+date
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
 
 if jobtype == 'csparc2star':
         command=args['commandline']
