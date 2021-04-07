@@ -625,10 +625,12 @@ def prepareRelionRun(args):
                 runningdir=''
                 while counter < numdirs-1: 
                         if counter == 0: 
-                                os.makedirs(newoutdir.split('/')[counter])
+                                if not os.path.exists(newoutdir.split('/')[counter]): 
+                                    os.makedirs(newoutdir.split('/')[counter])
                                 runningdir=newoutdir.split('/')[counter]
                         if counter>0: 
-                                os.makedirs('%s/%s' %(runningdir,newoutdir.split('/')[counter]))
+                                if not os.path.exists('%s/%s' %(runningdir,newoutdir.split('/')[counter])):
+                                    os.makedirs('%s/%s' %(runningdir,newoutdir.split('/')[counter]))
                                 runningdir='%s/%s' %(runningdir,newoutdir.split('/')[counter])
                         counter=counter+1
 
@@ -638,12 +640,18 @@ def prepareRelionRun(args):
                 newoutdir='/'.join(newoutdir)
                 tmplog.write('\n'+datastar.split('/')[-1])
                 tmplog.write('\n%s/%s' %(newoutdir,datastar.split('/')[-1][:-5])) 
-                shutil.copyfile(datastar.split('/')[-1],'%s/%s.star' %(newoutdir,datastar.split('/')[-1][:-5]))
-                shutil.copyfile(samplingstar.split('/')[-1],'%s/%s.star' %(newoutdir,samplingstar.split('/')[-1][:-5]))
-                shutil.copyfile(model1star.split('/')[-1],'%s/%s.star' %(newoutdir,model1star.split('/')[-1][:-5]))
-                shutil.copyfile(model2star.split('/')[-1],'%s/%s.star' %(newoutdir,model2star.split('/')[-1][:-5]))
-                shutil.copyfile(model2mrc,'%s/%s' %(newoutdir,model2mrc))
-                shutil.copyfile(model1mrc,'%s/%s' %(newoutdir,model1mrc))
+                if not os.path.exists('%s/%s.star' %(newoutdir,datastar.split('/')[-1][:-5])):
+                        shutil.copyfile(datastar.split('/')[-1],'%s/%s.star' %(newoutdir,datastar.split('/')[-1][:-5]))
+                if not os.path.exists('%s/%s.star' %(newoutdir,samplingstar.split('/')[-1][:-5])):
+                        shutil.copyfile(samplingstar.split('/')[-1],'%s/%s.star' %(newoutdir,samplingstar.split('/')[-1][:-5]))
+                if not os.path.exists('%s/%s.star' %(newoutdir,model1star.split('/')[-1][:-5])):
+                        shutil.copyfile(model1star.split('/')[-1],'%s/%s.star' %(newoutdir,model1star.split('/')[-1][:-5]))
+                if not os.path.exists('%s/%s.star' %(newoutdir,model2star.split('/')[-1][:-5])):
+                        shutil.copyfile(model2star.split('/')[-1],'%s/%s.star' %(newoutdir,model2star.split('/')[-1][:-5]))
+                if not os.path.exists('%s/%s' %(newoutdir,model2mrc)):
+                        shutil.copyfile(model2mrc,'%s/%s' %(newoutdir,model2mrc))
+                if not os.path.exists('%s/%s' %(newoutdir,model1mrc)):
+                        shutil.copyfile(model1mrc,'%s/%s' %(newoutdir,model1mrc))
                 mpi_to_use=3 
                 nodes=1
                 gpuextra2='--gpu 0,1:2,3'
