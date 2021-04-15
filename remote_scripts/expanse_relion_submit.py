@@ -246,6 +246,9 @@ def preparePreprocessingRun(inputline,jobdir):
 
 def prepareRelionRun(args):
 	#Start temp log file
+        relion_command=''
+        outdir=''
+        numiters=''
         inputline = args['commandline']
         tmplog=open('_tmplog','w')
         tmplog.write("start of tmplog\n")
@@ -425,7 +428,9 @@ def prepareRelionRun(args):
                 o1.close()        
                 print('Could not find input star file' )
                 sys.exit()
-        
+        if 'isac' in inputline: 
+                relion_command=newstarname
+
         #Create output dirs
         if '--ref' in inputline:
                 #partition='compute'
@@ -468,22 +473,23 @@ def prepareRelionRun(args):
                                         counter=counter+1
 
                         if '--reconstruct_subtracted_bodies' not in inputline:
-                                if not os.path.exists('Class2D_cosmic'):
-                                        os.makedirs('Class2D_cosmic')
-                                counter=1
-                                while counter<=500: 
-                                        if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
-                                                os.makedirs('Class2D_cosmic/job%03i' %(counter))
-                                                outdir='Class2D_cosmic/job%03i' %(counter)
-                                                counter=10000
-                                        counter=counter+1
-                                #Get num iters: 
-                                varcounter=0
-                                for variable in inputline.split():
-                                        if variable == '--iter':
-                                                iter_position=varcounter
-                                        varcounter=varcounter+1
-                                numiters=inputline.split()[iter_position+1]
+                                if 'relion_refine_mpi' in inputline: 
+                                        if not os.path.exists('Class2D_cosmic'):
+                                                os.makedirs('Class2D_cosmic')
+                                        counter=1
+                                        while counter<=500: 
+                                                if not os.path.exists('Class2D_cosmic/job%03i' %(counter)): 
+                                                       os.makedirs('Class2D_cosmic/job%03i' %(counter))
+                                                       outdir='Class2D_cosmic/job%03i' %(counter)
+                                                       counter=10000
+                                                counter=counter+1
+                                        #Get num iters: 
+                                        varcounter=0
+                                        for variable in inputline.split():
+                                                if variable == '--iter':
+                                                       iter_position=varcounter
+                                                varcounter=varcounter+1
+                                        numiters=inputline.split()[iter_position+1]
                 if '--denovo_3dref' in inputline: 
                         if not os.path.exists('InitialModel_cosmic'):
                                 os.makedirs('InitialModel_cosmic')
@@ -581,14 +587,15 @@ def prepareRelionRun(args):
                         tmplog.write(relion_command)        
 
                 if '"' in inputline: 
-                        inputline_list=inputline.split('"')[0].split()
-                        tmplog.write("inputline_list (%s)\n" % (inputline_list,))
-                        inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
-                        tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
-                        if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map':
-                                inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'        
-                        relion_command=' '.join(inputline_list)+'  %s' %(newstarname)
-                        tmplog.write(relion_command)        
+                        if 'relion_refine_mpi' in inputline:
+                               inputline_list=inputline.split('"')[0].split()
+                               tmplog.write("inputline_list (%s)\n" % (inputline_list,))
+                               inputline_list[returnEntryNumber(inputline,'--o')]='relion_refine_mpi --o %s/run' %(outdir)
+                               tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--o')]))
+                               if inputline_list[returnEntryNumber(inputline,'--ref')].split('.')[-1] == 'map':
+                                      inputline_list[returnEntryNumber(inputline,'--ref')]=inputline_list[returnEntryNumber(inputline,'--ref')]+':mrc'        
+                               relion_command=' '.join(inputline_list)+'  %s' %(newstarname)
+                               tmplog.write(relion_command)        
         if '--reconstruct_subtracted_bodies' in inputline:
                 inputline_list=inputline.split()
                 tmplog.write('\n%s\n' %(inputline_list[returnEntryNumber(inputline,'--i')]))
@@ -835,6 +842,8 @@ if 'local_bfactor_sharpen' in args['commandline']:
         jobtype='local_bfactor_sharpen'
 if 'loc_occupancy' in args['commandline']:
         jobtype='loc_occupancy'
+if 'isac' in args['commandline']:
+        jobtype='isac'
 if '3dfscrun' in args['commandline']:
         jobtype='3dfsc'
 if re.search('sleep_time.txt', args['commandline']):
@@ -2354,6 +2363,111 @@ pwd > stdout.txt 2>stderr.txt
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 echo 'Job finished && date' >> job_status.txt
 """%(partition,jobname, runtime, mailuser, args['account'],jobdir,runcmd,REMOTESCRIPTSDIR,username,out_destination,outdir,runcmd,'pipeline')
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'isac':
+        relion_command,outdir,out_destination,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use,newstarname=prepareRelionRun(args)
+        runminutes = math.ceil(60 * runhours)
+        instar=relion_command 
+        cmdline=args['commandline'].split()
+        totEntries=len(cmdline)
+        counter=0
+        options=''
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '--CTF':
+                    options=options+' --CTF'
+                if 'maxit' in entry: 
+                    options=options+' ' + entry
+                if 'minimum' in entry: 
+                    options=options+' ' + entry
+                if 'img_per' in entry: 
+                    options=options+' ' + entry
+                if 'radius=' in entry: 
+                    options=options+' ' + entry
+                counter=counter+1
+        sphiredir='sphire-%s' %(''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
+        starconvert='isac-converted-%s.star' %(''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
+        outdir='output-%s' %(sphiredir)
+        for line in open(instar,'r'):
+            if 'mrcs' in line:
+                for entry in line.split():
+                    if 'mrcs' in entry:
+                        f=entry
+        f=f.split('@')[-1]
+        f=f.split('/')
+        del f[-1]
+        f='/'.join(f)
+        star=instar.split("/")
+        del star[-1]
+        star='/'.join(star)
+        additionalpath=f.replace(star,'')
+
+        isac_cmd='''conda activate /expanse/projects/cosmic2/expanse/conda/pyem/
+/expanse/projects/cosmic2/expanse/software_dependencies/pyem/star.py %s %s --relion2 
+conda deactivate 
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2
+sxrelion2sphire.py %s %s >> stdout.txt 2>> stderr.txt 
+e2bdb.py  %s/%s/Particles  --makevstack=bdb:%s/%s/Particles#sphire_stack >> stdout.txt 2>> stderr.txt
+mpirun python /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2/bin/sp_isac2_gpu.py 'bdb:%s/%s/Particles/#sphire_stack' %s %s --gpu_devices=0,1,2,3  >> stdout.txt 2>> stderr.txt
+e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.mrcs >> stdout.txt 2>> stderr.txt''' %(instar,starconvert,starconvert,sphiredir,sphiredir,additionalpath,sphiredir,additionalpath,sphiredir,additionalpath,outdir,options,outdir,outdir)
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=4             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=6
+#SBATCH --gpus=4
+#SBATCH --no-requeue
+module load gpu
+module load cuda 
+module load openmpi
+source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], jobdir,isac_cmd)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
