@@ -196,6 +196,18 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="SPHIRE_ISAC"
+                name="ISAC 2D classification on Expanse"
+                toolresource="expanse-gpu"
+                configfile="pisexml/sphire_isac.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="DEEPEMHANCER"
                 name="DeepEMhancer - non-linear post-processing with deep learning"
                 toolresource="expanse-gpu"

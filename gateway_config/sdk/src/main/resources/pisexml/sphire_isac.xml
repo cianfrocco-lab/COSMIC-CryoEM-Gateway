@@ -1,0 +1,222 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>ISAC 2D classification</title>
+    <version>2.3.4</version>
+    <description>Calculate 2D class averages using iterative stable alignment and classification (ISAC)</description>
+    <authors>Yang, Z., Fang, J., Chittuluru, J., Asturias, F. J. and Penczek, P. A.</authors>
+    <reference>https://pubmed.ncbi.nlm.nih.gov/22325773/</reference>
+    <category>SPHIRE</category>
+  </head>
+
+  <command>sphire_isac</command>
+<!-- 
+Per our conversation earlier today, I’m sending along a comet submission script for the analysis routine that will be a part of the gateway. 
+
+First, you can look at an example submission script that I typically have used (‘relion_refine_submission.txt’). The cluster input variables are standard, 
+and then there is a single command that will run using MPI. 
+
+The barebones version of the command line input is the following (‘relion_refine_submission_base.txt’). I’ve bolded and underlined the areas that users 
+will have to input: 
+
+ibrun -v relion_refine_mpi  —o /path/to/working/directory/[output] -*auto_refine -*split_random_halves —i /path/to/working/directory/[input file] 
+-*particle_diameter [user provided] —angpix [user provided] —ref /path/to/working/directory/[user provided] -*ini_high [user provided] -*ctf 
+-*flatten_solvent -*zero_mask -*oversampling 1 -*healpix_order 2 -*auto_local_healpix_order 4 -*offset_range [user provided] -*offset_step [user provided] 
+—sym [user provided] -*low_resol_join_halves 40 -*norm -*scale  -*j 1 -*memory_per_thread 4
+
+A list of variables that I would change for these test run (or at least an initial list of variables):
+—o Output file basename
+—i Input file
+—particle_diameter Diameter of particle (Angstroms)
+—angpix Pixel size of data (A/pix)
+—ref 3D model to use as template 
+—ini_high Initial filter for 3D volume
+—offset_range Pixel search range 
+—offset_step Pixel search range step size
+—sym Symmetry of sample 
+I’m not sure what the next steps are for building out this command, but this is a definite start. There will be a few added changes to the submission command based upon users data, which we will incorporate into the gateway job template page.
+
+Let me know what else I can do to help!
+Mike -->
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"sp_isac2_gpu.py"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "gpu=4\\n" .
+				 "runhours=12\\n" .
+				 "ChargeFactor=1.0\\n" .
+				 "ntasks-per-node=24\\n" .
+				 "node_exclusive=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>Particle stack</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"--i \"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+	
+<!-- Files to transfer back -->
+    <parameter type="Results">
+      <name>ISAC output</name>
+      <attributes>
+        <filenames>*ISAC_output_ordered_class_averages.mrcs</filenames>
+      </attributes>
+    </parameter>	
+	<parameter type="Results">
+	  <name>stderr.txt</name>
+	  <attributes>
+	    <filenames>stderr</filenames>
+	  </attributes>
+	</parameter>
+
+<!-- visible input parameters -->	
+
+	<parameter type="Integer" issimple="1" ismandatory="1">
+	    <name>particle_radius</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Particle radius, in pixels (--radius)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--radius=$value"</code>
+		    </format>
+		    <ctrls>
+			    <ctrl>
+                    <message>Please enter an integer > 0 for the particle radius</message>
+				    <language>perl</language>
+				    <code>$particle_radius &lt; 1</code>
+			    </ctrl>
+		    </ctrls>
+	    </attributes>
+    </parameter>
+
+	<parameter type="Integer" issimple="1" ismandatory="1">
+        <name>K</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Images per group (--img_per_grp)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--img_per_grp=$value"</code>
+            </format>
+            <vdef>
+                <value>200</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter an integer > 0 </message>
+                    <language>perl</language>
+                    <code>$K &lt; 1</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+	<parameter type="Integer" issimple="1" ismandatory="1">
+        <name>minK</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Minimum number of images per group (--minimum_grp_size) (Typically 60% of number of images per group)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--minimum_grp_size=$value"</code>
+            </format>
+            <vdef>
+                <value>120</value>
+            </vdef>
+			<ctrls>
+                <ctrl>
+                    <message>Please enter an integer > 0 </message>
+                    <language>perl</language>
+                    <code>$K &lt; 1</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <!-- Advanced Parameters -->
+
+	<parameter type="Integer" ismandatory="1">
+        <name>iter</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Number of reference-free iterations (--maxit)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--maxit=$value"</code>
+            </format>
+            <vdef>
+                <value>30</value>
+            </vdef>
+            <ctrls>
+                <ctrl>
+                    <message>Please enter an integer > 0 for the number of iterations</message>
+                    <language>perl</language>
+                    <code>$iter &lt; 1</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+    <parameter type="Switch">
+	    <name>ctf</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Do CTF correction (--CTF) </prompt>
+		    <format>
+			    <language>perl</language>
+                <code>($value) ? " --CTF" : ""</code>
+		    </format>
+            <vdef>
+                <value>1</value>
+            </vdef>
+	    </attributes>
+    </parameter>
+
+</parameters>
+
+</pise>
