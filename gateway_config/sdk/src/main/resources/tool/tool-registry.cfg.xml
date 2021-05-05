@@ -288,6 +288,17 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
+                toolresource="expanse"
+                configfile="pisexml/csparc2star.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<!--
 			    <Tool id="THREED_FSC" name="3DFSC"
                 toolresource="expanse"
@@ -314,19 +325,6 @@
 				</OutputParameters>
 			</Tool>
 			-->
-<!--
-			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
-                toolresource="expanse"
-                configfile="pisexml/csparc2star_expanse.xml"
-                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
-                <InputParameters>
-                    <InputParameter id="infile_" entityType="UNKNOWN"
-                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
-                </InputParameters>
-                <OutputParameters>
-                </OutputParameters>
-            </Tool>
- -->
 		</ToolGroup>
 <!--
 		<ToolGroup id="COMET" isdefault="1">
