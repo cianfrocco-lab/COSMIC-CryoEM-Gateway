@@ -191,6 +191,18 @@ Mike -->
             </ctrls>
 	    </attributes>
     </parameter>
+	
+	<parameter type="InFile" issimple="1">
+        <name>mask</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Mask for 3D classification (optional)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--solvent_mask $value"</code>
+            </format>
+        </attributes>
+    </parameter>
 
     <parameter type="Excl" ismandatory="1">
 	    <name>sym</name>
