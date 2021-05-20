@@ -6,7 +6,7 @@
 <pise>
   <head>
     <title>cryoDRGN - Deep Reconstructing Generative Networks for cryo-EM heterogeneous reconstruction</title>
-    <version>0.3.0b</version>
+    <version>0.3.1</version>
     <description>Perform structural analysis of 3D reconstructions using deep learning</description>
     <authors>E. Zhong, T. Bepler, B. Berger, J.H. Davis </authors>
 <!--

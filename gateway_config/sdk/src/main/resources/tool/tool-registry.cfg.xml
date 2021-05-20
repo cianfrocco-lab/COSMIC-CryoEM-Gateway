@@ -220,7 +220,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--
 			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
                 toolresource="expanse-gpu"
                 configfile="pisexml/cryodrgn.xml"
@@ -232,7 +231,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			-->
 			<Tool id="LOCAL_BFACTOR_ESTIMATION" name="Estimate local B-Factors for 3D reconstructions"
                 toolresource="expanse"
                 configfile="pisexml/local_bfactor_estimation.xml"
@@ -300,6 +298,17 @@
                 </OutputParameters>
             </Tool>
 			<!--
+			<Tool id="CRYOLO" name="crYOLO automatic particle picking"
+                toolresource="expanse"
+                configfile="pisexml/cryolo.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			    <Tool id="THREED_FSC" name="3DFSC"
                 toolresource="expanse"
                 configfile="pisexml/threed_fsc.xml"
