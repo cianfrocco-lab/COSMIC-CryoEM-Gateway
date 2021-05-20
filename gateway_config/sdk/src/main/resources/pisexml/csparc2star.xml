@@ -23,7 +23,7 @@
 	  <attributes>
 	    <format>
 		  <language>perl</language>
-		  <code>"/cosmic2-software/pyem/csparc2star.py"</code>
+		  <code>"/expanse/projects/cosmic2/expanse/software_dependencies/pyem/csparc2star.py"</code>
 		</format>
 		<group>0</group>
 	  </attributes>

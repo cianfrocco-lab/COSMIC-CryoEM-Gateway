@@ -179,7 +179,7 @@
         <name>highmem</name>
         <attributes>
             <group>1</group>
-            <prompt>Advanced: Check box if your job is crashing because of memory issues (box size >500 pixels).</prompt>
+            <prompt>Advanced: Check box if your job is crashing because of memory issues.</prompt>
             <format>
                 <language>perl</language>
                 <code>($value) ? " --highmem" : ""</code>
@@ -190,6 +190,12 @@
         </attributes>
     </parameter>
 <!-- Files to transfer back -->
+	<parameter type="Results">
+      <name>Scheduler standard error</name>
+      <attributes>
+        <filenames>scheduler_stderr.txt</filenames>
+      </attributes>
+    </parameter>
 	<parameter type="Results">
       <name>Local B-factor estimation maps</name>
       <attributes>
