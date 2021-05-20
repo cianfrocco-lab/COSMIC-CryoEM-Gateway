@@ -27,7 +27,7 @@ def prepareMicassess(inputline,jobdir):
         tmplog.write("start of tmplog\n")
         tmplog.write(inputline + "\n")
         tmplog.write("inputline (%s)\n" % inputline)
-        elements = string.split(inputline, '"')
+        elements = inputline.split('"')
         testargs = []
         for eindex in range(len(elements)):
             if eindex % 2 == 0:
@@ -51,11 +51,9 @@ def prepareMicassess(inputline,jobdir):
         #outdir=inputline.split()[returnEntryNumber(inputline,'--o')].split('/')[0]
 
         #Get current working directory on comet
-        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-
-        #Get username
-        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
-        ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
+        pwd=os.getcwd()
+        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf8').split('=')[-1].strip()
+        ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf8')
 
         #Get userdirectory data and write to log file
         tmplog.write(pwd+'\n'+ls+'\n'+usernamedir)
@@ -105,25 +103,26 @@ def prepareMicassess(inputline,jobdir):
         fullStarDir='/'.join(fullStarDir) #Extract/job023/
         counter=1
         tmplog.write('\nfullStarDir='+fullStarDir+'\n')
-        while counter<=len(starfiledirname.split('/')):
+        '''while counter<=len(starfiledirname.split('/')):
                 checkDir=starfiledirname.split('/')[-counter]
                 if fullStarDir.split('/')[-1] == checkDir:
                         fullStarDir=fullStarDir.split('/')
                         del fullStarDir[-1]
                         fullStarDir='/'.join(fullStarDir)
                 counter=counter+1
+        '''
 
         #Symlink directory: 
         DirToSymLink=fullStarDir
         tmplog.write('\n'+'symlink'+DirToSymLink)
-        cmd="ln -s '%s/'* ." %(DirToSymLink)
+        cmd="ln -s '%s/' ." %(DirToSymLink)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
         if newstarname[0] == '/':
                 newstarname=newstarname[1:] 
 
         shutil.copyfile(starfilename,newstarname)
 
-        return newstarname,threshold
+        return newstarname,threshold,DirToSymLink.split('/')[-1]
 
 def preparePreprocessingRun(inputline,jobdir):
 
@@ -810,6 +809,8 @@ jobdir = os.getcwd()
 
 if 'pipeline' in args['commandline']: 
         jobtype='pipeline'
+if 'cryolo' in args['commandline']:
+        jobtype='cryolo'
 if 'relion_refine_mpi' in args['commandline']: 
         jobtype='relion'
 if 'relion_postprocess' in args['commandline']:
@@ -1608,6 +1609,76 @@ zip -r hrtm-output.zip hrtm-output
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
         %(partition,jobname, runtime, mailuser, args['account'],1,4,6,jobdir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+if jobtype == 'cryolo':
+        formatted_starname,threshold,indirname=prepareMicassess(args['commandline'],jobdir)
+        runhours=2
+        runminutes = math.ceil(60 * runhours)
+        partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=4\n')
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
+#SBATCH --gpus=1
+#SBATCH --no-requeue
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
+date 
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+module purge
+module load gpu/0.15.4 
+module load anaconda3/2020.11
+source /expanse/projects/cosmic2/expanse/software_dependencies/pipeline/init.sh
+/expanse/projects/cosmic2/expanse/software_dependencies/pipeline/cryolo.py --indir=%s --outdir=cryolo/ -t %s
+zip -r cryolo-picks.zip cryolo/
+zip -r /expanse/projects/cosmic2/meta-data/%s-micrographs.zip %s/
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,indirname,threshold,randomString(40),indirname)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
