@@ -1,0 +1,122 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>crYOLO</title>
+    <version>1.7.6</version>
+    <description>Automatic particle picking using crYOLO</description>
+    <authors>Wagner, T., Merino, F., Stabrin, M., Moriya, T., Antoni, C., Apelbaum, A., Hagel, P., Sitsel, O., Raisch, T., Prumbaum, D., Quentin, D., Roderer, D., Tacke, S., Siebolds, B., Schubert, E., Shaikh, T.R., Lill, P., Gatsogiannis, C., Raunser, S.</authors>
+    <category>SPHIRE</category>
+    <reference>https://pubmed.ncbi.nlm.nih.gov/31240256/</reference>
+  </head>
+
+  <command>cryolo</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"cryolo_predict.py"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "runhours=1\\n" . 
+                 "ChargeFactor=1.0\\n" .
+			     "ntasks-per-node=6\\n" .
+                 "cores_per_node=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>STAR file for micrographs</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>'-i "$value"'</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+	<parameter type="Float" issimple="1" ismandatory="1">
+        <name>thresh</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Threshold for picking. Default is 0.1. Higher number will decrease chance of false-positive picking. Typically 0.1 works for all datasets.</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-t $value"</code>
+            </format>
+            <vdef>
+                <value>0.1</value>
+            </vdef>
+			<ctrls>
+                <ctrl>
+                    <message>Please enter a value > 0 for the threshold</message>
+                    <language>perl</language>
+                    <code>$thresh &lt; 0</code>
+                </ctrl>
+            </ctrls>
+        </attributes>
+    </parameter>
+
+<!-- Files to transfer back -->
+	<parameter type="Results">
+	  <name>Error log file</name>
+	  <attributes>
+	    <filenames>stderr</filenames>
+	  </attributes>
+	</parameter>
+	<parameter type="Results">
+        <name>crYOLO output coordinate files</name>
+        <attributes>
+            <filenames>*.zip</filenames>
+        </attributes>
+    </parameter>
+	<parameter type="Results">
+        <name>crYOLO output</name>
+        <attributes>
+            <filenames>*/*.out</filenames>
+        </attributes>
+    </parameter>
+	<parameter type="Results">
+        <name>crYOLO size_distribution</name>
+        <attributes>
+            <filenames>cryolo/DISTR/size_distribution*png</filenames>
+        </attributes>
+    </parameter>
+</parameters>
+
+</pise>

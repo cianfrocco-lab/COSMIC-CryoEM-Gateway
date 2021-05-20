@@ -297,7 +297,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--
 			<Tool id="CRYOLO" name="crYOLO automatic particle picking"
                 toolresource="expanse"
                 configfile="pisexml/cryolo.xml"
@@ -309,7 +308,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			    <Tool id="THREED_FSC" name="3DFSC"
+			<!--<Tool id="THREED_FSC" name="3DFSC"
                 toolresource="expanse"
                 configfile="pisexml/threed_fsc.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
