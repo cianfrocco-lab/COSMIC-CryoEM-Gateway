@@ -317,6 +317,7 @@ def prepareRelionRun(args):
         newstarname=inputZipFile.split('/')
         del newstarname[0]
         newstarname='/'.join(newstarname)
+        tmplog.write('\n'+'newstarname:   '+newstarname)
         '''#Get relative path from starfile 
         #Read star file header to get particle name
         rlno1=open(starfilename,'r')
@@ -385,17 +386,24 @@ def prepareRelionRun(args):
                                 particlename=rln_line.split()[colnum].split('@')[-1]
                                 checker=1
         rlno1.close()
-
+        tmplog.write('\n'+'particlename:   '+particlename)
         particlenameDir=particlename.split('/')[0]
-
+        tmplog.write('\n'+'particlenameDir:   '+particlenameDir)
         starfilenameDir=''
         checker=0
         for path in starfilename.split('/'):
+                tmplog.write('\n'+'path:   '+path)
                 if path == particlenameDir:
                         checker=1
                 if checker==0:
                         starfilenameDir=starfilenameDir+'/'+path
-    
+        tmplog.write('\n'+'starfilenameDir SEL'+starfilenameDir)
+        tmplog.write('\n'+'starfilenameDir SEL'+'/'+path)
+        if starfilenameDir == '/'+starfilename: 
+                #if starfilenameDir is empty; this means user provided select file separate from particle stack
+                starfilenameDir=starfilename.replace(newstarname,'')
+                tmplog.write('\n'+'starfilenameDir SEL'+starfilenameDir)
+        newstarnameold=newstarname
         newstarname=''
         checker=0
         for path in starfilename.split('/'):
@@ -408,6 +416,9 @@ def prepareRelionRun(args):
                         if len(newstarname)==0: 
                                 newstarname=path
 
+        if len(newstarname) ==0:
+            newstarname=newstarnameold
+        tmplog.write('\n'+'newstarname:'+newstarname)
         pwd= subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read()
         o1=open('_tmp2.txt','w')
         o1.write('%s\n'%(pwd))
