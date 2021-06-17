@@ -216,6 +216,20 @@ Mike -->
 	    </attributes>
     </parameter>
     -->
+	<parameter type="Switch">
+        <name>fast</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Use fast subsets (for large datasets)</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --fast_subsets" : ""</code>
+            </format>
+            <vdef>
+                <value>1</value>
+            </vdef>
+        </attributes>
+    </parameter>
 	<parameter type="Float" ismandatory="1">
         <name>angpix</name>
         <attributes>
