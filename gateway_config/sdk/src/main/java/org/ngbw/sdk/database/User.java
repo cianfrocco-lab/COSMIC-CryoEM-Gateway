@@ -26,6 +26,7 @@ import org.ngbw.sdk.Workbench;
 import org.ngbw.sdk.WorkbenchException;
 import org.ngbw.sdk.common.util.StringUtils;
 import org.ngbw.sdk.core.shared.UserRole;
+import org.ngbw.sdk.common.util.ProcessRunner;
 
 
 /**
@@ -271,6 +272,7 @@ public class User extends VersionedRow implements Comparable<User> {
 	private MembershipSet m_memberships;
 	private PreferenceMap m_preferences;
 	private long m_dataSize = -1;
+	private long m_dataSizeDU = -1;
 
 
 	// constructors
@@ -323,6 +325,7 @@ public class User extends VersionedRow implements Comparable<User> {
 		return m_key.getValue();
 	}
 
+
 	/**
 	 * Get the user's cached total documents' size.  Will return 0 if there is
 	 * a problem querying the database.
@@ -343,6 +346,30 @@ public class User extends VersionedRow implements Comparable<User> {
 		}
 
 		return ( m_dataSize );
+	}
+
+	/**
+	 * Get the user's globus_transfers du.  Will return 0 if there is
+	 * a problem querying the database.
+	 */
+	public long getDataSizeDU()
+	{
+		//log.debug("start of getDataSizeDU()");
+		// If database query has not been done, do it...
+		if ( m_dataSizeDU == -1 )
+		{
+			try
+			{
+				m_dataSizeDU = queryDataSizeDU();
+			}
+			catch ( Exception e )
+			{
+				return ( 0 );
+			}
+		}
+
+		//log.debug("m_dataSizeDU: (" + m_dataSizeDU + ")");
+		return ( m_dataSizeDU );
 	}
 
 
@@ -463,6 +490,44 @@ public class User extends VersionedRow implements Comparable<User> {
 		return ( m_dataSize );
 	}
 
+	/**
+	 * Function to query the database for the user's data size.
+     * Mona - added inclusion of the new userdata_dir table's size column.
+	 * @return long - total number of bytes; could be 0 if nothing found
+	 **/
+	public long queryDataSizeDU() throws SQLException, IOException, InterruptedException
+	{
+        //log.debug ( "MONA: entered User.queryDataSizeDU()" );
+		//long userid = getUserId();
+		String dused;
+		String dusize;
+                ProcessRunner pr = new ProcessRunner(true);
+                //int exitCode = pr.run("du -sb " + getGlobusDirectory() + " 2>/dev/null");
+                int exitCode = pr.run("du -sb " + getGlobusDirectory());
+        	log.debug( "after du, with exitCode (" + exitCode + ")" );
+        	log.debug( "pr.getStdOut(): (" + pr.getStdOut() + ")" );
+        	log.debug( "pr.getStdErr(): (" + pr.getStdErr() + ")" );
+                //if (pr.getStdOut().length() == 0 || pr.getStdErr().length() > 0)
+                if (pr.getStdOut().length() == 0)
+                {
+                        //throw new Exception("du says: " + pr.getStdOut() + "\n" + pr.getStdErr());
+        	log.debug( "after du, with exitCode (" + exitCode + ")" );
+        	log.debug( "pr.getStdOut(): (" + pr.getStdOut() + ")" );
+        	log.debug( "pr.getStdErr(): (" + pr.getStdErr() + ")" );
+			dused = "";
+			dusize = "-1";
+                } else {
+			dused = pr.getStdOut();
+			dusize = dused.split("\\s+")[0];
+		}
+		log.debug("dused: (" + dused + ")");
+		log.debug("before Long.parseLong(" + dusize + ")");
+		m_dataSizeDU = Long.parseLong(dusize);
+        	log.debug ( "dused = (" + dused + ")" );
+        	log.debug ( "dusize = (" + dusize + ")" );
+        //log.debug ( "MONA: userid = " + userid );
+		return (m_dataSizeDU);
+	}
 
 	public Date getDateCreated()
 	{
@@ -754,6 +819,7 @@ public class User extends VersionedRow implements Comparable<User> {
 				return ( true );
 		}
 
+            	log.debug("DATA_SIZE_EXCEEDS_MAX failed to validate user (" + getUsername() + ") with data used (" + getDataSize() + ")");
 		return ( false );
 	}
 	

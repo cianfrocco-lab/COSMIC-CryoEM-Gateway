@@ -2,6 +2,8 @@ package org.ngbw.web.actions;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +12,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.ArrayList;
+import java.sql.SQLException;
+import java.io.IOException;
+import java.lang.InterruptedException;
+import java.lang.NullPointerException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -123,6 +129,7 @@ public class DataManager extends FolderManager
 	/*================================================================
 	 * Action methods
 	 *================================================================*/
+    
 	public String list()
     {
         //logger.debug ( "MONA : entered list()" );
@@ -911,9 +918,12 @@ public class DataManager extends FolderManager
 	public String getLabel() {
 		try {
 			UserDataItem currentData = getCurrentData();
-			if (currentData == null)
-				throw new NullPointerException("No data item is currently selected.");
-			else return getLabel(currentData);
+			if (currentData == null) {
+				return null;
+				//throw new NullPointerException("No data item is currently selected.");
+			} else {
+				return getLabel(currentData);
+			}
 		} catch (Throwable error) {
 			reportError(error, "Error retrieving label of current data item");
 			return null;
@@ -948,7 +958,8 @@ public class DataManager extends FolderManager
 		try {
 			UserDataItem currentData = getCurrentData();
 			if (currentData == null)
-				throw new NullPointerException("No data item is currently selected.");
+				return null;
+				//throw new NullPointerException("No data item is currently selected.");
 			else return getCreationDate(currentData);
 		} catch (Throwable error) {
 			reportError(error, "Error retrieving creation date of current data item");
@@ -1156,7 +1167,12 @@ public class DataManager extends FolderManager
 	 * Data download property accessor methods
 	 *================================================================*/
 	public String getFilename() {
-		String filename = getLabel();
+		String filename = null;
+		try {
+			filename = getLabel();
+		} catch (NullPointerException error) {
+			filename = null;
+		}
 		if (filename != null)
 			return filename;
 		else return DEFAULT_FILENAME;
@@ -1193,6 +1209,47 @@ public class DataManager extends FolderManager
 			logger.error("", error);
 			return 0;
 		}
+	}
+
+	@SkipValidation
+	public String getDataSizeDU() throws SQLException, IOException, InterruptedException
+	{
+		Workbench workbench = getWorkbench();
+		WorkbenchSession session = getWorkbenchSession();
+		//logger.debug("before calling getUser()");
+		User sizeuser = session.getUser();
+		//logger.debug("before calling queryDataSizeDU()");
+		long size = session.getUser().queryDataSizeDU();
+		String size_string = String.valueOf(size);
+		return size_string;
+	}
+
+	@SkipValidation
+	public String callSizeAction() throws SQLException, IOException, InterruptedException
+	{
+		inputStreamDU = new ByteArrayInputStream(getDataSizeDU().getBytes(StandardCharsets.UTF_8));
+		return "success";
+	}
+	private InputStream inputStreamDU;
+
+	public InputStream getInputStreamDU()
+	{
+		return inputStreamDU;
+	}
+
+
+	private InputStream inputStreamHello;
+
+	public InputStream getInputStreamHello()
+	{
+		return inputStreamHello;
+	}
+
+	@SkipValidation
+	public String callAction()
+	{
+		inputStreamHello = new ByteArrayInputStream("hellodata".getBytes(StandardCharsets.UTF_8));
+		return "success";
 	}
 
 
@@ -1501,6 +1558,9 @@ public class DataManager extends FolderManager
 				throw new NullPointerException("No folder is currently selected.");
 			}
 
+			//long size = session.getUser().getDataSizeDU();
+			long size = session.getUser().queryDataSizeDU();
+			//size = getUserDataSize("gb");
 			// retrieve user's preferred data tab sort type
             // Looks like this isn't settable by the user and defaults to "recordType" (Mona)
 			String dataTabSortType = getDataTabSortType();

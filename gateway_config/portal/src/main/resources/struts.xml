@@ -82,6 +82,15 @@
                     <param name="excludeMethods">input,back,cancel,browse</param>
                 </interceptor-ref>
             </interceptor-stack>
+            <interceptor-stack name="emptyStack">
+                <interceptor-ref name="conversionError"/>
+                <!--
+                <interceptor-ref name="debugging"/>
+              <interceptors>
+                <interceptor name="NoOp" class="org.apache.struts2.interceptor.NoOpInterceptor"/>
+              </interceptors>
+                -->
+            </interceptor-stack>
 
             <!-- Basic user authentication interceptor stack -->
             <interceptor-stack name="authenticationStack">
@@ -138,8 +147,6 @@
             </result>
         </action>
 
-<!--
- -->
         <action name="displayremotetail" class="org.ngbw.web.actions.RemoteTailAction" method="execute">
             <result name="success">
                 pages/user/task/displayRemoteTail.jsp
@@ -358,6 +365,12 @@
             <result name="archiveData" type="redirectAction">archiveData</result>
 			<allowed-methods>setPage,display,cancel,list,download,delete</allowed-methods>
         </action>
+	<action name="callSizeAction" method="callSizeAction" class="org.ngbw.web.actions.DataManager">
+		<result type="stream">
+			<param name="contentType">text/plain</param>
+                	<param name="inputName">inputStreamDU</param>
+		</result>
+	</action>
         <action name="archiveData" class="org.ngbw.web.actions.ArchiveManager" method="download">
             <result name="download" type="stream">
                 <param name="parse">true</param>
@@ -438,6 +451,7 @@
             <result name="invalid.token" type="redirectAction">home</result>
 			<allowed-methods>create,selectTool,changeTab,edit,clone,run,execute,cancel</allowed-methods>
         </action>
+
 
         <!-- Task output saving -->
         <action name="setTaskOutput" class="org.ngbw.web.actions.SetTaskOutput" method="reload">

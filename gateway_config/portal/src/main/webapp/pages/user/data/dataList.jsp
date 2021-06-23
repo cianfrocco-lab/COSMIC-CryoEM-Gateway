@@ -44,6 +44,8 @@
 	</div>
 </div>
 
+<% response.setIntHeader("Refresh",15); %>
+
 <s:if test="%{hasFolderData()}">
   <!-- Pagination -->
   <s:url id="firstPageUrl" action="data" method="setPage" includeParams="none">
