@@ -9,6 +9,9 @@ import java.util.Properties;
 import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.sql.SQLException;
+import java.io.IOException;
+import java.lang.InterruptedException;
 import org.apache.log4j.Logger;
 
 import org.apache.struts2.ServletActionContext;
@@ -743,7 +746,7 @@ public class SessionManager extends NgbwSupport
 	 * size, will display respective warning message.
 	 * @param User
 	 */
-	protected void checkUserDataSize ( User user )
+	protected void checkUserDataSize ( User user ) throws SQLException, IOException, InterruptedException
 	{
 		if ( user == null )
 		{
@@ -751,7 +754,9 @@ public class SessionManager extends NgbwSupport
 			return;
 		}
 
-		long userDataSize = user.getDataSize();
+		//long userDataSize = user.getDataSize();
+		//long userDataSize = user.getDataSizeDU();
+		long userDataSize = user.queryDataSizeDU();
 		SessionController controller = getController();
 		String delete = getDataSize4Display ( userDataSize - DATA_SIZE_MAX );
 		String max = getDataSize4Display ( DATA_SIZE_MAX );
@@ -813,7 +818,7 @@ public class SessionManager extends NgbwSupport
 
 		try
 		{
-			userDataSize = user.queryDataSize();
+			userDataSize = user.queryDataSizeDU();
 		}
 		catch ( Exception e )
 		{
