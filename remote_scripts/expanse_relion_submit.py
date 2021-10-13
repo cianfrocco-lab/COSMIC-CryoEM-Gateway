@@ -133,8 +133,10 @@ def preparePreprocessingRun(inputline,jobdir):
         o1=open('_preprocess.txt','w')
 	#Input files
 	#input_starfile=inputline.split()[returnEntryNumber(inputline,'--i')]
-        elements = string.split(inputline, '"')
+        #elements = string.split(inputline, '"')
+        elements = inputline.split('"')
         testargs = []
+        o1.write(inputline)
         for eindex in range(len(elements)):
             if eindex % 2 == 0:
                 # eindex is even, so not double quoted, so split on whitespace
@@ -146,8 +148,15 @@ def preparePreprocessingRun(inputline,jobdir):
         apix = None
         cs = None
         kev = None
+        extract = None
+        extractScaled = None
+        ctfscore = None 
+        ctfreslim = None 
+        motioninput= ''
+        motionflag=0
+        #standard_pipeline --cs 2.7 --apix 0.66 --extract 512 --ctfscore 0 --ctfreslim 4 --kev 300 -t 0.1 --extractScale 128 
         for eindex in range(len(testargs)):
-            if testargs[eindex] == '--i':
+            if testargs[eindex] == '-i':
                 input_starfile = testargs[eindex + 1]
             if testargs[eindex] == '--apix':
                 apix=testargs[eindex + 1]
@@ -155,14 +164,37 @@ def preparePreprocessingRun(inputline,jobdir):
                 cs=testargs[eindex + 1]
             if testargs[eindex] == '--kev':
                 kev=testargs[eindex + 1]
+            if testargs[eindex] == '--extract':
+                extract=testargs[eindex + 1]
+            if testargs[eindex] == '--extractScale':
+                extractScaled=testargs[eindex + 1]
+            if testargs[eindex] == '--ctfscore':
+                ctfscore=testargs[eindex + 1]
+            if testargs[eindex] == '--ctfreslim':
+                ctfreslim=testargs[eindex + 1]
+            if testargs[eindex] == '--motion':
+                motioninput=motioninput+' '+testargs[eindex]
+            if testargs[eindex] == '--moviebin':
+                motioninput=motioninput+' '+testargs[eindex]+'='+testargs[eindex + 1]
+            if testargs[eindex] == '--moviebfactor':
+                motioninput=motioninput+' '+testargs[eindex]+'='+testargs[eindex + 1]
+            if testargs[eindex] == '--moviepatchx':
+                motioninput=motioninput+' '+testargs[eindex]+'='+testargs[eindex + 1]+' '
+            if testargs[eindex] == '--moviepatchy':
+                motioninput=motioninput+' '+testargs[eindex]+'='+testargs[eindex + 1]
         if input_starfile == None:
             print("Error, could not parse input starfile in (%s)" % inputline)
             log(statusfile, "can't get input starfile, submit_job is returning 1\n")
             return 1
+        if motionflag == 0:
+            motioninput=''
 	
 	#Get current working directory on comet
-        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
+        pwd=subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf8').strip()
+        o1.write('pwd=%s\n' %(pwd))
+        usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().decode('utf8').split('=')[-1].strip()
+        o1.write('usernamedir=%s\n' %(usernamedir))
+        #usernamedir=subprocess.Popen("cat %s/_JOBINFO.TXT | grep Name="%(pwd), shell=True, stdout=subprocess.PIPE).stdout.read().split('=')[-1].strip()
         ls=subprocess.Popen("ls", shell=True, stdout=subprocess.PIPE).stdout.read()
 
         #Get userdirectory data and write to log file
@@ -178,11 +210,19 @@ def preparePreprocessingRun(inputline,jobdir):
         rlno1=open(starfilename,'r')
         colnum=-1
         for rln_line in rlno1:
-                if '_rlnMicrographName' in rln_line:
-                        if len(rln_line.split()) == 2:
-                                colnum=int(rln_line.split()[-1].split('#')[-1])-1
-                        if len(rln_line.split()) == 1:
-                                colnum=0
+                o1.write('%i\n' %(len(motioninput)))
+                if len(motioninput) == 0: 
+                        if '_rlnMicrographName' in rln_line:
+                                if len(rln_line.split()) == 2:
+                                    colnum=int(rln_line.split()[-1].split('#')[-1])-1
+                                if len(rln_line.split()) == 1:
+                                    colnum=0
+                if len(motioninput) > 0: 
+                        if '_rlnMicrographMovieName' in rln_line:
+                                if len(rln_line.split()) == 2:
+                                    colnum=int(rln_line.split()[-1].split('#')[-1])-1
+                                if len(rln_line.split()) == 1:
+                                    colnum=0
         rlno1.close()
         o1.write('reading rln col=%i' %(colnum))
 
@@ -200,7 +240,7 @@ def preparePreprocessingRun(inputline,jobdir):
         rlno1.close()
 
         newstarname='%s'%(starfiledirname)+'/'+'%s'%(input_starfile.split('/')[-1])
-        o1.write('\nnewstarname='+newstarname+'\n')
+        o1.write('\n1222newstarname='+newstarname+'\n')
 
         workingStarDirName=starfilename
         fullStarDir=starfilename.split('/')
@@ -215,33 +255,21 @@ def preparePreprocessingRun(inputline,jobdir):
                         fullStarDir='/'.join(fullStarDir)
                 counter=counter+1
 
-	#Symlink directory: 
-        DirToSymLink=fullStarDir
+	#Symlink directory:
+        outdest=fullStarDir
+        DirToSymLink=fullStarDir+'/'+starfiledirname
         o1.write('\n'+'symlink'+DirToSymLink)
-        cmd="ln -s '%s/'* ." %(DirToSymLink)
+        cmd="ln -s '%s' ." %(DirToSymLink)
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read()
 
 	#Copy starfile to current directory
-        shutil.copyfile(starfilename,newstarname.split('/')[-1])
+        #shutil.copyfile(starfilename,newstarname.split('/')[-1])
 
 	#Get email
         jobproperties_dict = getProperties('_JOBINFO.TXT')
         mailuser = jobproperties_dict['email']
 
-	#Format pipeline.sh script
-        with open(os.path.join('/home/cosmic2/software_dependencies/Automatic-preprocessing-COSMIC2/', 'pipeline.sh'), 'r') as f:
-                with open(os.path.join(pwd, 'pipeline.sh'), 'w') as new_f:
-                    for line in f:
-                        new_line = line.replace('$$input_dir', starfiledirname)\
-                        .replace('$$input_star', newstarname.split('/')[-1])\
-                        .replace('$$user_email', mailuser)\
-                        .replace('$$CS', cs)\
-                        .replace('$$HT', kev)\
-                        .replace('$$apix', apix)\
-                        .replace('$$final_apix', apix)
-                        new_f.write(new_line)
-        return DirToSymLink
-
+        return DirToSymLink,DirToSymLink.split('/')[-1],apix,cs,kev,extract,extractScaled,ctfscore,ctfreslim,outdest,motioninput
 
 def prepareRelionRun(args):
 	#Start temp log file
@@ -820,6 +848,8 @@ jobdir = os.getcwd()
 
 if 'pipeline' in args['commandline']: 
         jobtype='pipeline'
+if 'standard_pipeline' in args['commandline']:
+        jobtype='standard_pipeline'
 if 'cryolo' in args['commandline']:
         jobtype='cryolo'
 if 'relion_refine_mpi' in args['commandline']: 
@@ -850,6 +880,8 @@ if 'isac' in args['commandline']:
         jobtype='isac'
 if '3dfscrun' in args['commandline']:
         jobtype='3dfsc'
+if 'alphafold2' in args['commandline']:
+        jobtype='alphafold2'
 if re.search('sleep_time.txt', args['commandline']):
         jobtype='sleep'
 
@@ -1958,6 +1990,136 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
+if jobtype == 'alphafold2':
+        command=args['commandline']
+        #outfile='%s_deepEMhancer-sharpened.mrc' %(command.split()[-1].strip('"')[:-4])
+        cmdline=command.split()
+        totEntries=len(cmdline)
+        #counter=0
+        #maskflag=0
+        #while counter < totEntries:
+        #        entry=cmdline[counter]
+        #        if entry == '-m':
+        #                maskflag=1
+        #        counter=counter+1
+#
+#        if maskflag == 1: 
+#                command=''
+#                counter=0
+#                while counter < totEntries:
+#                        entry=cmdline[counter]
+#                        if entry == '-p':
+#                                counter=counter+2
+#                        if entry != '-p':
+#                                command=command+' %s '%(cmdline[counter])
+#                                counter=counter+1
+
+#        cmd='''module load gpu
+#module load cuda10.2/toolkit
+#source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+#conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
+#%s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
+#''' %(command,outfile)
+        fasta_paths = []
+        for option in cmdline:
+            name = None
+            value = None
+            optionparts = option.split('=')
+            if len(optionparts) == 2:
+                name = optionparts[0]
+                value = optionparts[1]
+            if name == '--relaxrun':
+                relaxrun = value
+            if name == '--preset':
+                preset = value
+            if name == '--model_names':
+                model_names = value
+            if name == '--fasta_paths':
+                fasta_paths_list = value.split(',')
+                for fasta_path in fasta_paths_list:
+                    # strip out the double-quotes that pisexml put in
+                    fasta_paths.append(re.sub(r'"',r'',fasta_path.strip()))
+        fasta_paths_string = ''
+        FO=open('_submitdebug.txt','w')
+        #for fasta_path in fasta_paths:
+        for findex, fasta_path in enumerate(fasta_paths):
+            FO.write('fasta_path: (%s)\n'%(fasta_path))
+            fasta_paths_string = fasta_paths_string + '{}/{}'.format(jobdir,fasta_path)
+            if len(fasta_paths) > 1 and findex < len(fasta_paths) - 1:
+                fasta_paths_string = fasta_paths_string + ','
+        FO.close()
+        cmd = "/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2/runit.afold.bash --relaxrun=%s --preset='%s' --model_names='%s' --fasta_paths='%s'" % (relaxrun, preset, model_names, fasta_paths_string)
+        #runhours=12
+        runhours=48
+        runminutes = math.ceil(60 * runhours)
+        #partition='gpu'
+        partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+##SBATCH --cpus-per-task=%i
+#SBATCH --cpus-per-task=30
+#SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
+##SBATCH --mem=374G
+#SBATCH --mem=279G
+#SBATCH --no-requeue
+#SBATCH --gpus=1
+date 
+cd '%s/'
+mkdir output_dir
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+module load singularitypro/3.5
+pwd > stdout.txt 2>stderr.txt
+#%s
+singularity exec --nv --bind /expanse/projects/cosmic2/expanse/software_dependencies/alphafold2 -H %s /cm/shared/apps/containers/singularity/tensorflow/tensorflow-2.5.0-ubuntu-18.04-cuda-11.2-openmpi-4.0.5-20210707.sif %s --output_dir=%s/output_dir --stdouterr_path=%s/output_dir/outerr.txt --slurm_job_id=${SLURM_JOB_ID}
+python %s/plotting_afold.py %s/output_dir/
+/bin/tar -czf output_dir.tar.gz output_dir
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
 
 if jobtype == 'deepemhancer':
         command=args['commandline']
@@ -2143,7 +2305,7 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 if jobtype == 'csparc2star':
         command=args['commandline']
         outfile=command.split()[-1].split('.')[0]+'.star'
-        cmd='''module load anaconda 
+        cmd='''module load anaconda3/2020.11
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
 conda activate /expanse/projects/cosmic2/expanse/conda/pyem
 %s %s >> stdout 2>>stderr.txt''' %(command,outfile)
@@ -2378,6 +2540,84 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         #FO.flush()
         #os.fsync(FO.fileno())
         #FO.close()
+
+if jobtype == 'standard_pipeline':
+        DirToSymLink,indir,apix,cs,kev,extract,extractScaled,ctfscore,ctfreslim,userglobusdir,motioninput=preparePreprocessingRun(args['commandline'],jobdir) 
+        out_destination=DirToSymLink
+        outputdir='Preprocess_cosmic2_%i' %(int(time.time()))
+        #outputdir,kev,apix,cs,extract,extractScaled,ctfscore,ctfreslim,indir
+        runminutes = math.ceil(60 * 3)
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        nodes=1
+        partition='gpu-shared'
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = 1 #int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=8
+#SBATCH --gpus=1
+#SBATCH --mem=50G
+#SBATCH --no-requeue
+module purge
+module load slurm
+module load gpu
+module load openmpi
+module load relion
+module load gcc/7.2.0
+export OMP_NUM_THREADS=8
+export OMPI_MCA_btl_openib_allow_ib=1
+source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/expanse/conda/cryolo/
+export OMP_NUM_THREADS=8
+export OMPI_MCA_btl_openib_allow_ib=1
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+/expanse/projects/cosmic2/expanse/software_dependencies/pipeline/pipeline-mike-standard-pipe-v1.py --outdir='%s' -o -d --kev=%s --apix=%s --cs=%s --extract=%s --extractScaled=%s --ctfscorelowerlim=%s --ctfreslim=%s --indir='%s' --Gctfpath='/expanse/projects/cosmic2/expanse/software_dependencies/Gctf/Gctf_v1.18_b2_sm60_cu9.1' --relionpath='/cm/shared/apps/spack/gpu/opt/spack/linux-centos8-skylake_avx512/gcc-8.3.1/relion-3.1.1-axhl7egohcygsvf3kbblfh7n5rdb3o7c/bin/' --cryolo_gmodel='/expanse/projects/cosmic2/expanse/software_dependencies/cryolo_gmodel_files/gmodel_phosnet_202005_N63_c17.h5' --cryolo_env='/expanse/projects/cosmic2/expanse/conda/cryolo/' %s>>stdout.txt 2>>stderr.txt
+mv %s %s/
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], nodes,1,jobdir,outputdir,kev,apix,cs,extract,extractScaled,ctfscore,ctfreslim,DirToSymLink,motioninput,outputdir,userglobusdir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        sys.exit()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
 if jobtype == 'pipeline':
         #relion_command,outdir,runhours,nodes,numiters,worksubdir,partition,gpuextra1,gpuextra2,gpuextra3,mpi_to_use=preparePreprocessingRun(args['commandline'])
