@@ -1,0 +1,170 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>AlphaFold2</title>
+    <version>1.0</version>
+    <description>Highly accurate protein structure prediction with AlphaFold</description>
+    <authors>Jumper et al. </authors>
+    <reference>https://www.nature.com/articles/s41586-021-03819-2</reference>
+    <category>Protein structure prediction</category>
+    <doclink>https://github.com/deepmind/alphafold</doclink>
+  </head>
+
+  <command>alphafold</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"alphafold2"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "gpu=2\\n" . 
+				 "runhours=12\\n" . 
+			     "ntasks-per-node=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>FASTA file</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"--fasta_paths=\"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+	
+    <parameter type="Results">
+      <name>stderr.txt</name>
+      <attributes>
+        <filenames>stderr</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Input FASTA file</name>
+      <attributes>
+        <filenames>*.fasta</filenames>
+      </attributes>
+    </parameter>
+
+    <parameter type="Results">
+      <name>Predicted structural models</name>
+      <attributes>
+        <filenames>output_dir/*/*relaxed*pdb</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Diagnostic plots for each predicted model</name>
+      <attributes>
+        <filenames>output_dir/*/*.png</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Full output from AlphaFold (compressed)</name>
+      <attributes>
+        <filenames>*.tar.gz</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Ranking of AlphaFold models</name>
+      <attributes>
+        <filenames>output_dir/*/*anking_debug.json</filenames>
+      </attributes>
+    </parameter>
+
+<!-- visible input parameters -->	
+
+	<parameter type="Excl" issimple="1" ismandatory="1">
+	    <name>preset</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Database</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--preset=$value"</code>
+		    </format>
+            <vdef>
+                <value>full_dbs</value>
+            </vdef>
+            <vlist>
+                <value>reduced_dbs</value>
+                <label>reduced_dbs</label>
+                <value>full_dbs</value>
+                <label>full_dbs</label>
+                <value>casp14</value>
+                <label>casp14</label>
+            </vlist>
+	    </attributes>
+    </parameter>
+    <parameter type="Switch" issimple="1" ismandatory="1">
+        <name>ptm</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Generate predicted template modeling (pTM) scored models</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --model_names=model_1,model_2,model_3,model_4,model_5,model_1_ptm,model_2_ptm,model_3_ptm,model_4_ptm,model_5_ptm" : " --model_names=model_1,model_2,model_3,model_4,model_5"</code>
+            </format>
+            <vdef>
+                <value>1</value>
+            </vdef>
+        </attributes>
+    </parameter>
+    <parameter type="Switch" issimple="1" ismandatory="1">
+        <name>relaxrun</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Skip calculating relaxed models</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " --relaxrun=False" : " --relaxrun=True"</code>
+            </format>
+            <vdef>
+                <value>1</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
+</parameters>
+
+</pise>

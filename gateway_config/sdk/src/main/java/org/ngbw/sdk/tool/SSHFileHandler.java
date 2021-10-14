@@ -400,12 +400,18 @@ class SSHFileHandler implements FileHandler {
 		SSHExecProcessRunner pr=null;
 		try {
 			pr = getProcessRunner();
-			exitCode = pr.run("ls -a -1 '" + directory + "'");
+			//exitCode = pr.run("ls -a -1 '" + directory + "'");
+			exitCode = pr.run("(cd '" + directory + "' ; find -type f | cut --characters=3- | sort)");
+			m_log.debug("(cd  '" + directory + "' ; find -type f | cut --characters=3- | sort)");
+			m_log.debug("stdout: " + pr.getStdOut());
+			m_log.debug("stderr: " + pr.getStdErr());
 			if (exitCode != 0) {
-				m_log.debug("ls -a -i '" + directory + "' failed with exitCode: " + exitCode);
+				//m_log.debug("ls -a -1 '" + directory + "' failed with exitCode: " + exitCode);
+				m_log.debug("(cd  '" + directory + "' ; find -type f | cut --characters=3- | sort) failed with exitCode: " + exitCode);
 				m_log.debug("stdout: " + pr.getStdOut());
 				m_log.debug("stderr: " + pr.getStdErr());
-				throw new IOException("ls -a -i '" + directory + "' failed with exitCode: " + exitCode);
+				//throw new IOException("ls -a -1 '" + directory + "' failed with exitCode: " + exitCode);
+				throw new IOException("(cd  '" + directory + "' ; find -type f | cut --characters=3- | sort) failed with exitCode: " + exitCode);
 			}
 			String[] filenames = pr.getStdOut().split("\n");
 			for (String filestring : filenames) {
@@ -414,9 +420,9 @@ class SSHFileHandler implements FileHandler {
 		}
 		catch(IOException e)
 		{
-			m_log.debug("ls -a -i " + directory + " failed with exitCode: " + exitCode);
+			m_log.debug("(cd '" + directory + "' ; find -type f | cut --characters=3- | sort) failed with exitCode: " + exitCode);
 			pr.close();
-			throw new IOException("ls -a -i " + directory + " failed with exitCode: " + exitCode);
+			throw new IOException("(cd '" + directory + "' ; find -type f | cut --characters=3- | sort) failed with exitCode: " + exitCode);
 		}
 		for (String filestring : filenamelist) {
 			HashMap file = new HashMap();

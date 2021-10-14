@@ -698,7 +698,9 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 
 		try
 		{
-			size = getWorkbenchSession().getUser().getDataSize();
+			//size = getWorkbenchSession().getUser().getDataSize();
+			//size = getWorkbenchSession().getUser().getDataSizeDU();
+			size = getWorkbenchSession().getUser().queryDataSizeDU();
 
 			switch ( mode )
 			{
