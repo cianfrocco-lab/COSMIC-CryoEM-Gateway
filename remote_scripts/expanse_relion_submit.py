@@ -2306,6 +2306,8 @@ if jobtype == 'csparc2star':
         command=args['commandline']
         outfile=command.split()[-1].split('.')[0]+'.star'
         cmd='''module load anaconda3/2020.11
+module load cpu
+module load DefaultModules
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
 conda activate /expanse/projects/cosmic2/expanse/conda/pyem
 %s %s >> stdout 2>>stderr.txt''' %(command,outfile)
