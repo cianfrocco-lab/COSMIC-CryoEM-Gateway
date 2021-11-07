@@ -1063,10 +1063,12 @@ if jobtype == 'loc_occupancy':
         totEntries=len(cmdline)
         counter=0
         mem='24G'
+        ntasks=24
         while counter < totEntries:
                 entry=cmdline[counter]
                 if entry == '--highmem':
                         mem='240G'
+                        ntasks=5
                 if entry == '--bfactor_max':
                         maxres=cmdline[counter+1]
                 if entry == '--bfactor_min':
@@ -1093,9 +1095,9 @@ close all
 
 addpath('/expanse/projects/cosmic2/expanse/software_dependencies/LocSpiral-LocBSharpen-LocBFactor-LocOccupancy/Code')
 myCluster = parcluster('local')
-myCluster.NumWorkers = 24
+myCluster.NumWorkers = %i
 saveProfile(myCluster);
-parpool('local',24)
+parpool('local',%i)
 
 vol1 = ReadMRC('%s');
 vol2 = ReadMRC('%s');
@@ -1107,7 +1109,7 @@ mask = vol > %s;
 mask = bwareaopen(mask,25,6);
 WriteMRC(mask,%s,'mask.mrc');
 [map] = locOccupancy(vol,mask,%s,%s,%s,%s,%s);
-WriteMRC(map,%s,'%s_locOccupancy.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
+WriteMRC(map,%s,'%s_locOccupancy.mrc');''' %(ntasks,ntasks,half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
         o1.close()
         cmd='''module load matlab 
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
