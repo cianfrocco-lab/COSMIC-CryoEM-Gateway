@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
-	 "http://struts.apache.org/dtds/struts-2.5.dtd">
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	 "http://struts.apache.org/dtds/struts-2.3.dtd">
 
 <struts>
 
@@ -120,9 +120,11 @@
             <result name="error">/pages/error.jsp</result>
         </global-results>
         
+		<!--
         <global-allowed-methods>
 			input
 		</global-allowed-methods>
+		-->
 
         <!-- Has to come after global-results -->
         <global-exception-mappings>
@@ -215,7 +217,7 @@
             <interceptor-ref name="loginStack"/>
             <result name="input">/pages/user/login.jsp</result>
             <result name="authcallback" type="redirectAction">authcallback</result>
-            <allowed-methods>authcallback,input</allowed-methods>
+            <allowed-methods>input,authcallback,input</allowed-methods>
         </action>
 
         <action name="authcallback" class="edu.sdsc.globusauth.action.AuthCallbackAction" method="globuslogin">
@@ -264,7 +266,7 @@
             <result name="input">/pages/user/register.jsp</result>
             <result name="cancel" type="redirectAction">home</result>
             <result name="success" type="redirectAction">home</result>
-			<allowed-methods>register,cancel</allowed-methods>
+			<allowed-methods>input,register,cancel</allowed-methods>
         </action>
         <action name="guestLogin" class="org.ngbw.web.actions.FolderManager" method="guestLogin">
             <interceptor-ref name="defaultStack"/>
@@ -341,14 +343,14 @@
             <result name="list">/pages/user/home.jsp</result>
             <result name="display">/pages/user/home.jsp</result>
             <result name="input">/pages/user/folder/folderForm.jsp</result>
-			<allowed-methods>create,edit,delete,list,display</allowed-methods>
+			<allowed-methods>input,create,edit,delete,list,display</allowed-methods>
         </action>
         <action name="saveFolder" class="org.ngbw.web.actions.FolderManager" method="save">
             <result name="list" type="redirectAction">home</result> 
             <result name="display" type="redirectAction">home</result>
 			<result name="error">/pages/user/folder/folderForm.jsp</result>
             <result name="input">/pages/user/folder/folderForm.jsp</result>
-			<allowed-methods>cancel</allowed-methods>
+			<allowed-methods>input,cancel</allowed-methods>
         </action>
 
         <!-- NGBW data management pages-->
@@ -385,13 +387,13 @@
             <result name="list" type="redirectAction">data!list</result>
             <result name="display" type="redirectAction">data!display</result>
             <result name="input">/pages/user/data/pasteForm.jsp</result>
-			<allowed-methods>upload,executePaste,cancel</allowed-methods>
+			<allowed-methods>input,upload,executePaste,cancel</allowed-methods>
         </action>
         <action name="uploadData" class="org.ngbw.web.actions.CreateData">
             <result name="list" type="redirectAction">data!list</result>
             <result name="display" type="redirectAction">data!display</result>
             <result name="input">/pages/user/data/uploadForm.jsp</result>
-			<allowed-methods>upload</allowed-methods>
+			<allowed-methods>input,upload</allowed-methods>
         </action>
         <!-- this is invoked by the Jupload applet, included in uploadForm.jsp, stream result goes back to the applet. -->
         <action name="uploadFiles" class="org.ngbw.web.actions.CreateData" method="uploadFiles">
@@ -403,7 +405,7 @@
         <action name="searchData" class="org.ngbw.web.actions.SearchData" method="reload">
             <result name="input">/pages/user/data/searchForm.jsp</result>
             <result name="display">/pages/user/data/displaySearchResult.jsp</result>
-			<allowed-methods>execute,save,list,setPage,displayResultItem,changeTab,saveSelected</allowed-methods>
+			<allowed-methods>input,execute,save,list,setPage,displayResultItem,changeTab,saveSelected</allowed-methods>
         </action>
         <action name="paginateSearch" class="org.ngbw.web.actions.SearchData" method="paginate">
             <result name="input">/pages/user/data/searchForm.jsp</result>
@@ -449,7 +451,7 @@
             <result name="tools">/pages/user/displayTool.jsp</result>
             <result name="createFolder" type="redirectAction">home</result> 
             <result name="invalid.token" type="redirectAction">home</result>
-			<allowed-methods>create,selectTool,changeTab,edit,clone,run,execute,cancel</allowed-methods>
+			<allowed-methods>input,create,selectTool,changeTab,edit,clone,run,execute,cancel</allowed-methods>
         </action>
 
 
@@ -479,7 +481,7 @@
         <action name="paginateOutput" class="org.ngbw.web.actions.SetTaskOutput" method="paginate">
             <result name="input">/pages/user/task/displayTransformedOutput.jsp</result>
             <result name="displayTransformedRecord">/pages/user/task/displayTransformedRecord.jsp</result>
-			<allowed-methods>setPage,displayTransformedRecord</allowed-methods>
+			<allowed-methods>input,setPage,displayTransformedRecord</allowed-methods>
         </action>
 
         <!-- =============================================== AJAX-Based Actions -->
