@@ -52,7 +52,7 @@ public class SchedulerProperties
             else 
             {
                 logger.error("Property 'ChargeFactor' not defined in scheduler.conf.");
-                chargeFactor = (SchedulerProperties.isGpu(p))? 1.50 : 1.00;
+                chargeFactor = (SchedulerProperties.isGpu(p))? 1.00 : 1.00;
             }
         }
         catch ( NumberFormatException e )

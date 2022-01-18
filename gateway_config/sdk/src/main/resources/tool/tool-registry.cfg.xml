@@ -208,6 +208,18 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="ALPHAFOLDMULTIMER"
+                name="Alphafold 2.1 Multimer"
+                toolresource="expanse-gpu"
+                configfile="pisexml/alphafoldmultimer.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="ALPHAFOLD"
                 name="Alphafold 2.0"
                 toolresource="expanse-gpu"
@@ -320,7 +332,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<!--<Tool id="PREPROCESS" name="Standard preprocessing"
+			<Tool id="PREPROCESS" name="Standard preprocessing"
                 toolresource="expanse-gpu"
                 configfile="pisexml/preprocess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -331,7 +343,6 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			-->
 			<!--<Tool id="THREED_FSC" name="3DFSC"
                 toolresource="expanse"
                 configfile="pisexml/threed_fsc.xml"
