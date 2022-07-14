@@ -208,7 +208,19 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="COLABFOLD"
+                <Tool id="IGFOLD"
+                name="IGFOLD"
+                toolresource="expanse"
+                configfile="pisexml/igfold.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+            <Tool id="COLABFOLD"
                 name="COLABFOLD Alphafold 2.1 Multimer"
                 toolresource="expanse-gpu"
                 configfile="pisexml/colabfold.xml"
@@ -221,9 +233,21 @@
                 </OutputParameters>
             </Tool>
 			<Tool id="ALPHAFOLDMULTIMER"
-                name="Alphafold 2.1 Multimer"
+				name="Alphafold 2.1 Multimer"
+				toolresource="expanse-gpu"
+				configfile="pisexml/alphafoldmultimer.xml"
+				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+				<InputParameters>
+					<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+				</InputParameters>
+				<OutputParameters>
+				</OutputParameters>
+			</Tool>
+			<Tool id="ALPHAFOLD"
+                name="Alphafold 2.0"
                 toolresource="expanse-gpu"
-                configfile="pisexml/alphafoldmultimer.xml"
+                configfile="pisexml/alphafold.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
@@ -232,10 +256,10 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="ALPHAFOLD"
-                name="Alphafold 2.0"
-                toolresource="expanse-gpu"
-                configfile="pisexml/alphafold.xml"
+                        <Tool id="ALIGNPROJECTIONS"
+                name="AlignProjections - Align projections with class averages"
+                toolresource="expanse"
+                configfile="pisexml/alignprojections.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"
@@ -344,7 +368,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-			<Tool id="PREPROCESS" name="Standard preprocessing"
+			<!--<Tool id="PREPROCESS" name="Standard preprocessing"
                 toolresource="expanse-gpu"
                 configfile="pisexml/preprocess.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
@@ -355,6 +379,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			-->
 			<!--<Tool id="THREED_FSC" name="3DFSC"
                 toolresource="expanse"
                 configfile="pisexml/threed_fsc.xml"
