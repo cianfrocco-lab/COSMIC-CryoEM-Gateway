@@ -308,7 +308,7 @@ public class CreateTask extends ManageTasks
 	*/
 	public String run()
 	{
-        //logger.debug ( "MONA: entered CreateTask.run" );
+        logger.debug ( "MONA: entered CreateTask.run" );
 		// get selected task ID from request param, if present
 		String[] taskId = (String[])getParameters().get(ID);
 		if (taskId != null && taskId.length > 0)
@@ -337,7 +337,37 @@ public class CreateTask extends ManageTasks
 				}
 				try
 				{
-					logger.debug(getUsernameString() + "Calling submitTask for taskId  " + taskId);
+					User user = super.getWorkbenchSession().getUser();
+
+					String toolId = super.getTool();
+					try
+					{
+						// Verify active jobs count.
+						UsageLimit.getInstance().verifyActiveJobCount(user, null);
+					}
+                			catch ( UsageLimitException ule )
+			                {
+			                    logger.error(ule.getMessage());
+			                    reportUserError("You have reached active jobs limit.");
+			                    return ERROR;
+			                }
+		         	 
+					try
+					{
+						logger.debug("toolId: " + toolId + " task.getToolId(): " + task.getToolId());
+						// Verify SU usages.
+						UsageLimit.getInstance().verifySULimit(user, null, task.getToolId(), loggedInViaIPlant());
+            
+						logger.debug(getUsernameString() + "Calling submitTask for taskId  " + taskId);
+					}
+		                        catch ( UsageLimitException ule )
+       		     		        {
+						logger.error(ule.getMessage());
+						setCurrentTask(null);
+						refreshFolderTaskTabs();
+						reportUserError(ule.getMessage());
+						return LIST_ERROR;
+					}
 
 					getWorkbench().submitTask(task, loggedInViaIPlant());
 				}
@@ -362,7 +392,7 @@ public class CreateTask extends ManageTasks
 
 	@SkipValidation
 	public String cancel() {
-        //logger.debug ( "MONA: entered CreateTask.cancel" );
+        logger.debug ( "MONA: entered CreateTask.cancel" );
 		clearErrorsAndMessages();
 		String[] button = (String[])getParameters().get("method:cancel");
 		if (button != null && button.length > 0) {
@@ -1166,7 +1196,7 @@ public class CreateTask extends ManageTasks
 
 	private Task saveAndRunTask() throws DisabledResourceException, UsageLimitException
 	{
-        //logger.debug ( "MONA: entered CreateTask.saveAndRunTask()" );
+        logger.debug ( "MONA: entered CreateTask.saveAndRunTask()" );
 		try 
 		{
 			Workbench workbench = getWorkbench();

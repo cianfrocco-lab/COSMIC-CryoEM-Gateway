@@ -1,0 +1,212 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<pise>
+  <head>
+    <title>ColabFold</title>
+    <version>0.0</version>
+    <description>Fast and convenient protein structure predictions using MMseqs2 and AlphaFold</description>
+    <authors>Evans et al. </authors>
+    <reference>https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1</reference>
+    <category>Protein structure prediction</category>
+    <doclink>https://github.com/deepmind/alphafold</doclink>
+  </head>
+
+  <command>colabfold</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"colabfold"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "gpus=1\\n" . 
+				 "cpus=10\\n" . 
+				 "memory=90G\\n" . 
+				 "runhours=48\\n" . 
+			     "ntasks-per-node=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>FASTA file</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"--fasta_path=\"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+ 	<parameter type="Integer" issimple="1">
+	  <name>num_models</name>
+	  <attributes>
+        <group>1</group>
+	    <prompt>Number of Models</prompt>
+	    <format>
+	      <language>perl</language>
+	      <code>"--num_models=$value"</code>
+        </format>
+	    <vdef>
+	      <value>5</value>
+	    </vdef>
+	    <ctrls>
+	      <ctrl>
+	        <message>Please enter an 0 &lt; integer &lt; 6 for the number of models to run</message>
+	        <language>perl</language>
+	        <code>$num_models &gt; 5</code>
+	      </ctrl>
+	    </ctrls>
+	  </attributes>
+	</parameter>
+	
+ 	<parameter type="Integer" issimple="1">
+	  <name>num_recycles</name>
+	  <attributes>
+        <group>1</group>
+	    <prompt>Number of Recycles</prompt>
+	    <format>
+	      <language>perl</language>
+	      <code>"--num_recycles=$value"</code>
+        </format>
+	    <vdef>
+	      <value>3</value>
+	    </vdef>
+	    <ctrls>
+	      <ctrl>
+	        <message>Please enter an integer > 0 for the number of recycles to use</message>
+	        <language>perl</language>
+	        <code>$num_recycles &lt; 0</code>
+	      </ctrl>
+	    </ctrls>
+	  </attributes>
+	</parameter>
+	
+ 	<parameter type="Switch" issimple="1">
+	  <name>use_amber</name>
+	  <attributes>
+        <group>1</group>
+	    <prompt>Use Amber relaxation?</prompt>
+	    <format>
+	      <language>perl</language>
+	      <code>"--use_amber=$value"</code>
+        </format>
+	    <vdef>
+	      <value>0</value>
+	    </vdef>
+	  </attributes>
+	</parameter>
+
+ 	<parameter type="Switch" issimple="1">
+	  <name>use_templates</name>
+	  <attributes>
+        <group>1</group>
+	    <prompt>Use templates?</prompt>
+	    <format>
+	      <language>perl</language>
+	      <code>"--use_templates=$value"</code>
+        </format>
+	    <vdef>
+	      <value>0</value>
+	    </vdef>
+	  </attributes>
+	</parameter>
+
+    <parameter type="Results">
+      <name>stderr.txt</name>
+      <attributes>
+        <filenames>stderr</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Input FASTA file</name>
+      <attributes>
+        <filenames>*.fasta</filenames>
+      </attributes>
+    </parameter>
+
+    <parameter type="Results">
+      <name>Predicted structural models</name>
+      <attributes>
+        <filenames>output_dir/*relaxed*pdb</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Diagnostic plots for each predicted model</name>
+      <attributes>
+        <filenames>output_dir/*.png</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Full output from AlphaFold (compressed)</name>
+      <attributes>
+        <filenames>*.tar.gz</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Ranking of AlphaFold models</name>
+      <attributes>
+        <filenames>output_dir/*scores.json</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Predicted error of AlphaFold models</name>
+      <attributes>
+        <filenames>output_dir/*error_v1.json</filenames>
+      </attributes>
+    </parameter>
+
+<!--
+	<parameter type="Results">
+      <name>A3M</name>
+      <attributes>
+        <filenames>output_dir/*.a3m</filenames>
+      </attributes>
+    </parameter>
+ -->
+
+<!-- visible input parameters -->	
+
+
+</parameters>
+
+</pise>

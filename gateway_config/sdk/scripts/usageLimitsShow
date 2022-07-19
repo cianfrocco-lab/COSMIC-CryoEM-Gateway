@@ -1,0 +1,3 @@
+#!/bin/sh
+class=org.ngbw.sdk.jobs.UsageLimitShower
+sdkrun $class "$@" 2>/dev/null

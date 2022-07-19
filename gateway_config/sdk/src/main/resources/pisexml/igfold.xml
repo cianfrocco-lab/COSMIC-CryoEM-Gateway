@@ -1,0 +1,166 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<!--
+@article{ruffolo2021deciphering,
+    title = {Deciphering antibody affinity maturation with language models and weakly supervised learning},
+    author = {Ruffolo, Jeffrey A and Gray, Jeffrey J and Sulam, Jeremias},
+    journal = {arXiv},
+    year= {2021}
+}
+@article{ruffolo2022fast,
+    title = {Fast, accurate antibody structure prediction from deep learning on massive set of natural antibodies},
+    author = {Ruffolo, Jeffrey A and Chu, Lee-Shin and Mahajan, Sai Pooja and Gray, Jeffrey J},
+    journal = {bioRxiv},
+    year= {2022}
+}
+ -->
+
+<pise>
+  <head>
+    <title>IgFold</title>
+    <version>0.0</version>
+    <description>Fast and convenient protein structure predictions using IgFold</description>
+    <authors>Ruffolo et al. </authors>
+    <reference>https://www.biorxiv.org/content/10.1101/2022.04.20.488972v2</reference>
+    <category>Protein structure prediction</category>
+    <doclink>https://github.com/graylab/igfold</doclink>
+  </head>
+
+  <command>igfold</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"igfold"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "cpus=1\\n" . 
+				 "memory=2G\\n" . 
+				 "runhours=1\\n" . 
+			     "ntasks-per-node=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>FASTA file</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"--fasta_path=\"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+    <parameter type="Results">
+      <name>stderr.txt</name>
+      <attributes>
+        <filenames>stderr</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Input FASTA file</name>
+      <attributes>
+        <filenames>*.fasta</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Output FASTA file</name>
+      <attributes>
+        <filenames>my_antibody.fasta</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>PDB file</name>
+      <attributes>
+        <filenames>my_antibody.pdb</filenames>
+      </attributes>
+    </parameter>
+
+    <parameter type="Results">
+      <name>Predicted structural models</name>
+      <attributes>
+        <filenames>output_dir/*relaxed*pdb</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Diagnostic plots for each predicted model</name>
+      <attributes>
+        <filenames>output_dir/*.png</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Full output from IgFold (compressed)</name>
+      <attributes>
+        <filenames>*.tar.gz</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Ranking of AlphaFold models</name>
+      <attributes>
+        <filenames>output_dir/*scores.json</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Predicted error of AlphaFold models</name>
+      <attributes>
+        <filenames>output_dir/*error_v1.json</filenames>
+      </attributes>
+    </parameter>
+
+<!--
+	<parameter type="Results">
+      <name>A3M</name>
+      <attributes>
+        <filenames>output_dir/*.a3m</filenames>
+      </attributes>
+    </parameter>
+ -->
+
+<!-- visible input parameters -->	
+
+
+</parameters>
+
+</pise>
