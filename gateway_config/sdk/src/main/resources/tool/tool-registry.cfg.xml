@@ -208,10 +208,58 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+                <Tool id="IGFOLD"
+                name="IGFOLD"
+                toolresource="expanse"
+                configfile="pisexml/igfold.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+            <Tool id="COLABFOLD"
+                name="COLABFOLD Alphafold 2.1 Multimer"
+                toolresource="expanse-gpu"
+                configfile="pisexml/colabfold.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="ALPHAFOLDMULTIMER"
+				name="Alphafold 2.1 Multimer"
+				toolresource="expanse-gpu"
+				configfile="pisexml/alphafoldmultimer.xml"
+				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+				<InputParameters>
+					<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+				</InputParameters>
+				<OutputParameters>
+				</OutputParameters>
+			</Tool>
 			<Tool id="ALPHAFOLD"
                 name="Alphafold 2.0"
                 toolresource="expanse-gpu"
                 configfile="pisexml/alphafold.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+                        <Tool id="ALIGNPROJECTIONS"
+                name="AlignProjections - Align projections with class averages"
+                toolresource="expanse"
+                configfile="pisexml/alignprojections.xml"
                 commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
                 <InputParameters>
                     <InputParameter id="infile_" entityType="UNKNOWN"

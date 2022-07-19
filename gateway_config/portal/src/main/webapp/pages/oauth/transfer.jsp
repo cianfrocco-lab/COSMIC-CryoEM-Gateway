@@ -115,7 +115,10 @@
             if (sub_name == "actionType" && sub_value == "List") {
 
                 var epid = obj['endpointId'].value;
-                if (epid === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                //if (epid === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                // THIS IS ENDPOINT FOR STAGING SERVER ONLY; DO NOT CHECK INTO
+                // GITHUB!
+                if ( epid === '81e90a20-aa7e-11ea-8f0a-0a21f750d19b' ) {
                     var epname = obj['endpointName'].value;
                     alert("XSEDE Comet is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be used as your endpoint.");
                     return false;
@@ -200,7 +203,10 @@
                 } else {
                     var s_value = $( "#searchValue" ).val();
                     //XSEDE Comet endpoint is blocked to add
-                    if ( s_value === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                    // THIS IS ENDPOINT FOR STAGING SERVER ONLY; DO NOT CHECK
+                    // INTO GITHUB!
+                    //if ( s_value === 'de463f97-6d04-11e5-ba46-22000b92c6ec') {
+                    if ( s_value === '81e90a20-aa7e-11ea-8f0a-0a21f750d19b' ) {
                         alert("XSEDE Comet is managed by the COSMIC2 gateway and in order to protect all users' data, it cannot be added as your endpoint.");
                         return false;
                     };
