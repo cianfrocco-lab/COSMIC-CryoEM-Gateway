@@ -750,7 +750,11 @@ def createEpilog(self):
 def runGSA ( gateway_user, jobid, resource ):
         #cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -resource %s.sdsc.xsede -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % (resource, "%s@cosmic2.sdsc.edu" % gateway_user, jobid)
         timestring = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime())
-        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#<<<<<<< Updated upstream
+#        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#=======
+#        #cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#>>>>>>> Stashed changes
         cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://allocations-api.access-ci.org/acdb/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
 
         log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
@@ -3458,10 +3462,12 @@ if jobtype == 'isac':
         isac_cmd='''conda activate /expanse/projects/cosmic2/expanse/conda/pyem/
 /expanse/projects/cosmic2/expanse/software_dependencies/pyem/star.py %s %s --relion2 
 conda deactivate 
-conda activate /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2
+#conda activate /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2
+source /expanse/projects/cosmic2/expanse/software_dependencies/sphire-9-22-2/eman2bash.sh
+module load gcc/7.2.0
 sxrelion2sphire.py %s %s >> stdout.txt 2>> stderr.txt 
 e2bdb.py  %s/%s/Particles  --makevstack=bdb:%s/%s/Particles#sphire_stack >> stdout.txt 2>> stderr.txt
-mpirun python /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2/bin/sp_isac2_gpu.py 'bdb:%s/%s/Particles/#sphire_stack' %s %s --gpu_devices=0,1,2,3  >> stdout.txt 2>> stderr.txt
+mpirun sp_isac2_gpu.py 'bdb:%s/%s/Particles/#sphire_stack' %s %s --gpu_devices=0,1,2,3  >> stdout.txt 2>> stderr.txt
 e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.mrcs >> stdout.txt 2>> stderr.txt''' %(instar,starconvert,starconvert,sphiredir,sphiredir,additionalpath,sphiredir,additionalpath,sphiredir,additionalpath,outdir,options,outdir,outdir)
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
@@ -3501,8 +3507,7 @@ e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
 module load gpu
-module load cuda 
-module load openmpi
+module load cuda/9.2.88
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
