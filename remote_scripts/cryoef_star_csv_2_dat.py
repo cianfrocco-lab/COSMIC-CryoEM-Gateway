@@ -26,11 +26,10 @@ def star2dat(instar,outdat):
     readstar=open(instar,'r')
     for line in readstar: 
         if relion31 is True:
-            if len(line.split())<20: 
-                continue
-            angletilt=line.split()[int(TiltColNum)-1]
-            anglerot=line.split()[int(RotColNum)-1]
-            outfile.write('%s\t%s\n' %(anglerot,angletilt))
+            if '@' in line: 
+                angletilt=line.split()[int(TiltColNum)-1]
+                anglerot=line.split()[int(RotColNum)-1]
+                outfile.write('%s\t%s\n' %(anglerot,angletilt))
         if relion31 is False:
             if len(line)<30:
                 continue
