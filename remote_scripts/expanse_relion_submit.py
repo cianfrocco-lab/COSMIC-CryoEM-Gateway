@@ -750,7 +750,12 @@ def createEpilog(self):
 def runGSA ( gateway_user, jobid, resource ):
         #cmd = "/opt/ctss/gateway_submit_attributes/gateway_submit_attributes -resource %s.sdsc.xsede -gateway_user %s -submit_time \"`date '+%%F %%T %%:z'`\" -jobid %s" % (resource, "%s@cosmic2.sdsc.edu" % gateway_user, jobid)
         timestring = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime())
-        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#<<<<<<< Updated upstream
+#        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#=======
+#        #cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://xsede-xdcdb-api.xsede.org/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
+#>>>>>>> Stashed changes
+        cmd = "{}/rerun-gsa.py --curlcommand='/bin/curl' --apikey='/home/cosmic2/.xsede-gateway-attributes-apikey' --pickledir={}/rerunfiles --echocommand='/bin/echo' --mailxcommand='/bin/mailx ' --emailrecipient='kenneth@sdsc.edu' --url='https://allocations-api.access-ci.org/acdb/gateway/v2/job_attributes' --gatewayuser='{}' --xsederesourcename='{}.sdsc.xsede.org' --jobid='{}' --submittime='{}'".format(REMOTESCRIPTSDIR, REMOTESCRIPTSDIR, '{}@cosmic2.sdsc.edu'.format(gateway_user), resource, jobid, timestring)
 
         log("./_JOBINFO.TXT", "\ngateway_submit_attributes=%s\n" % cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -872,6 +877,10 @@ if 'micassess' in args['commandline']:
         jobtype='micassess'
 if 'deepemhancer' in args['commandline']:
         jobtype='deepemhancer'
+if 'isonet' in args['commandline']:
+        jobtype='isonet'
+if 'omegafold' in args['commandline']:
+        jobtype='omegafold'
 if 'cryodrgn' in args['commandline']:
         jobtype='cryodrgn'
 if 'smappoi.py' in args['commandline']:
@@ -903,6 +912,229 @@ if re.search('sleep_time.txt', args['commandline']):
 
 print('commandline ({})\n'.format(args['commandline']))
 
+if jobtype == 'omegafold':
+        command=args['commandline']
+        cmdline=command.split() #--subbatch_size=-1 --num_cycle=10 --fasta_paths="gfp.fasta"
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if 'subbatch' in entry: 
+                        subbatch=entry.split('=')[-1]
+                if 'num_cycle' in entry:
+                        numcycle=entry.split('=')[-1]
+                if 'fasta_paths' in entry:
+                        fasta=entry.split('=')[-1]
+                counter=counter+1
+
+        tmplog=open('_tmplog','w')
+        tmplog.write(cmdline[0])
+        tmplog.write(command)
+        pwd=os.getcwd() 
+
+        #Assemble command
+        cmd='omegafold %s output_dir/' %(fasta)
+        if float(subbatch)>0:
+                cmd=cmd+' --subbatch_size=%s' %(subbatch)
+        cmd=cmd+ ' --num_cycle=%s' %(numcycle)
+        cmd=cmd+ ' --weights_file=/expanse/projects/cosmic2/expanse/software_dependencies/conda-omegafold/model.pt'
+
+        runhours=0
+        runminutes=40
+        partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (runhours, runminutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --gpus=1
+#SBATCH --no-requeue
+#SBATCH --licenses=cosmic:1
+date
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+module purge
+module load gpu anaconda3 
+source /cm/shared/apps/spack/gpu/opt/spack/linux-centos8-skylake_avx512/gcc-8.3.1/anaconda3-2020.11-bsn4npoxyw7jzz7fajncek3bvdoaa5wv/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/conda-omegafold/
+%s >> stdout.txt 2>stderr.txt
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,10,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
+if jobtype == 'isonet':
+        command=args['commandline']
+        cmdline=command.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if entry == '-p':
+                        approach=cmdline[counter+1]
+                counter=counter+1
+
+        tmplog=open('_tmplog','w')
+        tmplog.write(cmdline[0])
+        tmplog.write(command)
+        pwd=os.getcwd() #subprocess.Popen("pwd", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+
+        #Get username
+        tmplog.write("%s" %(pwd))
+        tmplog.write("cat %s/_JOBINFO.TXT | grep Name="%(pwd))
+        for jobline in open('%s/_JOBINFO.TXT' %(pwd),'r'):
+            if "Name" in jobline:
+                usernamedir=jobline.split('=')[-1].strip()
+                tmplog.write("          %s     " %(usernamedir))
+
+        #Get userdirectory data and write to log file
+        userdir=GLOBUSTRANSFERSDIR + '/'+usernamedir
+        tmplog.write('\n'+userdir)
+
+        #Get input directory name 
+        inputZipFile=command.split('"')[-2]
+        isonetInput=inputZipFile.split('/')
+        del isonetInput[0]
+        isonetInput='/'.join(isonetInput)
+
+        #Get starfilename
+        inputZipFile=command.split('"')[-2]
+        juststar=inputZipFile.split('/')[-1]
+        justdir=inputZipFile.split('/')[-2]
+        isonetstarinput='%s/%s' %(justdir,juststar)        
+
+        #Get full path to starfile on cosmic
+        starfilename=userdir+'/'+'%s' %(inputZipFile)
+        tmplog.write('\n'+'starfilename:   '+starfilename)
+
+        newstarname=starfilename.split('/')
+        del newstarname[-1]
+        newstarname='/'.join(newstarname)
+
+        cmd='ln -s "/%s" .' %(newstarname)
+        tmplog.write('ln -s "/%s" .' %(newstarname))
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read() 
+
+        globusJobDir=newstarname.split('/')
+        del globusJobDir[-1]
+        globusJobDir='/'.join(globusJobDir)
+
+        cmd=command
+        #Assemble command
+        cmd='isonet.py refine "%s"  --remove_intermediate ' %(isonetstarinput)
+        if approach == 'Exhaustive':
+            cmd=cmd+' --iterations 40 --noise_start_iter 11,16,21,26,31,36 --noise_level 0.05,0.1,0.15,0.2,0.25,0.3'
+        if approach == 'Disabled':
+            cmd=cmd+' --iterations 30 --noise_start_iter 0 --noise_level 0'
+        cmd=cmd+' --gpuID 0,1,2,3' 
+        cmd=cmd+' --result_dir isonet_out'
+
+        runhours=24
+        runminutes=00
+        partition='gpu'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (runhours, runminutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --gpus=4
+#SBATCH --no-requeue
+#SBATCH --licenses=cosmic:1
+date
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+module purge
+module load gpu anaconda3 
+source /cm/shared/apps/spack/gpu/opt/spack/linux-centos8-skylake_avx512/gcc-8.3.1/anaconda3-2020.11-bsn4npoxyw7jzz7fajncek3bvdoaa5wv/etc/profile.d/conda.sh
+export PATH=/expanse/projects/cosmic2/expanse/software_dependencies/IsoNet/bin:$PATH
+export PYTHONPATH=/expanse/projects/cosmic2/expanse/software_dependencies/:$PYTHONPATH
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/conda-isonet3
+%s >> stdout.txt 2>stderr.txt
+%s/transfer_output_isonet.py '%s'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,40,jobdir,cmd,REMOTESCRIPTSDIR,globusJobDir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 if jobtype == 'alignproj':
         command=args['commandline']
         cmdline=command.split()
@@ -3230,10 +3462,12 @@ if jobtype == 'isac':
         isac_cmd='''conda activate /expanse/projects/cosmic2/expanse/conda/pyem/
 /expanse/projects/cosmic2/expanse/software_dependencies/pyem/star.py %s %s --relion2 
 conda deactivate 
-conda activate /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2
+#conda activate /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2
+source /expanse/projects/cosmic2/expanse/software_dependencies/sphire-9-22-2/eman2bash.sh
+module load gcc/7.2.0
 sxrelion2sphire.py %s %s >> stdout.txt 2>> stderr.txt 
 e2bdb.py  %s/%s/Particles  --makevstack=bdb:%s/%s/Particles#sphire_stack >> stdout.txt 2>> stderr.txt
-mpirun python /expanse/projects/cosmic2/expanse/software_dependencies/EMAN2/bin/sp_isac2_gpu.py 'bdb:%s/%s/Particles/#sphire_stack' %s %s --gpu_devices=0,1,2,3  >> stdout.txt 2>> stderr.txt
+mpirun sp_isac2_gpu.py 'bdb:%s/%s/Particles/#sphire_stack' %s %s --gpu_devices=0,1,2,3  >> stdout.txt 2>> stderr.txt
 e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.mrcs >> stdout.txt 2>> stderr.txt''' %(instar,starconvert,starconvert,sphiredir,sphiredir,additionalpath,sphiredir,additionalpath,sphiredir,additionalpath,outdir,options,outdir,outdir)
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (hours, minutes)
@@ -3273,8 +3507,7 @@ e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
 module load gpu
-module load cuda 
-module load openmpi
+module load cuda/9.2.88
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh 
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
