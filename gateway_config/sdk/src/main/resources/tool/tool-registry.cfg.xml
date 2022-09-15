@@ -128,7 +128,6 @@
 			-->
 		</ToolGroup>
 		<ToolGroup id="expanse" isdefault="1">
-			<!--
 			<Tool id="ISONET" name="IsoNet tomogram denoising on Expanse"
                 toolresource="expanse-gpu"
                 configfile="pisexml/isonet.xml"
@@ -140,7 +139,6 @@
                 <OutputParameters>
                 </OutputParameters>
 			</Tool>
-			-->
 			<Tool id="RELION_2D_CLASS" name="RELION 2D classification on Expanse"
                 toolresource="expanse-gpu"
                 configfile="pisexml/relion_2d_class.xml"
