@@ -1066,6 +1066,8 @@ if jobtype == 'isonet':
             cmd=cmd+' --iterations 40 --noise_start_iter 11,16,21,26,31,36 --noise_level 0.05,0.1,0.15,0.2,0.25,0.3'
         if approach == 'Disabled':
             cmd=cmd+' --iterations 30 --noise_start_iter 0 --noise_level 0'
+        if approach == 'Debug':
+            cmd=cmd+' --iterations 1 --noise_start_iter 0 --noise_level 0'
         cmd=cmd+' --gpuID 0,1,2,3' 
         cmd=cmd+' --result_dir isonet_out'
 
