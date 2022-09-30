@@ -356,6 +356,7 @@
         <!-- NGBW data management pages-->
         <action name="data" class="org.ngbw.web.actions.DataManager">
             <result name="list">/pages/user/data/dataList.jsp</result>
+            <result name="success">/pages/user/data/dataList.jsp</result>
             <result name="display">/pages/user/data/displayData.jsp</result>
             <result name="task" type="redirectAction">createTask</result>
             <result name="download" type="stream">
