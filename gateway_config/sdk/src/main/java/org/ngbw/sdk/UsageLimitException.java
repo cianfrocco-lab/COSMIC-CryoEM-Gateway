@@ -44,7 +44,7 @@ public class UsageLimitException extends RuntimeException
         return new UsageLimitException(
                     String.format(
                             "Sorry, you have reached %s user XSEDE SU quota. " 
-                            + "Quota is %d SUs from July 1st to June 30th each year.", 
+                            + "Please email cosmic2support@umich.edu if you would like your quota increased.", 
                             userType, limit));
     }
     
@@ -55,7 +55,7 @@ public class UsageLimitException extends RuntimeException
         return new UsageLimitException(
                     String.format(
                             "Sorry, you have reached %s user Non-XSEDE SU quota. " 
-                            + "Quota is %d SUs from July 1st to June 30th each year.", 
+                            + "Please email cosmic2support@umich.edu if you would like your quota increased.", 
                             userType, limit));
     }
     
