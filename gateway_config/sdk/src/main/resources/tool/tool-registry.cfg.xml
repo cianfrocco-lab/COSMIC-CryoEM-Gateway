@@ -303,6 +303,18 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="MODELANGELO"
+                name="Model Angelo - automated atomic model building"
+                toolresource="expanse-gpu"
+                configfile="pisexml/modelangelo.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="CRYODRGN" name="Deep learning-based heterogenous reconstructions"
                 toolresource="expanse-gpu"
                 configfile="pisexml/cryodrgn.xml"

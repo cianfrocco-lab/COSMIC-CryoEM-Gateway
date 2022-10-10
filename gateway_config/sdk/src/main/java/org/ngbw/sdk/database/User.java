@@ -354,7 +354,7 @@ public class User extends VersionedRow implements Comparable<User> {
 	 */
 	public long getDataSizeDU()
 	{
-		//log.debug("start of getDataSizeDU()");
+		log.debug("start of getDataSizeDU()");
 		// If database query has not been done, do it...
 		if ( m_dataSizeDU == -1 )
 		{
@@ -368,7 +368,7 @@ public class User extends VersionedRow implements Comparable<User> {
 			}
 		}
 
-		//log.debug("m_dataSizeDU: (" + m_dataSizeDU + ")");
+		log.debug("m_dataSizeDU: (" + m_dataSizeDU + ")");
 		return ( m_dataSizeDU );
 	}
 
@@ -504,9 +504,9 @@ public class User extends VersionedRow implements Comparable<User> {
                 ProcessRunner pr = new ProcessRunner(true);
                 //int exitCode = pr.run("du -sb " + getGlobusDirectory() + " 2>/dev/null");
                 int exitCode = pr.run("du -sb " + getGlobusDirectory());
-        	log.debug( "after du, with exitCode (" + exitCode + ")" );
-        	log.debug( "pr.getStdOut(): (" + pr.getStdOut() + ")" );
-        	log.debug( "pr.getStdErr(): (" + pr.getStdErr() + ")" );
+        	//log.debug( "after du, with exitCode (" + exitCode + ")" );
+        	//log.debug( "pr.getStdOut(): (" + pr.getStdOut() + ")" );
+        	//log.debug( "pr.getStdErr(): (" + pr.getStdErr() + ")" );
                 //if (pr.getStdOut().length() == 0 || pr.getStdErr().length() > 0)
                 if (pr.getStdOut().length() == 0)
                 {
@@ -520,11 +520,11 @@ public class User extends VersionedRow implements Comparable<User> {
 			dused = pr.getStdOut();
 			dusize = dused.split("\\s+")[0];
 		}
-		log.debug("dused: (" + dused + ")");
-		log.debug("before Long.parseLong(" + dusize + ")");
+		//log.debug("dused: (" + dused + ")");
+		//log.debug("before Long.parseLong(" + dusize + ")");
 		m_dataSizeDU = Long.parseLong(dusize);
-        	log.debug ( "dused = (" + dused + ")" );
-        	log.debug ( "dusize = (" + dusize + ")" );
+        	//log.debug ( "dused = (" + dused + ")" );
+        	//log.debug ( "dusize = (" + dusize + ")" );
         //log.debug ( "MONA: userid = " + userid );
 		return (m_dataSizeDU);
 	}

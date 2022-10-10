@@ -316,5 +316,6 @@ public class BaseTransferAPIClient {
     public static String endpointPath(String endpointName)
     throws UnsupportedEncodingException {
         return "/endpoint/" + URLEncoder.encode(endpointName);
+        //return URLEncoder.encode(endpointName);
     }
 }

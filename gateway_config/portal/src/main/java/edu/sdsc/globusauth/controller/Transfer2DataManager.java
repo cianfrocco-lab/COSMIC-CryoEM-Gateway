@@ -113,6 +113,7 @@ public class Transfer2DataManager
         String dirs[] = getList ( transfer_record.getDirectoryNames() );
         //log.debug ( "MONA : dirs = " + Arrays.toString ( dirs ) );
         String files[] = getList ( transfer_record.getFileNames() );
+        //log.debug ( "after getList" );
         ArrayList<String> new_files = null;
         if ( files != null && files.length > 0 )
         {
@@ -123,6 +124,7 @@ public class Transfer2DataManager
             //log.debug ( "MONA : new_files = " + new_files );
         }
 
+        //log.debug ( "before saveTopDirStarFiles" );
         num_files_saved +=
             saveTopDirStarFiles ( new_destination_path, dirs, folder, tr_id );
         //log.debug ( "MONA: saved_labels = " + saved_labels.toString() );
@@ -462,11 +464,17 @@ public class Transfer2DataManager
         File path = new File ( full_path );
         String[] starfile_ext = { "star" };
         //log.debug ( "MONA : starfile_ext = " + Arrays.toString ( starfile_ext ) );
-        Collection < File > files =
-            FileUtils.listFiles ( path, starfile_ext, false );
-        //log.debug ( "MONA : files = " + files );
+	if (path.isDirectory()) {
+        	//log.debug ( path.getAbsolutePath() + " is a directory, doing listFiles()");
+        	Collection < File > files =
+            	FileUtils.listFiles ( path, starfile_ext, false );
+        	//log.debug ( "MONA : files = " + files );
+        	return ( new ArrayList ( files ) );
+	} else {
+        	//log.debug ( path.getAbsolutePath() + " not a directory, returning null");
+            	return ( null );
+	}
 
-        return ( new ArrayList ( files ) );
     }
 
     private String[] getSubDirs ( String path )

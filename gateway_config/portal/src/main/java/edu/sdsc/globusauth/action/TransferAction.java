@@ -34,6 +34,8 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.*;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -44,6 +46,7 @@ public class TransferAction extends NgbwSupport {
 
     private JSONACLAPIClient acl_client = null;
     private JSONTransferAPIClient client;
+    private JSONTransferAPIClient consentclient;
     private Properties config;
     private List<TransferAction> files;
     private String filename;
@@ -69,6 +72,7 @@ public class TransferAction extends NgbwSupport {
 
     //endpoint activation uri
     private String ep_act_uri = null;
+    private String ep_cons_uri = null;
 
     private List<Map<String,Object>> bookmarklist;
     private String actionType;
@@ -107,6 +111,9 @@ public class TransferAction extends NgbwSupport {
         client = new JSONTransferAPIClient(username, null, null);
         //logger.info ( "MONA: client = " + client );
         client.setAuthenticator(authenticator);
+        consentclient = new JSONTransferAPIClient(username, null, "https://auth.globus.org/v2/oauth2/authorize");
+        //logger.info ( "MONA: consentclient = " + consentclient );
+        consentclient.setAuthenticator(authenticator);
     }
 
 	/**
@@ -507,6 +514,9 @@ public class TransferAction extends NgbwSupport {
 
             	r = client.postResult("/transfer", transfer, null);
             	taskId = r.document.getString("task_id");
+            	//logger.info("r.document from posResult: (" + r.document.toString() +")");
+            	//logger.info("r.statusMessage from posResult: (" + r.statusMessage.toString() +")");
+		// d_eppath kenneth@globusid.org/test1 can be used in chmod
             	saveTask(taskId,file_names,dir_names);
             	return "transferstatus";
             	//return SUCCESS;
@@ -527,7 +537,23 @@ public class TransferAction extends NgbwSupport {
                             // still queued - sleep for 5 seconds
                             Thread.sleep(5000);
                             String tstat = updateRecord(taskId);
-                            if (tstat.equals("SUCCEEDED") || tstat.equals("FAILED")) break;
+                            if (tstat.equals("SUCCEEDED") || tstat.equals("FAILED")) {
+				// https://www.codejava.net/java-se/file-io/execute-operating-system-commands-using-runtime-exec-methods
+				//String cmdstring = "ssh -l cosmic2 -i /users/u2/cosmic2-gw/.ssh/id_rsa ls -ltr /expanse/projects/cosmic2/gatewaydev/globus_transfers/" + d_eppath ;
+				//String cmdstring = "ssh -l cosmic2 -i /users/u2/cosmic2-gw/.ssh/id_rsa /expanse/projects/cosmic2/expanse/gatewaydev/COSMIC-CryoEM-Gateway/remote_scripts/chmod.sh";
+                		//Process process = Runtime.getRuntime().exec(cmdstring);
+                		//BufferedReader reader = new BufferedReader(
+				//	new InputStreamReader(process.getInputStream())
+				//);
+				//String line;
+               		 //line = "placeholder\n";
+				//while ((line = reader.readLine()) != null) {
+				//	logger.debug("sshtest output: " + line);
+				//}
+				//reader.close();
+				//logger.debug("after running cmdstring: " + cmdstring);
+				//break;
+			    }
                         } catch (Exception e) {
                             String msg = "Can't wait for job to update - " + e.getMessage();
                             logger.warn(msg);
@@ -573,7 +599,7 @@ public class TransferAction extends NgbwSupport {
 
             String globus_user_uuid =
                 (String) getSession().get ( "primary_identity" );
-		    //logger.debug ( "MONA: globus_user_uuid = " + globus_user_uuid );
+		    logger.debug ( "MONA: globus_user_uuid = " + globus_user_uuid );
 
             try
             {
@@ -583,8 +609,8 @@ public class TransferAction extends NgbwSupport {
                     acl_client = new JSONACLAPIClient ( epid );
 
                 JSONArray access_list = acl_client.accessList();
-                //logger.debug ( "MONA: access_list = " + access_list );
-                //logger.debug ( "MONA: access_list length = " + access_list.length() );
+                logger.debug ( "MONA: access_list = " + access_list );
+                logger.debug ( "MONA: access_list length = " + access_list.length() );
 
                 acl_client.setupACL ( globus_user_uuid, username );
             }
@@ -597,20 +623,78 @@ public class TransferAction extends NgbwSupport {
            	//createUserDir(epid, eppath);
         } else {
             if (!ep_status.get("activated")) {
+            //if (!ep_status.get("is_connected")) {
+                logger.debug ( "ep_status not activated");
+                //logger.debug ( "ep_status not is_connected");
 				//My GCP endpoint
                 if (!autoActivate(epid)) {
-                    //logger.error("My endpoint, " + dispname + " can't be activated.");
+                    logger.error("My endpoint, " + dispname + " can't be activated.");
                     reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
                     return "failure";
                 }
             } else {
+                logger.debug ( "ep_status activated");
 				if(ep_status.get("is_globus_connect")) {
 					 if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
                     	reportUserError ( "Warning, the endpoint, " +
                             dispname + ", is not connected or paused." );
 						return "failure";
                 	}
-				}
+				} else {
+                	logger.debug ( "status is negative for id_globus_connect");
+                	if (!autoActivate(epid)) {
+                   	 logger.error("My endpoint, " + dispname + " can't be activated.");
+                   	 reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
+                   	 return "failure";
+                	}
+					//logger.debug("before ls of epid");
+    //public boolean displayLs(String endpointId, String path) {
+					Exception err = getLsError(epid, eppath);
+					if(err == null){
+						logger.debug("getLsError succeeded, no error to print");
+					} else {
+						logger.debug("getLsError error: (" + err.toString() + "}");
+            			if (err.toString().startsWith("ConsentRequired")) {
+							logger.debug("found ConsentRequired in (" + err.toString() + ")");
+//https://auth.globus.org/v2/oauth2/authorize?
+//scope=urn:globus:auth:scope:auth.globus.org:view_identities+openid+email+profile&
+//state=security_token%3D138r5719ru3e1%26url%3Dhttps://oa2cb.example.com/myHome&
+//redirect_uri=https://oauth2-login-demo.example.com/callback&
+//response_type=code&
+//client_id=d430e6c8-b06f-4446-a060-2b6b2bc3e54a
+							String auth_uri = config.getProperty(OauthConstants.AUTH_URI);
+							//logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
+							String state = getSession().get(OauthConstants.OAUTH2_STATE).toString();
+							String redirect_uri = config.getProperty(OauthConstants.REDIRECT_URI);
+							String client_id = config.getProperty(OauthConstants.CLIENT_ID);
+							String consentUrl = auth_uri + "?scope=urn:globus:auth:scope:transfer.api.globus.org:all[*https://auth.globus.org/scopes/" + epid + "/data_access]&state=" + state + "&redirect_uri=" + redirect_uri + "&response_type=code&client_id=" + client_id;
+							//logger.debug("consentUrl: (" + consentUrl + ")");
+                   	 		//reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
+                   	 		reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + consentUrl + "\"> Consent </a>");
+						} else {
+							//logger.debug("did not find ConsentRequired in (" + err.toString() + ")");
+						}
+            			//if (err.toString().startsWith("DirectoryCreated")) {
+                		//	logger.info("User directory, " + path + " was created.");
+                		//	return true;
+            			//}
+					}
+        			//Map<String, String> params = new HashMap<String, String>();
+        			//if (eppath != null) {
+            	//		params.put("path", eppath);
+            	//		params.put("show_hidden","0");
+        		//	}
+            	//	String resource = BaseTransferAPIClient.endpointPath(epid)
+             	//	       + "/ls";
+            	//	JSONTransferAPIClient.Result r = client.getResult(resource, params);
+				//	logger.debug("after ls of epid");
+				//	logger.debug("r is : " + r);
+                	//if (!autoConsent(epid)) {
+                   	 //logger.error("My endpoint, " + dispname + " can't be activated.");
+                   	 //reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
+                   	 //return "failure";
+                	//}
+                }
 			}
         }
         return SUCCESS;
@@ -785,19 +869,40 @@ public class TransferAction extends NgbwSupport {
 
     public boolean autoActivate(String endpointId)
             throws IOException, JSONException, GeneralSecurityException, APIError {
-		//logger.debug ( "MONA: entered autoActivate()" );
-		//logger.debug ( "MONA: endpointId = " + endpointId );
+		logger.debug ( "MONA: entered autoActivate()" );
+		logger.debug ( "MONA: endpointId = " + endpointId );
         String resource = BaseTransferAPIClient.endpointPath(endpointId)
             + "/autoactivate";
-		//logger.debug ( "MONA: resource = " + resource );
+		logger.debug ( "MONA: resource = " + resource );
         JSONTransferAPIClient.Result r = client.postResult(resource, null,
                 null);
-		//logger.debug ( "MONA: r.document = " + r.document );
+		logger.debug ( "MONA: r.document = " + r.document );
         String code = r.document.getString("code");
-		//logger.debug ( "MONA: code = " + code );
+		logger.debug ( "MONA: code = " + code );
         if (code.startsWith("AutoActivationFailed")) {
             ep_act_uri = (String) getSession().get(OauthConstants.ENDPOINT_ACTIVATION_URI);
             ep_act_uri = ep_act_uri.replace(":endpoint_id",endpointId);
+            return false;
+        }
+		logger.debug ( "returning true fro autoActivte code = " + code );
+        return true;
+    }
+
+    public boolean autoConsent(String endpointId)
+            throws IOException, JSONException, GeneralSecurityException, APIError {
+		logger.debug ( "entered autoConsent()" );
+		logger.debug ( "endpointId = " + endpointId );
+        String resource = BaseTransferAPIClient.endpointPath(endpointId)
+           + "/autoactivate";
+		logger.debug ( "MONA: resource = " + resource );
+        JSONTransferAPIClient.Result r = consentclient.postResult(resource, null,
+                null);
+		logger.debug ( "MONA: r.document = " + r.document );
+        String code = r.document.getString("code");
+		logger.debug ( "MONA: code = " + code );
+        if (code.startsWith("ConsentFailed")) {
+            ep_cons_uri = (String) getSession().get(OauthConstants.ENDPOINT_ACTIVATION_URI);
+            ep_cons_uri = ep_cons_uri.replace(":endpoint_id",endpointId);
             return false;
         }
         return true;
@@ -831,8 +936,8 @@ public class TransferAction extends NgbwSupport {
         	is_connected = data.getJSONObject(i).getBoolean("is_connected");
             is_paused = data.getJSONObject(i).getBoolean("is_paused");
 
-            logger.info(i+" is_connected: "+is_connected);
-            logger.info(i+" is_paused: "+is_paused);
+            //logger.info(i+" is_connected: "+is_connected);
+            //logger.info(i+" is_paused: "+is_paused);
         }
 		*/
         ep_status.put("activated",activated);
@@ -1297,6 +1402,59 @@ public class TransferAction extends NgbwSupport {
         }
     }
 
+    public Exception getLsError(String endpointId, String path) {
+            //throws IOException, JSONException, GeneralSecurityException, APIError {
+        Map<String, String> params = new HashMap<String, String>();
+        if (path != null) {
+            params.put("path", path);
+            params.put("show_hidden","0");
+        }
+        try {
+            String resource = BaseTransferAPIClient.endpointPath(endpointId)
+                    + "/ls";
+            JSONTransferAPIClient.Result r = client.getResult(resource, params);
+            //logger.info("Contents of " + path + " on "
+            //        + endpointId + ":");
+
+            JSONArray fileArray = r.document.getJSONArray("DATA");
+            files = new ArrayList<>();
+            List<String> session_files = new ArrayList<>();
+            List<String> session_dirs = new ArrayList<>();
+
+            for (int i = 0; i < fileArray.length(); i++) {
+                JSONObject fileObject = fileArray.getJSONObject(i);
+                String f_name = fileObject.getString("name");
+                String f_type = fileObject.getString("type");
+
+                //logger.info("  " + f_name);
+                files.add(new TransferAction(f_name, f_type, fileObject.getInt("size")));
+                if (f_type.equals("dir")) session_dirs.add(f_name);
+                if (f_type.equals("file")) session_files.add(f_name);
+                /*
+                Iterator keysIter = fileObject.sortedKeys();
+                while (keysIter.hasNext()) {
+                    String key = (String)keysIter.next();
+                    if (!key.equals("DATA_TYPE") && !key.equals("LINKS")
+                            && !key.endsWith("_link") && !key.equals("name")) {
+                        System.out.println("    " + key + ": "
+                                + fileObject.getString(key));
+                    }
+                }
+                */
+            }
+
+            getSession().put("session_files",session_files);
+            getSession().put("session_dirs",session_dirs);
+
+            return null;
+        } catch (Exception e) {
+            logger.error("Display file list: "+e.toString());
+            //reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
+            //reportUserError("Error, unable to list files on the source endpoint ID, \""+endpointId+"\".");
+            return e;
+        }
+    }
+
 	public int getCount(String endpointId, String path, String disp_name) {
 		//logger.debug ( "MONA: entered getCount()" );
 		//logger.debug ( "MONA: endpointId = " + endpointId );
@@ -1323,7 +1481,7 @@ public class TransferAction extends NgbwSupport {
             //logger.info("File count:"+filecount);
             return filecount;
         } catch (Exception e) {
-            logger.error("Display file list: "+e.toString());
+            //logger.error("Display file list: "+e.toString());
 			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
 			reportUserError
 				( "Error, unable to get access on the source endpoint \""
@@ -1424,6 +1582,7 @@ public class TransferAction extends NgbwSupport {
 
     public void saveTask(String taskId,String fileNames, String dirNames)
             throws IOException, JSONException, GeneralSecurityException, APIError, SQLException {
+        //logger.info("start of saveTask");
         TransferRecord tr = new TransferRecord();
         String resource = "/task/" +  taskId;
         Map<String, String> params = new HashMap<String, String>();
@@ -1476,6 +1635,7 @@ public class TransferAction extends NgbwSupport {
 
         ProfileManager pm = new ProfileManager();
         pm.addRecord(tr);
+        //logger.info("end of saveTask");
     }
 
     public TransferRecord updateTask(String taskId, JSONTransferAPIClient local_client)
