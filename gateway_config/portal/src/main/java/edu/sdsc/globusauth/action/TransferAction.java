@@ -90,6 +90,7 @@ public class TransferAction extends NgbwSupport {
     private boolean tmp_can_transfer = true;
 
     public TransferAction(){
+        logger.info ( "MONA: entered TransferAction constructor 1!" );
     }
     public TransferAction(String filename,String filetype,
                           Integer filesize)
@@ -97,22 +98,23 @@ public class TransferAction extends NgbwSupport {
         this.filename = filename;
         this.filetype = filetype;
         this.filesize = filesize;
+        logger.info ( "MONA: entered TransferAction constructor 2!" );
     }
 
     public TransferAction(String accesstoken,
                           String username) throws Exception {
-        //logger.info ( "MONA: entered TransferAction constructor 3!" );
-        //logger.info ( "MONA: accesstoken = " + accesstoken );
-        //logger.info ( "MONA: username = " + username );
+        logger.info ( "MONA: entered TransferAction constructor 3!" );
+        logger.info ( "MONA: accesstoken = " + accesstoken );
+        logger.info ( "MONA: username = " + username );
         Authenticator authenticator = new GoauthAuthenticator(accesstoken);
-        //logger.info ( "MONA: authenticator = " + authenticator );
+        logger.info ( "MONA: authenticator = " + authenticator );
         config = OauthUtils.getConfig(OauthConstants.OAUTH_PORPS);
-        //logger.info ( "MONA: config = " + config );
+        logger.info ( "MONA: config = " + config );
         client = new JSONTransferAPIClient(username, null, null);
-        //logger.info ( "MONA: client = " + client );
+        logger.info ( "MONA: client = " + client );
         client.setAuthenticator(authenticator);
         consentclient = new JSONTransferAPIClient(username, null, "https://auth.globus.org/v2/oauth2/authorize");
-        //logger.info ( "MONA: consentclient = " + consentclient );
+        logger.info ( "MONA: consentclient = " + consentclient );
         consentclient.setAuthenticator(authenticator);
     }
 
@@ -124,22 +126,23 @@ public class TransferAction extends NgbwSupport {
 	 **/
     public String transfer()
 	{
-        //logger.info ( "MONA: entered TransferAction.transfer()" );
+        logger.info ( "MONA: entered TransferAction.transfer()" );
 
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
-        //logger.info ( "MONA: accesstoken = " + accesstoken );
+        logger.info ( "MONA: accesstoken = " + accesstoken );
         String globusRoot = Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
-        //logger.info ( "MONA: globusRoot = " + globusRoot );
+        logger.info ( "MONA: globusRoot = " + globusRoot );
 
         String username = (String) getSession().get(OauthConstants.PRIMARY_USERNAME);
-        //logger.info ( "MONA: username = " + username );
+        logger.info ( "MONA: username = " + username );
         Authenticator authenticator = new GoauthAuthenticator(accesstoken);
         config = OauthUtils.getConfig(OauthConstants.OAUTH_PORPS);
 
 		try
 		{
         	client = new JSONTransferAPIClient(username, null, null);
+			logger.debug("after creating client");
         	client.setAuthenticator(authenticator);
 		}
 		catch ( Exception e )
@@ -162,10 +165,10 @@ public class TransferAction extends NgbwSupport {
 			return SUCCESS;
 		}
 
-        //logger.info("search label: "+searchLabel);
-        //logger.info("search value: "+searchValue);
-        //logger.info("my emdpoint name: "+myendpointName);
-        //logger.info("my endpoint value: "+myendpointValue);
+        logger.info("search label: "+searchLabel);
+        logger.info("search value: "+searchValue);
+        logger.info("my emdpoint name: "+myendpointName);
+        logger.info("my endpoint value: "+myendpointValue);
 
 		try
 		{
@@ -190,7 +193,7 @@ public class TransferAction extends NgbwSupport {
 		}
 
         String transferlocation = request.getParameter("transferLocation");
-        //logger.info("Exchange Location: "+transferlocation);
+        logger.info("Exchange Location: "+transferlocation);
 
         if (transferlocation != null) {
             if (Boolean.valueOf(transferlocation)) {
@@ -587,6 +590,9 @@ public class TransferAction extends NgbwSupport {
         //logger.info ( "MONA: eppath = " + eppath );
         //logger.info ( "MONA: dispname = " + dispname );
         //logger.info ( "MONA: type = " + type );
+        String state = new BigInteger(130, new SecureRandom()).toString(32);
+		getSession().put(OauthConstants.OAUTH2_STATE, state);
+		logger.debug("start of activationProcess, getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 
 		Map<String, Boolean> ep_status = endpointStatus(epid);
         //logger.info ( "MONA: ep_status 1 = " + ep_status );
@@ -625,6 +631,7 @@ public class TransferAction extends NgbwSupport {
             if (!ep_status.get("activated")) {
             //if (!ep_status.get("is_connected")) {
                 logger.debug ( "ep_status not activated");
+                logger.debug ( "epid: " + epid);
                 //logger.debug ( "ep_status not is_connected");
 				//My GCP endpoint
                 if (!autoActivate(epid)) {
@@ -652,6 +659,7 @@ public class TransferAction extends NgbwSupport {
 					Exception err = getLsError(epid, eppath);
 					if(err == null){
 						logger.debug("getLsError succeeded, no error to print");
+						logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 					} else {
 						logger.debug("getLsError error: (" + err.toString() + "}");
             			if (err.toString().startsWith("ConsentRequired")) {
@@ -664,7 +672,7 @@ public class TransferAction extends NgbwSupport {
 //client_id=d430e6c8-b06f-4446-a060-2b6b2bc3e54a
 							String auth_uri = config.getProperty(OauthConstants.AUTH_URI);
 							//logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
-							String state = getSession().get(OauthConstants.OAUTH2_STATE).toString();
+							state = getSession().get(OauthConstants.OAUTH2_STATE).toString();
 							String redirect_uri = config.getProperty(OauthConstants.REDIRECT_URI);
 							String client_id = config.getProperty(OauthConstants.CLIENT_ID);
 							String consentUrl = auth_uri + "?scope=urn:globus:auth:scope:transfer.api.globus.org:all[*https://auth.globus.org/scopes/" + epid + "/data_access]&state=" + state + "&redirect_uri=" + redirect_uri + "&response_type=code&client_id=" + client_id;
