@@ -381,6 +381,17 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="HHBLITS" name="HHblits - lightning-fast iterative protein sequence searching by HMM-HMM alignment"
+                toolresource="expanse"
+                configfile="pisexml/hhblits.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="CSPARC2STAR" name="cryoSPARC to STAR file"
                 toolresource="expanse"
                 configfile="pisexml/csparc2star.xml"
