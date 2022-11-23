@@ -207,13 +207,13 @@ public class ProfileManager extends NgbwSupport
             OauthUtils.getConfig ( OauthConstants.OAUTH_PORPS );
         String gateway_endpoint_name =
             config.getProperty ( OauthConstants.DATASET_ENDPOINT_NAME );
-        //log.debug ( "MONA: gateway_endpoint_name = " + gateway_endpoint_name );
+        log.debug ( "MONA: gateway_endpoint_name = " + gateway_endpoint_name );
         String globusRoot =
             Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
-        //log.debug ( "MONA: globusRoot = " + globusRoot );
+        log.debug ( "MONA: globusRoot = " + globusRoot );
         String status = tr.getStatus();
-        //log.debug ( "MONA: status = " + status );
+        log.debug ( "MONA: status = " + status );
         Transfer2DataManager tdm = new Transfer2DataManager();
 
         if ( globusRoot == null )
@@ -231,15 +231,15 @@ public class ProfileManager extends NgbwSupport
         // from the COSMIC2 gateway so no need to create a user data dir item
         //if ( destination_path.startsWith ( globusRoot ) )
         if ( destination_name.equals ( gateway_endpoint_name ) )
-        {
+            {
             destination_path = globusRoot + destination_path;
-            //log.debug ( "MONA: new destination_path = " + destination_path );
-            //log.debug ( "MONA: transferring TO gateway" );
+            log.debug ( "MONA: new destination_path = " + destination_path );
+            log.debug ( "MONA: transferring TO gateway" );
             TransferRecord old_tr = null;
 
             // First get the old transfer record...
             try { old_tr = loadRecordByTaskId ( tr.getTaskId() ); }
-            catch ( Exception e )
+            	catch ( Exception e )
             {
                 // If no old transfer record...this shouldn't happen but
                 // is also not a problem since we can just save the the new
@@ -248,33 +248,35 @@ public class ProfileManager extends NgbwSupport
                     ( "System Warning: no transfer record with task id = " +
                     tr.getTaskId() + " found!" );
             }
-            //log.debug ( "after loadRecordByTaskId" );
+            log.debug ( "after loadRecordByTaskId" );
 
-            if ( old_tr != null && old_tr.getTaskId() != null )
-            {
+            if ( old_tr != null && old_tr.getTaskId() != null ) {
                 // If the status has changed...
                 if ( ! status.equals ( old_tr.getStatus() ) )
                 {
-                    //log.debug ( "before setupDataItems" );
-                    //log.debug ( "old_tr.getDirectoryNames(): " + old_tr.getDirectoryNames() );
-                    //log.debug ( "old_tr.getEnclosingFolderId(): " + old_tr.getEnclosingFolderId() );
+                    log.debug ( "before setupDataItems" );
+                    log.debug ( "old_tr.getDirectoryNames(): " + old_tr.getDirectoryNames() );
+                    log.debug ( "old_tr.getEnclosingFolderId(): " + old_tr.getEnclosingFolderId() );
 		    Folder folder = new Folder ( old_tr.getEnclosingFolderId() );
                     String folderstring = folder.getLabel();
 		    User user = new User ( old_tr.getUserId() );
 		    // Append user folder label to destination_path
 		    String new_destination_path = destination_path + folder.getLabel() +
 		                "/";
-		    //log.debug ( "MONA : new destination_path = " + new_destination_path );
+		    log.debug ( "MONA : new destination_path = " + new_destination_path );
 		    // Get the transferred directories and files
 		    String dirs[] = getList ( old_tr.getDirectoryNames() );
-		    //log.debug ( "MONA : dirs = " + Arrays.toString ( dirs ) );
+		    log.debug ( "MONA : dirs = " + Arrays.toString ( dirs ) );
+            if (dirs == null){
+                dirs = new String[0];
+            }
 		    String files[] = getList ( old_tr.getFileNames() );
-		    //log.debug ( "after getList" );
+		    log.debug ( "after getList" );
 
                     // If transfer successfully, create database entries
                     if ( status.equals ( "SUCCEEDED" ) ) {
-			//log.debug("status is SUCCEEDED, creating db entries");
-			//log.debug("dirs.length: " + dirs.length);
+			log.debug("status is SUCCEEDED, creating db entries");
+			log.debug("dirs.length: " + dirs.length);
 			//log.debug("dirs[0]: " + dirs[0]);
 			// harcode m_host.  This is the key used to pull info
 			// from ssl.properties stanza
@@ -290,14 +292,14 @@ public class ProfileManager extends NgbwSupport
 			String cmdstring = "chmod g+rwx '/expanse" + new_destination_path + "'";
 			int exitCode = pr.run(cmdstring);
 			if (exitCode != 0){
-				//log.debug("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-				//log.debug("stdout: " + pr.getStdOut());
-				//log.debug("stderr: " + pr.getStdErr());
-				throw new IOException(cmdstring + " failed with exitCode " + exitCode);
+				log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+				log.error("stdout: " + pr.getStdOut());
+				log.error("stderr: " + pr.getStdErr());
+				//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 			} else {
-				//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-				//log.debug("stdout: " + pr.getStdOut());
-				//log.debug("stderr: " + pr.getStdErr());
+				log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+				log.debug("stdout: " + pr.getStdOut());
+				log.debug("stderr: " + pr.getStdErr());
 			}
 			//log.debug("Ran: " + cmdstring);
 			pr.close();
@@ -305,14 +307,14 @@ public class ProfileManager extends NgbwSupport
 			cmdstring = "ls -ld '/expanse" + new_destination_path + "'";
 			exitCode = pr.run(cmdstring);
 			if (exitCode != 0){
-				//log.debug("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-				//log.debug("stdout: " + pr.getStdOut());
-				//log.debug("stderr: " + pr.getStdErr());
-				throw new IOException(cmdstring + " failed with exitCode " + exitCode);
+				log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+				log.error("stdout: " + pr.getStdOut());
+				log.error("stderr: " + pr.getStdErr());
+				//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 			} else {
-				//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-				//log.debug("stdout: " + pr.getStdOut());
-				//log.debug("stderr: " + pr.getStdErr());
+				log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+				log.debug("stdout: " + pr.getStdOut());
+				log.debug("stderr: " + pr.getStdErr());
 			}
 			//log.debug("Ran: " + cmdstring);
 			pr.close();
@@ -339,6 +341,7 @@ public class ProfileManager extends NgbwSupport
 				Thread.sleep(2000);
 				sleepcount = sleepcount + 1;
 			}
+			if (exitCode == 0) {
 		    	for ( int i = 0; i <= dirs.length - 1; i++){
 				//log.debug("dirs[" + i + "] : " + dirs[i]);
 				//log.debug("dirs[" + i + "] : " + dirs[i].toString());
@@ -358,14 +361,14 @@ public class ProfileManager extends NgbwSupport
 						cmdstring = "/expanse/projects/cosmic2/expanse/gatewaydev/COSMIC-CryoEM-Gateway/remote_scripts/chmod.sh '/expanse" + new_destination_path + dirs[i] + "'";
 						exitCode = pr.run(cmdstring);
 						if (exitCode != 0){
-							//log.debug("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-							//log.debug("stdout: " + pr.getStdOut());
-							//log.debug("stderr: " + pr.getStdErr());
-							throw new IOException(cmdstring + " failed with exitCode " + exitCode);
+							log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+							log.error("stdout: " + pr.getStdOut());
+							log.error("stderr: " + pr.getStdErr());
+							//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 						} else {
-							//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-							//log.debug("stdout: " + pr.getStdOut());
-							//log.debug("stderr: " + pr.getStdErr());
+							log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+							log.debug("stdout: " + pr.getStdOut());
+							log.debug("stderr: " + pr.getStdErr());
 						}
 						//log.debug("Ran: " + cmdstring);
 						pr.close();
@@ -375,14 +378,14 @@ public class ProfileManager extends NgbwSupport
 						cmdstring = "chmod g+rwx '/expanse" + new_destination_path + toppath.getName(0) + "'";
 						exitCode = pr.run(cmdstring);
 						if (exitCode != 0){
-							//log.debug("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-							//log.debug("stdout: " + pr.getStdOut());
-							//log.debug("stderr: " + pr.getStdErr());
-							throw new IOException(cmdstring + " failed with exitCode " + exitCode);
+							log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+							log.error("stdout: " + pr.getStdOut());
+							log.error("stderr: " + pr.getStdErr());
+							//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 						} else {
-							//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-							//log.debug("stdout: " + pr.getStdOut());
-							//log.debug("stderr: " + pr.getStdErr());
+							log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+							log.debug("stdout: " + pr.getStdOut());
+							log.debug("stderr: " + pr.getStdErr());
 						}
 						//log.debug("Ran: " + cmdstring);
 						pr.close();
@@ -398,7 +401,7 @@ public class ProfileManager extends NgbwSupport
 				//SSHExecProcessRunner pr=null;
 				//testloop
 				//cmdstring = "chmod g+rwx '/expanse" + new_destination_path + toppath.getName(0) + "'";
-				exitCode = pr.run(cmdstring);
+				//exitCode = pr.run(cmdstring);
 				//if (exitCode != 0){
 				//	log.debug("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
 				//	log.debug("stdout: " + pr.getStdOut());
@@ -447,6 +450,11 @@ public class ProfileManager extends NgbwSupport
 					Thread.sleep(2000);
 					sleepcount = sleepcount + 1;
 				}
+                if (exitCode !=0){
+				    log.error("cmdarray: " + cmdarray.toString() + " failed with exitCode " + exitCode);
+				    log.error("stdout: " + lpr.getStdOut());
+				    log.error("stderr: " + lpr.getStdErr());
+                } else {
 				//log.debug("exited loop with exitCode: " + exitCode + " and sleepcount: " + sleepcount);
 				//pr = getProcessRunner();
 				//cmdstring = "/expanse/projects/cosmic2/expanse/gatewaydev/COSMIC-CryoEM-Gateway/remote_scripts/chmod.sh '/expanse" + new_destination_path + dirs[i].toString() + "'";
@@ -494,9 +502,23 @@ public class ProfileManager extends NgbwSupport
 					//log.debug ( path.getAbsolutePath() + " not a directory, returning null");
 				}
 				
+                }
 		   	 }
 			//log.debug("after all chmods");
+                 if (exitCode == 0) {
+				        log.debug("last cmdarry: " + cmdarray.toString() + " succeeded with exitCode " + exitCode);
                         tdm.setupDataItems ( old_tr, destination_path );
+                 } else {
+				    log.error("last cmdarry: " + cmdarray.toString() + " failed with exitCode " + exitCode);
+				    log.error("stdout: " + lpr.getStdOut());
+				    log.error("stderr: " + lpr.getStdErr()); 
+                 }
+            // if (exitCode == 0) for lpr
+			} else {
+				log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+				log.error("stdout: " + lpr.getStdOut());
+				log.error("stderr: " + lpr.getStdErr());
+			}
 			//log.debug("after setupDataItems");
 			}
                 }

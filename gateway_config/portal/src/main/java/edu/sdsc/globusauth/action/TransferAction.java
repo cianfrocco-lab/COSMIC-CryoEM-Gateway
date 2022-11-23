@@ -130,6 +130,8 @@ public class TransferAction extends NgbwSupport {
 
         String accesstoken = (String) getSession().get(OauthConstants.CREDENTIALS);
         logger.info ( "MONA: accesstoken = " + accesstoken );
+        String state = (String) getSession().get(OauthConstants.OAUTH2_STATE);
+        logger.info ( "state = " + state );
         String globusRoot = Workbench.getInstance().getProperties().getProperty
             ( "database.globusRoot" );
         logger.info ( "MONA: globusRoot = " + globusRoot );
@@ -406,7 +408,7 @@ public class TransferAction extends NgbwSupport {
         }
 
         if (request.getMethod().equals(OauthConstants.HTTP_GET)) {
-	        //logger.info("Source Endpoint activation....");
+	        logger.info("Source Endpoint activation....");
 			try
 			{
             	String result = activationProcess ( username, globusRoot,
@@ -582,20 +584,32 @@ public class TransferAction extends NgbwSupport {
           String epid, String eppath, String dispname, String type )
         throws Exception
     {
-        //logger.info ( "MONA: entered activationProcess" );
-        //logger.info ( "MONA: username = " + username );
-        //logger.info ( "MONA: globus_root_path = " + globus_root_path );
-        //logger.info ( "MONA: epbmid = " + epbmid );
-        //logger.info ( "MONA: epid = " + epid );
-        //logger.info ( "MONA: eppath = " + eppath );
-        //logger.info ( "MONA: dispname = " + dispname );
-        //logger.info ( "MONA: type = " + type );
+        logger.info ( "MONA: entered activationProcess" );
+        logger.info ( "MONA: username = " + username );
+        logger.info ( "MONA: globus_root_path = " + globus_root_path );
+        logger.info ( "MONA: epbmid = " + epbmid );
+        logger.info ( "MONA: epid = " + epid );
+        logger.info ( "MONA: eppath = " + eppath );
+        logger.info ( "MONA: dispname = " + dispname );
+        logger.info ( "MONA: type = " + type );
+		//Workbench testbench = getWorkbench();
+		//logger.debug("in activationProcess, before generating new state, old state from Workbench is: " + testbench.getSession(username).get(OauthConstants.OAUTH2_STATE) );
+		//WorkbenchSession testsession = getWorkbenchSession();
+		//logger.debug("in activationProcess, before generating new state, old state is: " + testsession.get(OauthConstants.OAUTH2_STATE) );
+		//logger.debug("in activationProcess, before generating new state, old state from Workbench is: " + testbench.getSession(username).get(OauthConstants.OAUTH2_STATE) );
+
+		//WorkbenchSession testsession = getWorkbenchSession();
+		//Workbench testbench = testsession.getWorkbench();
+		//User testuser = testsession.getUser();
+		//WorkbenchSession activesession = testbench.getActiveSession(username, testuser.getPassword());
+		//logger.debug("in activationProcess, before generating new state, old state is: " + activesession.getSessionAttribute(OauthConstants.OAUTH2_STATE) );
+
         String state = new BigInteger(130, new SecureRandom()).toString(32);
 		getSession().put(OauthConstants.OAUTH2_STATE, state);
 		logger.debug("start of activationProcess, getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 
 		Map<String, Boolean> ep_status = endpointStatus(epid);
-        //logger.info ( "MONA: ep_status 1 = " + ep_status );
+        logger.info ( "MONA: ep_status 1 = " + ep_status );
 
         if (epbmid.equals("XSERVER")) {
             if ( ! ep_status.get ( "activated" ) && ! autoActivate ( epid ) )
@@ -680,7 +694,7 @@ public class TransferAction extends NgbwSupport {
                    	 		//reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
                    	 		reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + consentUrl + "\"> Consent </a>");
 						} else {
-							//logger.debug("did not find ConsentRequired in (" + err.toString() + ")");
+							logger.debug("did not find ConsentRequired in (" + err.toString() + ")");
 						}
             			//if (err.toString().startsWith("DirectoryCreated")) {
                 		//	logger.info("User directory, " + path + " was created.");
