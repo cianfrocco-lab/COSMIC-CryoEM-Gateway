@@ -909,15 +909,130 @@ if 'align_avgs' in args['commandline']:
         jobtype='alignproj'
 if 'angelo' in args['commandline']:
         jobtype='modelangelo'
+if 'hhblits' in args['commandline']:
+        jobtype='hhblits'
 if re.search('sleep_time.txt', args['commandline']):
         jobtype='sleep'
 
 print('commandline ({})\n'.format(args['commandline']))
 
+if jobtype == 'hhblits':
+        cmd=args['commandline']
+        runhours=1
+        runminutes=60
+        cmdline=cmd.split()
+        totEntries=len(cmdline)
+        counter=0
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if '-i' == entry:
+                        inputfile=cmdline[counter+1]
+                if '-d' == entry:
+                        database=cmdline[counter+1]
+                counter=counter+1
+        if database == 'UniClust30':
+            memory=8
+            databasefile= '/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2/download_dir/uniclust30/uniclust30_2018_08/uniclust30_2018_08'
+        if database == 'Pdb70':
+            memory=8
+            databasefile='/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2/download_dir/pdb70/pdb70'
+        if database =='BFD':
+            memory=16
+            databasefile='/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2/download_dir/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt' 
+        cmd='/expanse/projects/cosmic2/expanse/software_dependencies/hhsuite/bin/hhblits -i %s -d %s -oa3m %s.a3m -M first' %(inputfile,databasefile,inputfile.strip('"'))
+
+        counter=0
+        partition='shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+##SBATCH --qos=nsg
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
+#SBATCH --cpus-per-task=%i
+#SBATCH --mem=%iG
+#SBATCH --no-requeue
+#SBATCH --licenses=cosmic:1
+date
+cd '%s/'
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+echo 'Job is now running' >> job_status.txt
+pwd > stdout.txt 2>stderr.txt
+%s >> stdout.txt 2>>stderr.txt
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,1,1,memory,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+
 if jobtype == 'modelangelo':
         cmd=args['commandline']
         runhours=2
         runminutes=00
+        cmdline=cmd.split()
+        totEntries=len(cmdline)
+        counter=0
+        mode='build'
+        mask=' '
+        while counter < totEntries:
+                entry=cmdline[counter]
+                if 'build_no_seq' == entry:
+                        mode='build_no_seq'
+                if '-v' == entry:
+                        volume=cmdline[counter+1]
+                if '-f' == entry:
+                        fasta=cmdline[counter+1]
+                if '-m' == entry:
+                        mask=' -m %s' %(cmdline[counter+1])
+                counter=counter+1
+
+        #Assemble command
+        cmd='model_angelo %s -v %s %s' %(mode,volume,mask)
+        if mode == 'build':
+            cmd=cmd+' -f %s' %(fasta)
+            fopen=open(fasta,'r')
+            data=fopen.read()
+            numAAs=len(data)
+            if numAAs>800:
+                runhours=6
+        if mode == 'build_no_seq':
+            runhours=2        
+
         partition='gpu-shared'
         hours, minutes = divmod(runminutes, 60)
         runtime = "%02d:%02d:00" % (runhours, runminutes)
@@ -966,7 +1081,7 @@ module load gpu anaconda3
 source /cm/shared/apps/spack/gpu/opt/spack/linux-centos8-skylake_avx512/gcc-8.3.1/anaconda3-2020.11-bsn4npoxyw7jzz7fajncek3bvdoaa5wv/etc/profile.d/conda.sh
 conda activate /expanse/projects/cosmic2/expanse//software_dependencies/conda_model_angelo/
 %s >> stdout.txt 2>stderr.txt
-zip output.zip output/ 
+zip -r output.zip output/ 
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
         %(partition,jobname, runtime, mailuser, args['account'], 1,1,10,jobdir,cmd)
