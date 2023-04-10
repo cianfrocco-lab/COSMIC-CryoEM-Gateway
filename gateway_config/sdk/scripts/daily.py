@@ -1,4 +1,4 @@
-#!/projects/cosmic2/kennethtest/datawarn/python3venv/bin/python
+#!/usr/bin/env python
 # /projects/cosmic2/gateway/globus_transfers
 # 
 # https://github.com/cianfrocco-lab/COSMIC-CryoEM-Gateway/issues/222
@@ -31,16 +31,18 @@ import string
 import time
 import datetime
 import sys
+import tempfile
 
 GTD = "${database.globusRoot}"
 WARNBYTES = ${user.data.size.warn}
 MAILLIST = "${email.adminAddr}"
-MAILX = os.popen('which mailx').read().strip()
+MAILX = os.popen('which sendmail').read().strip()
 ECHO = os.popen('which echo').read().strip()
 DU = os.popen('which du').read().strip()
+CAT = os.popen('which cat').read().strip()
 # check to see if MAILX, ECHO and DU got populated.
-if MAILX == '' or ECHO == '' or DU == '':
-    print('couldn\'t find echo, du or mailx')
+if MAILX == '' or ECHO == '' or DU == '' or CAT == '':
+    print('couldn\'t find echo, du, cat or mailx')
     sys.exit(1)
 # would like to check to see if they are valid commands.
 # how to deal with shell aliases? aliases seem to not get
@@ -49,8 +51,14 @@ if MAILX == '' or ECHO == '' or DU == '':
 # would get emailed by cron...
 
 def warn(message, subject, recipient) :
-    cmd = ECHO + ' ' + "'%s'" % message + ' | ' + MAILX + ' -s ' + '"%s"' % subject + " %s" % recipient
+    FO = tempfile.NamedTemporaryFile(mode='w', delete=True)
+    FO.write(f'Subject: {subject}\n')
+    FO.write(message)
+    FO.write('\n.\n')
+    FO.flush()
+    cmd = CAT + ' ' + "'%s'" % FO.name + ' | ' + MAILX + '  '+ " %s" % recipient
     os.system(cmd)
+    FO.close()
 
 # startdate of form: startOfPeriod = "2016-07-01"
 

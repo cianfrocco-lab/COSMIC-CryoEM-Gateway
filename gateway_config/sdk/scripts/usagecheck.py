@@ -23,8 +23,8 @@ email = "${email.serviceAddr}"
 cra = "${portal.name}"
 # end Maven subs:
 
-CPURESOURCE = 'COMET'
-GPURESOURCE = 'comet-gpu'
+CPURESOURCE = 'expanse'
+GPURESOURCE = 'expanse-gpu'
 CPULIMIT = 10000
 #CPULIMIT = 1
 GPULIMIT = 1000
@@ -119,17 +119,26 @@ warnsa = False
 for saname in lowsa_dict.keys():
     if saname == 'CPULOWSA':
         salimit = lowsa_dict[saname]
-        saoption = ''
+        saoption = '--resource expanse'
     elif saname == 'GPULOWSA':
         salimit = lowsa_dict[saname]
-        saoption = '--gpu'
+        saoption = '--resource expanse_gpu'
     else:
         print('failed to find expected saname in ({})'.format(saname))
         sys.exit(1)
-    sa_pat = r'^cosmic2\s+(?P<project>\S+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s+(?P<usedbyproj>\d+)\s*$'
+#[cosmic2@login01 530203@ucsf.edu]$ expanse-client --plain user --user cosmic2 --resource expanse_gpu
+#
+# Resource  expanse_gpu
+#
+# NAME     STATE  PROJECT  TG PROJECT     USED  AVAILABLE  USED BY PROJECT
+#--------------------------------------------------------------------------
+# cosmic2  allow  csd547   TG-MCB170058  22459      23569            22462
+# cosmic2  allow  uic424   TG-BIO220068    193       2500              193
+#[cosmic2@login01 530203@ucsf.edu]$
+    sa_pat = r'^\s*cosmic2\s+(?P<state>\S+)\s+csd547\s+(?P<tgproject>\S+)\s+(?P<used>\d+)\s+(?P<available>\d+)\s+(?P<usedbyproj>\d+)\s*$'
     sa_reo = re.compile(sa_pat, flags=re.MULTILINE)
     try:
-        cp = subprocess.run(["ssh", "-l", "cosmic2", "comet-ln2.sdsc.edu", "show_accounts", saoption], capture_output=True, text=True, timeout=30)
+        cp = subprocess.run(["ssh", "-l", "cosmic2", "login.expanse.sdsc.edu", "expanse-client", "--plain", "user", "--user ", "cosmic2", saoption], capture_output=True, text=True, timeout=30)
     except subprocess.TimeoutExpired:
         print('TimeoutExpired for ssh show_accounts')
         sys.exit(1)
@@ -145,6 +154,8 @@ for saname in lowsa_dict.keys():
                 print(sa_out)
     else:
         print('ssh show_accounts failed!')
+        print(cp.stdout)
+        print(cp.stderr)
         sys.exit(1)
 
 if limit_exceeded == True or warnsa == True:

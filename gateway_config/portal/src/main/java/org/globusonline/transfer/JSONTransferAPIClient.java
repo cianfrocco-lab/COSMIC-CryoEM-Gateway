@@ -28,10 +28,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.HashMap;
 import java.net.URLEncoder;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
+
+import org.apache.log4j.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,7 +46,13 @@ import org.json.JSONObject;
  */
 public class JSONTransferAPIClient extends BCTransferAPIClient {
 
-    public static void main(String[] args) {
+	private static final Logger logger =
+		Logger.getLogger ( JSONTransferAPIClient.class.getName() );
+
+    public static void main(String[] args) throws IOException {
+		logger.debug("start of main");
+		FileWriter writelog = new FileWriter("/tmp/c.log");
+        writelog.write("start of main\n");
         if (args.length < 1) {
             System.err.println(
                 "Usage: java org.globusonline.transfer.JSONTransferAPIClient "
@@ -80,26 +90,31 @@ public class JSONTransferAPIClient extends BCTransferAPIClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
+		writelog.write("end of main\n");
     }
 
     public JSONTransferAPIClient(String username)
             throws KeyManagementException, NoSuchAlgorithmException {
         this(username, null, (String)null, (String)null, null);
+		logger.debug("start of constructor 1 with username: " + username);
     }
 
     public JSONTransferAPIClient(String username, String baseUrl)
             throws KeyManagementException, NoSuchAlgorithmException {
         this(username, null, (String)null, (String)null, baseUrl);
+		logger.debug("start of constructor 2 with username: " + username);
     }
 
     public JSONTransferAPIClient(String username, String cafile, String baseUrl) throws KeyManagementException, NoSuchAlgorithmException {
     	this(username, cafile, (String)null, (String)null, baseUrl);
+		logger.debug("start of constructor 3 with username: " + username);
     }
 
     public JSONTransferAPIClient(String username,
                       String trustedCAFile, String certFile, String keyFile)
             throws KeyManagementException, NoSuchAlgorithmException {
         this(username, trustedCAFile, certFile, keyFile, null);
+		logger.debug("start of constructor 4 with username: " + username);
     }
 
     /**
@@ -130,6 +145,7 @@ public class JSONTransferAPIClient extends BCTransferAPIClient {
                                  String keyFile, String baseUrl)
             throws KeyManagementException, NoSuchAlgorithmException {
         super(username, FORMAT_JSON, trustedCAFile, certFile, keyFile, baseUrl);
+		logger.debug("start of constructor 5 with username: " + username);
     }
 
 	/**
@@ -157,12 +173,14 @@ public class JSONTransferAPIClient extends BCTransferAPIClient {
             String trustedCAFile, KeyManager[] keymanagers, String baseUrl)
 throws KeyManagementException, NoSuchAlgorithmException {
     	super(username, FORMAT_JSON, trustedCAFile, keymanagers, baseUrl);
+		logger.debug("start of constructor 6 with username: " + username);
     }
 
     protected APIError constructAPIError(int statusCode, String statusMessage,
                                          String errorCode, InputStream input) {
         APIError error = new APIError(statusCode, statusMessage, errorCode);
         try {
+			logger.debug("start of constructAPIError");
             JSONObject errorDocument = new JSONObject(readString(input));
             error.requestId = errorDocument.getString("request_id");
             error.resource = errorDocument.getString("resource");
@@ -173,6 +191,7 @@ throws KeyManagementException, NoSuchAlgorithmException {
             // the details. If parsing fails, shove the exception in the
             // message fields, so the parsing error is not silently dropped.
             error.message = e.toString();
+			logger.debug("constructAPIError caught error: " + error.message);
         }
         return error;
     }
@@ -193,6 +212,7 @@ throws KeyManagementException, NoSuchAlgorithmException {
     public Result postResult(String path, JSONObject data)
         throws IOException, MalformedURLException, GeneralSecurityException,
                JSONException, APIError {
+		logger.debug("start of postResult 1");
         return postResult(path, data, null);
     }
 
@@ -201,6 +221,7 @@ throws KeyManagementException, NoSuchAlgorithmException {
         throws IOException, MalformedURLException, GeneralSecurityException,
                JSONException, APIError {
 
+		logger.debug("start of postResult 2");
         return requestResult("POST", path, data, queryParams);
     }
 
@@ -235,11 +256,14 @@ throws KeyManagementException, NoSuchAlgorithmException {
                                 Map<String, String> queryParams)
         throws IOException, MalformedURLException, GeneralSecurityException,
                JSONException, APIError {
+		logger.debug("start of requestResult");
         String stringData = null;
         if (data != null)
             stringData = data.toString();
 
+		logger.debug("before request");
         HttpsURLConnection c = request(method, path, stringData, queryParams);
+		logger.debug("after  request");
 
         Result result = new Result();
         result.statusCode = c.getResponseCode();
