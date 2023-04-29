@@ -352,40 +352,43 @@ public class ProfileManager extends NgbwSupport
 				//https://www.geeksforgeeks.org/path-iterator-method-in-java-with-examples/
 				Iterator<Path> pathelements = toppath.iterator();
 				int totalelements = toppath.getNameCount();
+				String accdirs = "/";
 				int currentelementindex;
 				for (currentelementindex = 0; currentelementindex < totalelements; currentelementindex = currentelementindex + 1){
 					//log.debug("toppath.getName(currentelementindex): " + toppath.getName(currentelementindex));
+					accdirs = accdirs + "/" + toppath.getName(currentelementindex);
 					if (currentelementindex == totalelements - 1){
 						//log.debug("last element: " + currentelementindex);
 						pr = getProcessRunner();
 						cmdstring = "/expanse/projects/cosmic2/expanse/gatewaydev/COSMIC-CryoEM-Gateway/remote_scripts/chmod.sh '/expanse" + new_destination_path + dirs[i] + "'";
 						exitCode = pr.run(cmdstring);
 						if (exitCode != 0){
-							log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-							log.error("stdout: " + pr.getStdOut());
-							log.error("stderr: " + pr.getStdErr());
+							//log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+							//log.error("stdout: " + pr.getStdOut());
+							//log.error("stderr: " + pr.getStdErr());
 							//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 						} else {
-							log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-							log.debug("stdout: " + pr.getStdOut());
-							log.debug("stderr: " + pr.getStdErr());
+							//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+							//log.debug("stdout: " + pr.getStdOut());
+							//log.debug("stderr: " + pr.getStdErr());
 						}
 						//log.debug("Ran: " + cmdstring);
 						pr.close();
 					} else {
 						//log.debug("not last element: " + currentelementindex);
 						pr = getProcessRunner();
-						cmdstring = "chmod g+rwx '/expanse" + new_destination_path + toppath.getName(0) + "'";
+						//cmdstring = "chmod g+rwx '/expanse" + new_destination_path + toppath.getName(0) + "'";
+						cmdstring = "chmod g+rwx '/expanse" + new_destination_path + accdirs + "'";
 						exitCode = pr.run(cmdstring);
 						if (exitCode != 0){
-							log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
-							log.error("stdout: " + pr.getStdOut());
-							log.error("stderr: " + pr.getStdErr());
+							//log.error("cmdstring: " + cmdstring + " failed with exitCode " + exitCode);
+							//log.error("stdout: " + pr.getStdOut());
+							//log.error("stderr: " + pr.getStdErr());
 							//throw new IOException(cmdstring + " failed with exitCode " + exitCode);
 						} else {
-							log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
-							log.debug("stdout: " + pr.getStdOut());
-							log.debug("stderr: " + pr.getStdErr());
+							//log.debug("cmdstring: " + cmdstring + " succeeded with exitCode " + exitCode);
+							//log.debug("stdout: " + pr.getStdOut());
+							//log.debug("stderr: " + pr.getStdErr());
 						}
 						//log.debug("Ran: " + cmdstring);
 						pr.close();
