@@ -788,6 +788,12 @@ def submitJob(job_properties={}, runfile='batch_command.run', statusfile='batch_
         #    retval = 2
         if re.search('Too many simultaneous jobs in queue',output.decode()) != None:
             retval = 2
+        f = open(statusfile, "r")
+        f_string = f.read()
+        f.close()
+        if re.search('sbatch: error: MaxSubmitJobsPerAccount', f_string) != None:
+            retval = 2
+        
 
         log(statusfile, "submit_job is returning %d\n" %  retval)
 
@@ -899,10 +905,10 @@ if '3dfscrun' in args['commandline']:
         jobtype='3dfsc'
 if 'alphafold2' in args['commandline']:
         jobtype='alphafold2'
-if 'alphafold2multimer' in args['commandline']:
-        jobtype='alphafold2multimer'
 if 'colabfold' in args['commandline']:
         jobtype='colabfold'
+if 'esmfold' in args['commandline']:
+        jobtype='esmfold'
 if 'igfold' in args['commandline']:
         jobtype='igfold'
 if 'align_avgs' in args['commandline']:
@@ -2512,6 +2518,7 @@ if jobtype == 'colabfold':
         CLUSTERSCRIPT = '/expanse/projects/cosmic2/expanse/software_dependencies/ColabFold/Colabfold/Slurm_setup/wrappers/utils/submit_colabfold_cluster.csh'
         command=args['commandline']
         cmdline=command.split()
+        cmd=''
         totEntries=len(cmdline)
         fasta_paths = []
         predpermodel = 1
@@ -2524,28 +2531,66 @@ if jobtype == 'colabfold':
             if len(optionparts) == 2:
                 name = optionparts[0]
                 value = optionparts[1]
+            #if name == '--num_models':
+            #    num_models = value
             if name == '--num_models':
                 num_models = value
-            #if name == '--gpus':
-            #    gpus = value
-            #if name == '--memory':
-            #    memory = value
+                cmd=cmd+' --num-models %i' %(int(num_models))
             if name == '--num_recycles':
                 num_recycles = value
+                cmd=cmd+' --num-recycle %i' %(int(num_recycles))
+            if name == '--stop_at_score':
+                stopscore = value
+                if int(stopscore)>0:
+                    cmd=cmd+ ' --stop-at-score %i' %(int(stopscore))
             if name == '--use_amber':
                 use_amber = value
                 if int(use_amber) == 0:
                     use_amber = 'False'
                 else:
                     use_amber = 'True'
+                    cmd=cmd+' --amber --use-gpu-relax'
             if name == '--use_templates':
                 use_templates = value
                 if int(use_templates) == 0:
                     use_templates = 'False'
                 else:
                     use_templates = 'True'
+                    cmd=cmd+' --templates'
+            if name == '--max_msa':
+                maxmsa=value
+                if maxmsa != 'auto':
+                    cmd=cmd+ '--max-msa %s' %(value)
             if name == '--fasta_path':
-                fasta_path = value
+                fasta_path = value.strip('"')
+
+        # Open the input file for reading
+        counter=1
+        readfasta=open('%s/%s' %(os.getcwd(),fasta_path.strip('"')), 'r')
+        # Initialize an empty string to store the joined lines
+        joined_lines= ''
+        # Loop through each line of the file
+        for line in readfasta:
+        # Strip any leading or trailing whitespace characters
+            line = line.strip()
+            # If the line starts with '>', replace the '>' character with a semicolon
+            if line.startswith('>'):
+                if counter>1:
+                    line = ':'
+                if counter ==1:
+                    line='' 
+                # Append the line to the joined lines string
+            joined_lines += line
+            counter=counter+1
+        # Print the joined lines string without any carriage returns
+        outstring=joined_lines.replace('\n', '')
+        outfasta=open('%s_stitched.fasta' %(fasta_path.split('.')[0]),'w')
+        outstring='>%s\n' %(fasta_path.split('.')[0])+outstring
+        outfasta.write(outstring)
+        outfasta.close()
+        fasta_path='%s_stitched.fasta' %(fasta_path.split('.')[0])
+        readfasta.close()
+        #Check fasta file: for capital letters; only two lines (right?) if htere is a semi colon. otherwise we need to create a single line for multiple chains
             #if name == '--fasta_paths':
             #    fasta_paths_list = value.split(',')
             #    for fasta_path in fasta_paths_list:
@@ -2591,51 +2636,102 @@ if jobtype == 'colabfold':
         jobdir = os.getcwd()
         OUTPUT = jobdir + '/output_dir'
         CPUS = '10'
-        STITCHEDFILE = f'{OUTPUT}/stitchedsequence.tmp'
-        #properties_dict = getProperties(f'{OUTPUT}/scheduler.conf')
-        #JOBNAME = properties_dict['JobHandle']
-        ARGS = f' --jobname={jobname} --num_models={num_models} --cpus={cpus} --gpus={gpus} --memory={memory} --output={OUTPUT} --num_recycles={num_recycles} --use_amber={use_amber} --use_templates={use_templates}'
-        cmd = f'{COLABFOLDECHO} {fasta_path} {ARGS}'
-        cmdoutput = os.popen(cmd).read()
-        DEBUGFO.write('\n'+ cmdoutput + '\n')
-        sys.stderr.write('\n'+ cmdoutput + '\n')
-        sbatch_pat = r'^sbatch --gpus=(?P<gpus>\d+) --cpus-per-task=(?P<cpus_per_task>\d+) --mem=(?P<mem>\d+G) --error=(?P<error>\S+) --output=(?P<output>\S+) /expanse/projects/cosmic2/expanse/software_dependencies/ColabFold/Colabfold/Slurm_setup/wrappers/utils/submit_colabfold_cluster.csh (?P<arg1>.*/stitchedsequence.tmp) (?P<arg2>\S+) (?P<arg3>\S+) (?P<arg4>\S+) (?P<arg5>\S+) (?P<arg6>\S+) (?P<arg7>\S+) (?P<arg8>\S+)\s*$'
-        sbatch_reo = re.compile(sbatch_pat, re.MULTILINE)
-        sbatch_mo = sbatch_reo.search(cmdoutput)
-        jobscript = open(CLUSTERSCRIPT).read()
-        jobscript = re.sub(r'\$1', sbatch_mo.group('arg1'), jobscript)
-        jobscript = re.sub(r'\$2', sbatch_mo.group('arg2'), jobscript)
-        jobscript = re.sub(r'\$3', sbatch_mo.group('arg3'), jobscript)
-        jobscript = re.sub(r'\$3', sbatch_mo.group('arg3'), jobscript)
-        jobscript = re.sub(r'\$4', sbatch_mo.group('arg4'), jobscript)
-        jobscript = re.sub(r'\$5', sbatch_mo.group('arg5'), jobscript)
-        jobscript = re.sub(r'\$6', sbatch_mo.group('arg6'), jobscript)
-        jobscript = re.sub(r'\$7', sbatch_mo.group('arg7'), jobscript)
-        jobscript = re.sub(r'\$8', sbatch_mo.group('arg8'), jobscript)
-        jobscript = re.sub(r'#SBATCH --gpus=\d+', '#SBATCH --gpus={}'.format(sbatch_mo.group('gpus')), jobscript)
-        jobscript = re.sub(r'#SBATCH --job-name=Colabfold', '#SBATCH --job-name={}'.format(jobname), jobscript)
-        jobscript = re.sub(r'###COSMIC2_SBATCH_DIRECTIVES###', '#SBATCH --licenses=cosmic:1', jobscript)
-        cosmic2precode = """
+        runfile='run.sh'
+        openrunfile=open(runfile,'w')
+        openrunfile.write('''module purge 
+module load cpu/0.17.3b
+module load gpu/0.17.3b  nvhpc/21.9/4xco23d
+module load intel/19.1.3.304/vecir2b
+module load cuda/11.2.2
+module load anaconda3/2021.05
+source /cm/shared/apps/spack/0.17.3/gpu/b/opt/spack/linux-rocky8-skylake_avx512/gcc-8.5.0/anaconda3-2021.05-kfluefzsateihlamuk2qihp56exwe7si/etc/profile.d/conda.sh
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/localcolabfold-newmay2023/localcolabfold/colabfold-conda/
+colabfold_batch %s output/ %s''' %(fasta_path,cmd))
+        openrunfile.close()
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --cpus-per-task=10
+#SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
+#SBATCH --mem=90G
+#SBATCH --no-requeue
+#SBATCH --gpus=1
+#SBATCH --licenses=cosmic:1
 date
-cd '%s/output_dir/'
+cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
-module load singularitypro
-(pwd > stdout.txt) > & stderr.txt
-""" % (jobdir,)
-        cosmic2postcode = """
-cd '%s/'
-/bin/tar -czf output_dir.tar.gz output_dir
+pwd > stdout.txt 2>stderr.txt
+bash run.sh >>stdout.txt 2>>stderr.txt
+/bin/tar -czf output.tar.gz output
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
-""" % (jobdir,)
-        jobscript = re.sub(r'#___COSMIC2_PRECODE___', cosmic2precode, jobscript)
-        jobscript = re.sub(r'#___COSMIC2_POSTCODE___', cosmic2postcode, jobscript)
-        jobscript = re.sub(r'___COSMIC2_MAILUSER___', mailuser, jobscript)
-
-        FO = open('batch_command.run', 'w')
-        FO.write(jobscript)
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
         FO.close()
+        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+        #STITCHEDFILE = f'{OUTPUT}/stitchedsequence.tmp'
+        #properties_dict = getProperties(f'{OUTPUT}/scheduler.conf')
+        #JOBNAME = properties_dict['JobHandle']
+        #ARGS = f' --jobname={jobname} --num_models={num_models} --cpus={cpus} --gpus={gpus} --memory={memory} --output={OUTPUT} --num_recycles={num_recycles} --use_amber={use_amber} --use_templates={use_templates}'
+        #cmd = f'{COLABFOLDECHO} {fasta_path} {ARGS}'
+        #cmdoutput = os.popen(cmd).read()
+        #DEBUGFO.write('\n'+ cmdoutput + '\n')
+        #sys.stderr.write('\n'+ cmdoutput + '\n')
+        #sbatch_pat = r'^sbatch --gpus=(?P<gpus>\d+) --cpus-per-task=(?P<cpus_per_task>\d+) --mem=(?P<mem>\d+G) --error=(?P<error>\S+) --output=(?P<output>\S+) /expanse/projects/cosmic2/expanse/software_dependencies/ColabFold/Colabfold/Slurm_setup/wrappers/utils/submit_colabfold_cluster.csh (?P<arg1>.*/stitchedsequence.tmp) (?P<arg2>\S+) (?P<arg3>\S+) (?P<arg4>\S+) (?P<arg5>\S+) (?P<arg6>\S+) (?P<arg7>\S+) (?P<arg8>\S+)\s*$'
+        #sbatch_reo = re.compile(sbatch_pat, re.MULTILINE)
+        #sbatch_mo = sbatch_reo.search(cmdoutput)
+        #jobscript = open(CLUSTERSCRIPT).read()
+        #jobscript = re.sub(r'\$1', sbatch_mo.group('arg1'), jobscript)
+        #jobscript = re.sub(r'\$2', sbatch_mo.group('arg2'), jobscript)
+        #jobscript = re.sub(r'\$3', sbatch_mo.group('arg3'), jobscript)
+        #jobscript = re.sub(r'\$3', sbatch_mo.group('arg3'), jobscript)
+        #jobscript = re.sub(r'\$4', sbatch_mo.group('arg4'), jobscript)
+        #jobscript = re.sub(r'\$5', sbatch_mo.group('arg5'), jobscript)
+        #jobscript = re.sub(r'\$6', sbatch_mo.group('arg6'), jobscript)
+        #jobscript = re.sub(r'\$7', sbatch_mo.group('arg7'), jobscript)
+        #jobscript = re.sub(r'\$8', sbatch_mo.group('arg8'), jobscript)
+        #jobscript = re.sub(r'#SBATCH --gpus=\d+', '#SBATCH --gpus={}'.format(sbatch_mo.group('gpus')), jobscript)
+        #jobscript = re.sub(r'#SBATCH --job-name=Colabfold', '#SBATCH --job-name={}'.format(jobname), jobscript)
+        #jobscript = re.sub(r'###COSMIC2_SBATCH_DIRECTIVES###', '#SBATCH --licenses=cosmic:1', jobscript)
+        #cosmic2precode = """
+#date
+#cd '%s/output_dir/'
+#date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
+#echo 'Job is now running' >> job_status.txt
+#module load singularitypro
+#(pwd > stdout.txt) > & stderr.txt
+#""" % (jobdir#,)
+#        cosmic2postcode = """
+#cd '%s/'
+#/bin/tar -czf output_dir.tar.gz output_dir
+#date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+#""" % (jobdir,)
+#        jobscript = re.sub(r'#___COSMIC2_PRECODE___', cosmic2precode, jobscript)
+#        jobscript = re.sub(r'#___COSMIC2_POSTCODE___', cosmic2postcode, jobscript)
+#        jobscript = re.sub(r'___COSMIC2_MAILUSER___', mailuser, jobscript)
 
+#        FO = open('batch_command.run', 'w')
+#        FO.write(jobscript)
+#        FO.close()
+#
 
 #        text = """#!/bin/sh
 ##SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
@@ -2675,17 +2771,124 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 #""" \
 #        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
         
-        runfile = "./batch_command.run"
-        statusfile = "./batch_command.status"
-        cmdfile = "./batch_command.cmdline"
-        debugfile = "./nsgdebug"
+#        runfile = "./batch_command.run"
+#        statusfile = "./batch_command.status"
+#        cmdfile = "./batch_command.cmdline"
+#        debugfile = "./nsgdebug"
 #        FO = open(runfile, mode='w')
 #        FO.write(text)
 #        FO.flush()
 #        os.fsync(FO.fileno())
 #        FO.close()
+#        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
+#        DEBUGFO.close()
+
+if jobtype == 'esmfold':
+        command=args['commandline']
+        cmdline=command.split()
+        totEntries=len(cmdline)
+        chunk=-1
+        #fasta_paths = []
+        #predpermodel = 1
+        for option in cmdline:
+            name = None
+            value = None
+            optionparts = option.split('=')
+            if len(optionparts) == 2:
+                name = optionparts[0]
+                value = optionparts[1]
+            if name == '--fasta_path':
+                fasta_path = re.sub(r'"',r'',value.strip())
+            if name == '--chunk':
+                chunk=value
+            if name == '--num_recycles':
+                numrecycles=value
+        # Open the input file for reading
+        counter=1
+        readfasta=open('%s/%s' %(os.getcwd(),fasta_path.strip('"')), 'r')
+        # Initialize an empty string to store the joined lines
+        joined_lines= ''
+        # Loop through each line of the file
+        for line in readfasta:
+        # Strip any leading or trailing whitespace characters
+            line = line.strip()
+            # If the line starts with '>', replace the '>' character with a semicolon
+            if line.startswith('>'):
+                if counter>1:
+                    line = ':'
+                if counter ==1:
+                    line=''
+                # Append the line to the joined lines string
+            joined_lines += line
+            counter=counter+1
+        # Print the joined lines string without any carriage returns
+        seq=joined_lines.replace('\n', '')
+        readfasta.close()
+
+        FO=open('_submitdebug.txt','w')
+
+        cmd = "python3 %s/run_esmfold_cmdline.py %s %s %s %s" %(REMOTESCRIPTSDIR,seq,fasta_path[:-6],chunk,numrecycles)
+        runhours=3
+        runminutes = math.ceil(60 * runhours)
+        partition='gpu-shared'
+        hours, minutes = divmod(runminutes, 60)
+        runtime = "%02d:%02d:00" % (hours, minutes)
+        nodes=1
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        o1=open('_JOBINFO.TXT','a')
+        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
+        o1.close()
+        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
+        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
+        mailuser = jobproperties_dict['email']
+        jobname = jobproperties_dict['JobHandle']
+        for line in open('_JOBINFO.TXT','r'):
+                if 'User\ Name=' in line:
+                        username=line.split('=')[-1].strip()
+        jobstatus=open('job_status.txt','w')
+        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
+        jobstatus.write('Job currently in queue\n\n')
+        jobstatus.close()
+        ntaskspernode = int(properties_dict['ntasks-per-node'])
+        text = """#!/bin/sh
+#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
+#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
+#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
+#SBATCH -J %s        # Job name
+#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH --mail-user=%s
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#The next line is required if the user has more than one project
+# #SBATCH -A A-yourproject  # Allocation name to charge job against
+#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
+#SBATCH --mem=90G
+#SBATCH --gpus=1
+#SBATCH --no-requeue
+#SBATCH --licenses=cosmic:1
+date
+. /expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenneth/env.cuda
+export HOME=/expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenneth/HOME.cuda
+. /expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenneth/HOME.cuda/.bashrc
+conda activate esmfold
+cd '%s/'
+%s >>stdout.txt 2>>stderr.txt
+date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
+""" \
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,cmd)
+        runfile = "./batch_command.run"
+        statusfile = "./batch_command.status"
+        cmdfile = "./batch_command.cmdline"
+        debugfile = "./nsgdebug"
+        FO = open(runfile, mode='w')
+        FO.write(text)
+        FO.flush()
+        os.fsync(FO.fileno())
+        FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
-        DEBUGFO.close()
 
 if jobtype == 'igfold':
         command=args['commandline']
@@ -2790,8 +2993,7 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
-
-if jobtype == 'alphafold2multimer':
+if jobtype == 'alphafold2':
         command=args['commandline']
         cmdline=command.split()
         totEntries=len(cmdline)
@@ -2804,7 +3006,14 @@ if jobtype == 'alphafold2multimer':
             if len(optionparts) == 2:
                 name = optionparts[0]
                 value = optionparts[1]
-            if name == '----num_multimer_predictions_per_model':
+            if name == '--skip_run_relax':
+                if value == 0:
+                    run_relax = True
+                else:
+                    run_relax = False
+            if name == '--max_template_date':
+                max_template_date = value
+            if name == '--num_multimer_predictions_per_model':
                 predpermodel = value
             if name == '--db_preset':
                 db_preset = value
@@ -2824,7 +3033,7 @@ if jobtype == 'alphafold2multimer':
             if len(fasta_paths) > 1 and findex < len(fasta_paths) - 1:
                 fasta_paths_string = fasta_paths_string + ','
         FO.close()
-        cmd = "/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2.multimer.v2.2.0/runit.afold.bash.multi --num_multimer_predictions_per_model=%s --db_preset='%s' --model_preset='%s' --fasta_paths='%s'" % (predpermodel, db_preset, model_preset, fasta_paths_string)
+        #cmd = "/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2.multimer.v2.2.0/runit.afold.bash.multi --num_multimer_predictions_per_model=%s --db_preset='%s' --model_preset='%s' --fasta_paths='%s'" % (predpermodel, db_preset, model_preset, fasta_paths_string)
         #runhours=12
         runhours=48
         runminutes = math.ceil(60 * runhours)
@@ -2862,31 +3071,51 @@ if jobtype == 'alphafold2multimer':
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
-#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
-##SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-##SBATCH --cpus-per-task=%i
-#SBATCH --cpus-per-task=10
+#SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
-##SBATCH --mem=374G
-##SBATCH --mem=279G
-#SBATCH --mem=90G
+#SBATCH --cpus-per-task=10
+#SBATCH --mem=94348M
 #SBATCH --no-requeue
 #SBATCH --gpus=1
+#SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
 date
 cd '%s/'
 mkdir output_dir
+export TMPDIR=`pwd`/output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 module load singularitypro
+module load gpu/0.15.4
+module load python/3.8.5
+. /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/venv/bin/activate
+
+export ALPHAFOLD_DIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/alphafold_singularity-2.3.1
+export ALPHAFOLD_DATADIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/download_dir
+
+echo ALPHAFOLD_DIR=$ALPHAFOLD_DIR
+echo ALPHAFOLD_DATADIR=$ALPHAFOLD_DATADIR
+
+
 pwd > stdout.txt 2>stderr.txt
-#%s
-singularity exec --nv --bind /expanse/projects/cosmic2/expanse/software_dependencies/alphafold2.multimer.v2.2.0,/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2.multimer.download_dir.v2.2.0 -H %s /cm/shared/apps/containers/singularity/tensorflow/tensorflow-2.5.0-ubuntu-18.04-cuda-11.2-openmpi-4.0.5-20210707.sif %s --output_dir=%s/output_dir --stdouterr_path=%s/output_dir/outerr.txt --slurm_job_id=${SLURM_JOB_ID}
+# Run AlphaFold; default is to use GPUs
+python3 ${ALPHAFOLD_DIR}/run_singularity.py \
+    --data_dir=${ALPHAFOLD_DATADIR} \
+    --fasta_paths=%s \
+    --max_template_date=%s \
+    --db_preset=%s \
+    --model_preset=%s \
+    --num_multimer_predictions_per_model=%s \
+    --run_relax=%s >output_dir/outerr.txt 2>&1
+
+deactivate
+module purge
 python %s/plotting_afold.py %s/output_dir/
 /bin/tar -czf output_dir.tar.gz output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,run_relax,REMOTESCRIPTSDIR,jobdir)
+        #%(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -2897,139 +3126,6 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         os.fsync(FO.fileno())
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
-
-if jobtype == 'alphafold2':
-        command=args['commandline']
-        #outfile='%s_deepEMhancer-sharpened.mrc' %(command.split()[-1].strip('"')[:-4])
-        cmdline=command.split()
-        totEntries=len(cmdline)
-        #counter=0
-        #maskflag=0
-        #while counter < totEntries:
-        #        entry=cmdline[counter]
-        #        if entry == '-m':
-        #                maskflag=1
-        #        counter=counter+1
-#
-#        if maskflag == 1: 
-#                command=''
-#                counter=0
-#                while counter < totEntries:
-#                        entry=cmdline[counter]
-#                        if entry == '-p':
-#                                counter=counter+2
-#                        if entry != '-p':
-#                                command=command+' %s '%(cmdline[counter])
-#                                counter=counter+1
-
-#        cmd='''module load gpu
-#module load cuda10.2/toolkit
-#source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
-#conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
-#%s -o %s -g 0,1,2,3 >>stdout.txt 2>>stderr.txt 
-#''' %(command,outfile)
-        fasta_paths = []
-        for option in cmdline:
-            name = None
-            value = None
-            optionparts = option.split('=')
-            if len(optionparts) == 2:
-                name = optionparts[0]
-                value = optionparts[1]
-            if name == '--relaxrun':
-                relaxrun = value
-            if name == '--preset':
-                preset = value
-            if name == '--model_names':
-                model_names = value
-            if name == '--fasta_paths':
-                fasta_paths_list = value.split(',')
-                for fasta_path in fasta_paths_list:
-                    # strip out the double-quotes that pisexml put in
-                    fasta_paths.append(re.sub(r'"',r'',fasta_path.strip()))
-        fasta_paths_string = ''
-        FO=open('_submitdebug.txt','w')
-        #for fasta_path in fasta_paths:
-        for findex, fasta_path in enumerate(fasta_paths):
-            FO.write('fasta_path: (%s)\n'%(fasta_path))
-            fasta_paths_string = fasta_paths_string + '{}/{}'.format(jobdir,fasta_path)
-            if len(fasta_paths) > 1 and findex < len(fasta_paths) - 1:
-                fasta_paths_string = fasta_paths_string + ','
-        FO.close()
-        cmd = "/expanse/projects/cosmic2/expanse/software_dependencies/alphafold2/runit.afold.bash --relaxrun=%s --preset='%s' --model_names='%s' --fasta_paths='%s'" % (relaxrun, preset, model_names, fasta_paths_string)
-        #runhours=12
-        runhours=9
-        runminutes = math.ceil(60 * runhours)
-        #partition='gpu'
-        partition='gpu-shared'
-        hours, minutes = divmod(runminutes, 60)
-        runtime = "%02d:%02d:00" % (hours, minutes)
-        nodes=1
-        ntaskspernode = int(properties_dict['ntasks-per-node'])
-        o1=open('_JOBINFO.TXT','a')
-        o1.write('\ncores=%i\n' %(nodes*ntaskspernode))
-        o1.close()
-        shutil.copyfile('_JOBINFO.TXT', '_JOBPROPERTIES.TXT')
-        jobproperties_dict = getProperties('_JOBPROPERTIES.TXT')
-        mailuser = jobproperties_dict['email']
-        jobname = jobproperties_dict['JobHandle']
-        for line in open('_JOBINFO.TXT','r'):
-                if 'User\ Name=' in line:
-                        username=line.split('=')[-1].strip()
-        jobstatus=open('job_status.txt','w')
-        jobstatus.write('COSMIC2 job staged and submitted to Expanse Supercomputer at SDSC.\n\n')
-        jobstatus.write('Job currently in queue\n\n')
-        jobstatus.close()
-        ntaskspernode = int(properties_dict['ntasks-per-node'])
-        text = """#!/bin/sh
-#SBATCH -o scheduler_stdout.txt    # Name of stdout output file(%%j expands to jobId)
-#SBATCH -e scheduler_stderr.txt    # Name of stderr output file(%%j expands to jobId)
-#SBATCH --partition=%s           # submit to the 'large' queue for jobs > 256 nodes
-#SBATCH -J %s        # Job name
-#SBATCH -t %s         # Run time (hh:mm:ss) - 1.5 hours
-#SBATCH --mail-user=%s
-#SBATCH --mail-type=begin
-#SBATCH --mail-type=end
-##SBATCH --qos=nsg
-#The next line is required if the user has more than one project
-# #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
-#SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
-##SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
-##SBATCH --cpus-per-task=%i
-#SBATCH --cpus-per-task=10
-#SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
-##SBATCH --mem=374G
-##SBATCH --mem=279G
-#SBATCH --mem=90G
-#SBATCH --no-requeue
-#SBATCH --gpus=1
-#SBATCH --licenses=cosmic:1
-date 
-cd '%s/'
-mkdir output_dir
-date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
-echo 'Job is now running' >> job_status.txt
-module load singularitypro
-pwd > stdout.txt 2>stderr.txt
-#%s
-singularity exec --nv --bind /expanse/projects/cosmic2/expanse/software_dependencies/alphafold2 -H %s /cm/shared/apps/containers/singularity/tensorflow/tensorflow-2.5.0-ubuntu-18.04-cuda-11.2-openmpi-4.0.5-20210707.sif %s --output_dir=%s/output_dir --stdouterr_path=%s/output_dir/outerr.txt --slurm_job_id=${SLURM_JOB_ID}
-python %s/plotting_afold.py %s/output_dir/
-/bin/tar -czf output_dir.tar.gz output_dir
-date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
-""" \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
-        runfile = "./batch_command.run"
-        statusfile = "./batch_command.status"
-        cmdfile = "./batch_command.cmdline"
-        debugfile = "./nsgdebug"
-        FO = open(runfile, mode='w')
-        FO.write(text)
-        FO.flush()
-        os.fsync(FO.fileno())
-        FO.close()
-        rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
-
 
 if jobtype == 'deepemhancer':
         command=args['commandline']
@@ -3419,7 +3515,7 @@ if jobtype == 'relion':
 #SBATCH --licenses=cosmic:1
 module purge
 module load slurm
-module load gpu
+module load gpu/0.15.4
 module load openmpi
 module load relion
 export OMP_NUM_THREADS=8
