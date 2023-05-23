@@ -231,7 +231,19 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
-            <Tool id="COLABFOLD"
+            <Tool id="ESMFOLD"
+                name="ESMFold language model structure prediction"
+                toolresource="expanse-gpu"
+                configfile="pisexml/esmfold.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
+			<Tool id="COLABFOLD"
                 name="COLABFOLD Alphafold 2.1 Multimer"
                 toolresource="expanse-gpu"
                 configfile="pisexml/colabfold.xml"
@@ -243,6 +255,19 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="ALPHAFOLD2"
+				name="Alphafold2"
+				toolresource="expanse-gpu"
+				configfile="pisexml/alphafold2.xml"
+				commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+				<InputParameters>
+					<InputParameter id="infile_" entityType="UNKNOWN"
+						dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+				</InputParameters>
+				<OutputParameters>
+				</OutputParameters>
+			</Tool>
+<!--
 			<Tool id="ALPHAFOLDMULTIMER"
 				name="Alphafold 2.1 Multimer"
 				toolresource="expanse-gpu"
@@ -267,6 +292,7 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+ -->
 			<Tool id="OMEGAFOLD"
                 name="OmegaFold"
                 toolresource="expanse-gpu"

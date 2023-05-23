@@ -1,0 +1,180 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!DOCTYPE pise PUBLIC "pise2.dtd" "pise2.dtd"  [
+<!ENTITY runtime_tg PUBLIC "run_time2.xml.in" "run_time2.xml.in" >
+]>
+<!-- Created by Mark Miller for CryoEM project around 5/24/2016-->
+<!--
+@article{ruffolo2021deciphering,
+    title = {Deciphering antibody affinity maturation with language models and weakly supervised learning},
+    author = {Ruffolo, Jeffrey A and Gray, Jeffrey J and Sulam, Jeremias},
+    journal = {arXiv},
+    year= {2021}
+}
+@article{ruffolo2022fast,
+    title = {Fast, accurate antibody structure prediction from deep learning on massive set of natural antibodies},
+    author = {Ruffolo, Jeffrey A and Chu, Lee-Shin and Mahajan, Sai Pooja and Gray, Jeffrey J},
+    journal = {bioRxiv},
+    year= {2022}
+}
+ -->
+
+<pise>
+  <head>
+    <title>ESMFold</title>
+    <version>1.0.3</version>
+    <description>Evolutionary-scale prediction of atomic level protein structure with a language model</description>
+    <authors>Lin et al. </authors>
+    <reference>https://www.science.org/doi/10.1126/science.ade2574</reference>
+    <category>Protein structure prediction</category>
+    <doclink>https://github.com/graylab/igfold</doclink>
+  </head>
+
+  <command>esmfold</command>
+
+<parameters>
+<!-- command name: this parameter precedes all instruction strings -->
+    <parameter ishidden="1" type="String"> 
+	  <name>relion_invoke</name>
+	  <attributes>
+	    <format>
+		  <language>perl</language>
+		  <code>"esmfold"</code>
+		</format>
+		<group>0</group>
+	  </attributes>
+	</parameter> 
+	  
+<!-- build the conf file -->
+	<parameter ishidden="1" type="String">
+		<name>relion_scheduler</name>
+		<attributes>
+			<paramfile>scheduler.conf</paramfile>
+			<format>
+				<language>perl</language>
+				<code>
+<!-- RUN THESE JOBS ON Comet -->
+				 "cpus=1\\n" . 
+				 "memory=2G\\n" . 
+				 "runhours=1\\n" . 
+			     "ntasks-per-node=1\\n" .
+				 "nodes=1\\n"
+				</code>
+			</format>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- create the non-configurable command line -->
+<!--  -->
+	<parameter ishidden="1" type="String">
+		<name>relion_commandline</name>
+		<attributes>
+			<group>1</group>
+		</attributes>
+	</parameter>	
+
+<!-- required input file, this is selected outside the parameters gui -->
+    <parameter isinput = "1" type = "InFile">
+	  <name>infile</name>
+	  <attributes>
+	    <prompt>FASTA file</prompt>
+		<format>
+		  <language>perl</language>
+		  <code>"--fasta_path=\"$value\""</code>
+		</format>
+	    <group>90</group>
+	  </attributes>	  
+	</parameter>
+
+	<parameter type="Integer" issimple="1" ismandatory="1">
+      <name>num_recycles</name>
+      <attributes>
+        <group>1</group>
+        <prompt>Number of Recycles</prompt>
+        <format>
+          <language>perl</language>
+          <code>"--num_recycles=$value"</code>
+        </format>
+        <vdef>
+          <value>4</value>
+        </vdef>
+        <ctrls>
+          <ctrl>
+            <message>Please enter an integer > 0 for the number of recycles to use</message>
+            <language>perl</language>
+            <code>$num_recycles &lt; 0</code>
+          </ctrl>
+        </ctrls>
+      </attributes>
+    </parameter>
+
+	<parameter type="Excl" issimple="1" >
+        <name>chunk</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Chunk size for axial attention. Use to reduce memory footprint, smaller numbers uses less memory at the cost of speed.</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--chunk=$chunk"</code>
+            </format>
+            <vlist>
+                <value>-1</value>
+                <label>-1</label>
+                <value>128</value>
+                <label>128</label>
+                <value>64</value>
+                <label>64</label>
+                <value>32</value>
+                <label>32</label>
+                <value>16</value>
+                <label>16</label>
+                <value>8</value>
+                <label>8</label>
+            </vlist>
+        </attributes>
+    </parameter>
+	
+    <parameter type="Results">
+      <name>stderr.txt</name>
+      <attributes>
+        <filenames>stderr</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>Input FASTA file</name>
+      <attributes>
+        <filenames>*.fasta</filenames>
+      </attributes>
+    </parameter>
+
+	<parameter type="Results">
+      <name>PDB file</name>
+      <attributes>
+        <filenames>*.pdb</filenames>
+      </attributes>
+    </parameter>
+	<parameter type="Results">
+      <name>Diagnostic plots for each predicted model</name>
+      <attributes>
+        <filenames>*.png</filenames>
+      </attributes>
+    </parameter>
+
+
+
+<!--
+	<parameter type="Results">
+      <name>A3M</name>
+      <attributes>
+        <filenames>output_dir/*.a3m</filenames>
+      </attributes>
+    </parameter>
+ -->
+
+<!-- visible input parameters -->	
+
+
+</parameters>
+
+</pise>

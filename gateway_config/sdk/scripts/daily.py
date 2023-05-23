@@ -32,14 +32,19 @@ import time
 import datetime
 import sys
 import tempfile
+import subprocess
+import shlex
+import re
 
 GTD = "${database.globusRoot}"
+RCFILE = "${expanse.rc}"
 WARNBYTES = ${user.data.size.warn}
 MAILLIST = "${email.adminAddr}"
 MAILX = os.popen('which sendmail').read().strip()
 ECHO = os.popen('which echo').read().strip()
 DU = os.popen('which du').read().strip()
 CAT = os.popen('which cat').read().strip()
+SSH = os.popen('which ssh').read().strip()
 # check to see if MAILX, ECHO and DU got populated.
 if MAILX == '' or ECHO == '' or DU == '' or CAT == '':
     print('couldn\'t find echo, du, cat or mailx')
@@ -49,6 +54,17 @@ if MAILX == '' or ECHO == '' or DU == '' or CAT == '':
 # picked up by which...
 # in warn(), there will probably be stderr output that
 # would get emailed by cron...
+
+def runit(command):
+    args = shlex.split(command)
+    child_obj = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #print(f'waiting for {command} to complete...\n')
+    rc = child_obj.wait()
+    (stdout, stderr) = child_obj.communicate()
+    #print(f'{command} completed\n')
+    #print(f' rc: {rc}\n')
+    #print(f' stdout: {stdout}\n')
+    return(stdout, stderr, rc)
 
 def warn(message, subject, recipient) :
     FO = tempfile.NamedTemporaryFile(mode='w', delete=True)
@@ -73,7 +89,32 @@ def warn(message, subject, recipient) :
 #
 
 #    Disk space usage (cumulative)
-globususage_raw = os.popen("du --block-size=1 -s %s" % GTD).read()
+
+command = f'{DU} --block-size=1 -s {GTD}'
+return_tuple = runit(command)
+globususage_raw = return_tuple[0]
+rc = return_tuple[2]
+perm_pat = f'/usr/bin/du: cannot read directory \'(?P<path>[^\']*)\': Permission denied'
+perm_reo = re.compile(perm_pat)
+#print(f'perm_pat: ({perm_pat})\n')
+if not rc == 0:
+    print(f'du rc: {rc}\n')
+    print(f'stderr: {return_tuple[1]}\n')
+    for line in return_tuple[1].decode().split('\n'):
+        print(f'line: {line}\n')
+        perm_mo = perm_reo.match(line)
+        if perm_mo == None:
+            print(f'not matched\n')
+        else:
+            print(f"matched with path: {perm_mo.group('path')}\n")
+            # try to ssh chmod.sh the dir
+            command = f'{SSH} -l cosmic2 login.expanse.sdsc.edu ". {RCFILE}; chmod.sh \'/expanse{perm_mo.group("path")}\'"'
+            return_tuple = runit(command)
+            print(f'return_tuple for {command}: {return_tuple}\n')
+command = f'{DU} --block-size=1 -s {GTD}'
+return_tuple = runit(command)
+globususage_raw = return_tuple[0]
+
 globususage_bytes = int(globususage_raw.split()[0])
 globususage_gb = globususage_bytes // (1024 * 1024 *1024)
 #print('globususage_bytes ({})\n'.format(globususage_bytes))
