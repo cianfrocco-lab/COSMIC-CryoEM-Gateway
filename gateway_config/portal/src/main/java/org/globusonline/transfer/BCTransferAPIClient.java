@@ -55,7 +55,7 @@ public class BCTransferAPIClient extends BaseTransferAPIClient {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         try {
             if (args.length < 1) {
                 System.err.println(

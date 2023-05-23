@@ -141,7 +141,9 @@ public class AuthCallbackAction extends FolderManager {
 
             // Remembers the random UUID to ensure that the same login flow continues once
             // redirected back to the client
+            logger.debug ( "putting state = " + state  + " for authurl: " + authurl);
             getSession().put(OauthConstants.OAUTH2_STATE, state);
+            logger.debug ( "after putting state = " + state );
 
             //response.sendRedirect(url);
             reportUserMessage("Redirect auth url: "+authurl);

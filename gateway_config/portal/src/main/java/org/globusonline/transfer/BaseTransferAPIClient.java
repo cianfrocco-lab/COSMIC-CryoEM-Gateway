@@ -72,7 +72,7 @@ public class BaseTransferAPIClient {
 
     static final String CLIENT_VERSION = "0.10.9";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         BaseTransferAPIClient c = new BaseTransferAPIClient(args[0],
                                         BaseTransferAPIClient.FORMAT_JSON);
         try {

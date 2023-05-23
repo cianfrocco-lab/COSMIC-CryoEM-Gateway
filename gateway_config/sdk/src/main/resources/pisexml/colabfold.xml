@@ -6,10 +6,10 @@
 <pise>
   <head>
     <title>ColabFold</title>
-    <version>0.0</version>
+    <version>1.5.2</version>
     <description>Fast and convenient protein structure predictions using MMseqs2 and AlphaFold</description>
-    <authors>Evans et al. </authors>
-    <reference>https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1</reference>
+    <authors>Mirdita et al. </authors>
+    <reference>https://www.nature.com/articles/s41592-022-01488-1</reference>
     <category>Protein structure prediction</category>
     <doclink>https://github.com/deepmind/alphafold</doclink>
   </head>
@@ -72,29 +72,29 @@
 	  </attributes>	  
 	</parameter>
 
- 	<parameter type="Integer" issimple="1">
-	  <name>num_models</name>
-	  <attributes>
+	<parameter type="Integer" issimple="1" ismandatory="1">
+      <name>num_models</name>
+      <attributes>
         <group>1</group>
-	    <prompt>Number of Models</prompt>
-	    <format>
-	      <language>perl</language>
-	      <code>"--num_models=$value"</code>
+        <prompt>Number of models</prompt>
+        <format>
+          <language>perl</language>
+          <code>"--num_models=$value"</code>
         </format>
-	    <vdef>
-	      <value>5</value>
-	    </vdef>
-	    <ctrls>
-	      <ctrl>
-	        <message>Please enter an 0 &lt; integer &lt; 6 for the number of models to run</message>
-	        <language>perl</language>
-	        <code>$num_models &gt; 5</code>
-	      </ctrl>
-	    </ctrls>
-	  </attributes>
-	</parameter>
-	
- 	<parameter type="Integer" issimple="1">
+        <vdef>
+          <value>5</value>
+        </vdef>
+        <ctrls>
+          <ctrl>
+            <message>Please enter an integer > 0 for the number of models to use</message>
+            <language>perl</language>
+            <code>$num_models &lt; 0</code>
+          </ctrl>
+        </ctrls>
+      </attributes>
+    </parameter>
+
+ 	<parameter type="Integer" issimple="1" ismandatory="1">
 	  <name>num_recycles</name>
 	  <attributes>
         <group>1</group>
@@ -116,11 +116,26 @@
 	  </attributes>
 	</parameter>
 	
- 	<parameter type="Switch" issimple="1">
+	<parameter type="Integer" issimple="1" ismandatory="1">
+      <name>stop_score</name>
+      <attributes>
+        <group>1</group>
+        <prompt>Stop at score (Compute recycle models until plddt (single chain) or ptmscore (complex) > threshold is reached.) Leave blank to use all recyles.</prompt>
+        <format>
+          <language>perl</language>
+          <code>"--stop_at_score=$value"</code>
+        </format>
+		<vdef>
+          <value>80</value>
+        </vdef>
+      </attributes>
+    </parameter>
+
+ 	<parameter type="Switch">
 	  <name>use_amber</name>
 	  <attributes>
         <group>1</group>
-	    <prompt>Use Amber relaxation?</prompt>
+	    <prompt>Use Amber molecular dynamics relaxation?</prompt>
 	    <format>
 	      <language>perl</language>
 	      <code>"--use_amber=$value"</code>
@@ -135,7 +150,7 @@
 	  <name>use_templates</name>
 	  <attributes>
         <group>1</group>
-	    <prompt>Use templates?</prompt>
+	    <prompt>Use templates from published PDB structures?</prompt>
 	    <format>
 	      <language>perl</language>
 	      <code>"--use_templates=$value"</code>
@@ -145,6 +160,35 @@
 	    </vdef>
 	  </attributes>
 	</parameter>
+
+	<parameter type="Excl" ismandatory="1" ishidden="0">
+        <name>maxmsa</name>
+        <attributes>
+            <group>1</group>
+            <prompt>Max MSA depth (smaller values to increase uncertainty)</prompt>
+            <format>
+                <language>perl</language>
+                <code>"--max_msa=$maxmsa"</code>
+            </format>
+            <vdef>
+                <value>auto</value>
+            </vdef>
+            <vlist>
+                <value>auto</value>
+                <label>auto</label>
+                <value>512:1024</value>
+                <label>512:1024</label>
+                <value>256:512</value>
+                <label>256:512</label>
+                <value>64:128</value>
+                <label>64:128</label>
+				<value>32:64</value>
+                <label>32:64</label>
+				<value>16:32</value>
+                <label>16:32</label>
+            </vlist>
+        </attributes>
+    </parameter>
 
     <parameter type="Results">
       <name>stderr.txt</name>
@@ -163,14 +207,14 @@
     <parameter type="Results">
       <name>Predicted structural models</name>
       <attributes>
-        <filenames>output_dir/*relaxed*pdb</filenames>
+        <filenames>output/*relaxed*pdb</filenames>
       </attributes>
     </parameter>
 
 	<parameter type="Results">
       <name>Diagnostic plots for each predicted model</name>
       <attributes>
-        <filenames>output_dir/*.png</filenames>
+        <filenames>output/*.png</filenames>
       </attributes>
     </parameter>
 
@@ -184,17 +228,23 @@
 	<parameter type="Results">
       <name>Ranking of AlphaFold models</name>
       <attributes>
-        <filenames>output_dir/*scores.json</filenames>
+        <filenames>output/*scores.json</filenames>
       </attributes>
     </parameter>
 
 	<parameter type="Results">
       <name>Predicted error of AlphaFold models</name>
       <attributes>
-        <filenames>output_dir/*error_v1.json</filenames>
+        <filenames>output/*error_v1.json</filenames>
       </attributes>
     </parameter>
 
+	<parameter type="Results">
+      <name>Citation file</name>
+      <attributes>
+        <filenames>output/cite.bibtex</filenames>
+      </attributes>
+    </parameter>
 <!--
 	<parameter type="Results">
       <name>A3M</name>
