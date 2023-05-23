@@ -1624,7 +1624,7 @@ WriteMRC(mask,%s,'mask.mrc');
 [map] = locOccupancy(vol,mask,%s,%s,%s,%s,%s);
 WriteMRC(map,%s,'%s_locOccupancy.mrc');''' %(ntasks,ntasks,half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
         o1.close()
-        cmd='''module load matlab 
+        cmd='''module load matlab/2022b
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
@@ -1741,7 +1741,7 @@ WriteMRC(mask,%s,'mask.mrc');
 [map W] = locBSharpen(vol,mask,%s,%s,%s,%s,%s);
 WriteMRC(map,%s,'%s_locBfactor.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
         o1.close()
-        cmd='''module load matlab 
+        cmd='''module load matlab/2022b
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
@@ -1860,7 +1860,7 @@ WriteMRC(mask,%s,'mask.mrc');
 [map W] = locSpiral(vol,mask,%s,%s,%s,%s,%s);
 WriteMRC(map,%s,'%s_locSpiralMap.mrc');''' %(ntasks,ntasks,half1map,half2map,angpix,half1map[:-4],thresh,angpix,angpix,minres,maxres,noisethresh,bandwidth,angpix,half1map[:-4]))
         o1.close()
-        cmd='''module load matlab 
+        cmd='''module load matlab/2022b
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
@@ -1980,7 +1980,7 @@ mask = bwareaopen(mask,25,6);
 WriteMRC(BMap*4,%s,'%s_local_bfactorMap.mrc');	
 WriteMRC(AMap,%s,'%s_local_bfactorAMap.mrc');''' %(half1map,half2map,angpix,half1map[:-4],thresh,angpix,minres,maxres,numpoints,noisethresh,bandwidth,angpix,half1map[:-4],angpix,half1map[:-4]))
         o1.close()
-        cmd='''module load matlab 
+        cmd='''module load matlab/2022b
 matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stderr.txt''' %(runscript)
         runhours=1
         runminutes = math.ceil(60 * runhours)
@@ -3728,9 +3728,9 @@ if jobtype == 'isac':
         starconvert='isac-converted-%s.star' %(''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
         outdir='output-%s' %(sphiredir)
         for line in open(instar,'r'):
-            if 'mrcs' in line:
+            if 'mrc' in line:
                 for entry in line.split():
-                    if 'mrcs' in entry:
+                    if 'mrc' in entry:
                         f=entry
         f=f.split('@')[-1]
         f=f.split('/')
