@@ -6,10 +6,10 @@
 <pise>
   <head>
     <title>Model Angelo</title>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <description>Automatic atomic model building program for cryo-EM maps</description>
     <authors>Jamali K, Kimanius D, Scheres S</authors>
-    <reference>https://arxiv.org/abs/2210.00006</reference>
+    <reference>https://www.biorxiv.org/content/10.1101/2023.05.16.541002v1</reference>
     <category>Model building</category>
     <doclink>https://github.com/3dem/model-angelo</doclink>
   </head>
@@ -71,13 +71,37 @@
 	</parameter>
 
 	<parameter type="InFile" issimple="1">
-        <name>half2</name>
+        <name>proteinfasta</name>
         <attributes>
             <group>1</group>
-            <prompt>Fasta sequence</prompt>
+            <prompt>Protein fasta sequence</prompt>
             <format>
                 <language>perl</language>
                 <code>"-f $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1">
+        <name>dnafasta</name>
+        <attributes>
+            <group>1</group>
+            <prompt>DNA fasta sequence</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-df $value"</code>
+            </format>
+        </attributes>
+    </parameter>
+
+	<parameter type="InFile" issimple="1">
+        <name>rnafasta</name>
+        <attributes>
+            <group>1</group>
+            <prompt>RNA fasta sequence</prompt>
+            <format>
+                <language>perl</language>
+                <code>"-rf $value"</code>
             </format>
         </attributes>
     </parameter>
