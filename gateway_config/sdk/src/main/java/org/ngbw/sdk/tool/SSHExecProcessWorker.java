@@ -274,7 +274,7 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 		} 
 		if (exitStatus == 2)
 		{
-			throw new Exception("Too many tasks are waiting to run.  You can clone your task and try running it again later."); 
+			throw new Exception("We're sorry - your current job could not be submitted due to a large volume of jobs running on COSMIC2 and the Expanse Supercomputer. Please try again later - you can use the 'Clone' command when you resubmit."); 
 		}
 
         // Original line below displays directory path to the user; something
