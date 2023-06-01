@@ -793,7 +793,8 @@ def submitJob(job_properties={}, runfile='batch_command.run', statusfile='batch_
         f.close()
         if re.search('sbatch: error: MaxSubmitJobsPerAccount', f_string) != None:
             retval = 2
-        
+        if re.search('sbatch: error: QOSMaxSubmitJobPerUserLimit', f_string) != None:
+            retval = 2
 
         log(statusfile, "submit_job is returning %d\n" %  retval)
 
@@ -3018,11 +3019,8 @@ if jobtype == 'alphafold2':
             if len(optionparts) == 2:
                 name = optionparts[0]
                 value = optionparts[1]
-            if name == '--skip_run_relax':
-                if value == 0:
-                    run_relax = True
-                else:
-                    run_relax = False
+            if name == '--models_to_relax':
+                models_to_relax = value
             if name == '--max_template_date':
                 max_template_date = value
             if name == '--num_multimer_predictions_per_model':
@@ -3100,10 +3098,10 @@ echo 'Job is now running' >> job_status.txt
 module load singularitypro
 module load gpu/0.15.4
 module load python/3.8.5
-. /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/venv/bin/activate
+. /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/venv/bin/activate
 
-export ALPHAFOLD_DIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/alphafold_singularity-2.3.1
-export ALPHAFOLD_DATADIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.1.kenneth/download_dir
+export ALPHAFOLD_DIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/alphafold-2.3.2
+export ALPHAFOLD_DATADIR=/expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/download_dir
 
 echo ALPHAFOLD_DIR=$ALPHAFOLD_DIR
 echo ALPHAFOLD_DATADIR=$ALPHAFOLD_DATADIR
@@ -3111,23 +3109,23 @@ echo ALPHAFOLD_DATADIR=$ALPHAFOLD_DATADIR
 
 pwd > stdout.txt 2>stderr.txt
 # Run AlphaFold; default is to use GPUs
-python3 ${ALPHAFOLD_DIR}/run_singularity.py \
+python3 ${ALPHAFOLD_DIR}/singularity/run_singularity.py \
     --data_dir=${ALPHAFOLD_DATADIR} \
     --fasta_paths=%s \
     --max_template_date=%s \
     --db_preset=%s \
     --model_preset=%s \
     --num_multimer_predictions_per_model=%s \
-    --run_relax=%s >output_dir/outerr.txt 2>&1
+    --models_to_relax=%s >output_dir/outerr.txt 2>&1
 
 deactivate
 module purge
-. /expanse/projects/cosmic2/expanse/software_dependencies/python/env
+. /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/env
 python %s/plotting_afold.py %s/output_dir/
 /bin/tar -czf output_dir.tar.gz output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'],jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,run_relax,REMOTESCRIPTSDIR,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,models_to_relax,REMOTESCRIPTSDIR,jobdir)
         #%(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
@@ -3823,3 +3821,4 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
         FO.close()
         rc = submitJob(job_properties=jobproperties_dict, runfile='batch_command.run', statusfile='batch_command.status', cmdfile='batch_command.cmdline')
 
+sys.exit(rc)
