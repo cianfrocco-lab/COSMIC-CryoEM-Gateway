@@ -1012,6 +1012,9 @@ if jobtype == 'modelangelo':
         runminutes=00
         cmdline=cmd.split()
         totEntries=len(cmdline)
+        fasta=''
+        dfasta=''
+        rfasta=''
         counter=0
         mode='build'
         mask=' '
@@ -1025,17 +1028,26 @@ if jobtype == 'modelangelo':
                         fasta=cmdline[counter+1]
                 if '-m' == entry:
                         mask=' -m %s' %(cmdline[counter+1])
+                if '-df' == entry:
+                        dfasta=cmdline[counter+1]
+                if '-rf' == entry:
+                        rfasta=cmdline[counter+1]
                 counter=counter+1
 
         #Assemble command
         cmd='model_angelo %s -v %s %s' %(mode,volume,mask)
         if mode == 'build':
-            cmd=cmd+' -f %s' %(fasta)
-            fopen=open(fasta,'r')
-            data=fopen.read()
-            numAAs=len(data)
-            if numAAs>800:
-                runhours=6
+            if len(fasta)>0:
+                cmd=cmd+' -f %s' %(fasta)
+                fopen=open(fasta,'r')
+                data=fopen.read()
+                numAAs=len(data)
+                if numAAs>800:
+                    runhours=6
+            if len(dfasta)>0:
+                cmd=cmd+' -df %s' %(dfasta)
+            if len(rfasta)>0:
+                cmd=cmd+' -rf %s' %(rfasta)
         if mode == 'build_no_seq':
             runhours=2        
 
@@ -1085,7 +1097,7 @@ pwd > stdout.txt 2>stderr.txt
 module purge
 module load gpu anaconda3
 source /cm/shared/apps/spack/gpu/opt/spack/linux-centos8-skylake_avx512/gcc-8.3.1/anaconda3-2020.11-bsn4npoxyw7jzz7fajncek3bvdoaa5wv/etc/profile.d/conda.sh
-conda activate /expanse/projects/cosmic2/expanse//software_dependencies/conda_model_angelo/
+conda activate /expanse/projects/cosmic2/expanse//software_dependencies/conda_model_angelo1.0/
 %s >> stdout.txt 2>stderr.txt
 zip -r output.zip output/ 
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
@@ -3110,6 +3122,7 @@ python3 ${ALPHAFOLD_DIR}/run_singularity.py \
 
 deactivate
 module purge
+. /expanse/projects/cosmic2/expanse/software_dependencies/python/env
 python %s/plotting_afold.py %s/output_dir/
 /bin/tar -czf output_dir.tar.gz output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
