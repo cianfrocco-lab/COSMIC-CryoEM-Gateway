@@ -3110,6 +3110,7 @@ echo ALPHAFOLD_DATADIR=$ALPHAFOLD_DATADIR
 pwd > stdout.txt 2>stderr.txt
 # Run AlphaFold; default is to use GPUs
 python3 ${ALPHAFOLD_DIR}/singularity/run_singularity.py \
+    --use_gpu \
     --data_dir=${ALPHAFOLD_DATADIR} \
     --fasta_paths=%s \
     --max_template_date=%s \
