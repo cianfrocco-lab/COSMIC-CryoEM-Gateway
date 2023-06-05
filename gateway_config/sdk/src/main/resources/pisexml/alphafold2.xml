@@ -7,7 +7,7 @@
   <head>
     <title>AlphaFold2</title>
     <!-- from https://github.com/prehensilecode/alphafold_singularity -->
-    <version>2.3.1</version>
+    <version>2.3.2</version>
     <description>Highly accurate protein structure prediction</description>
     <authors>Jumper et al. </authors>
     <reference>https://www.nature.com/articles/s41586-021-03819-2</reference>
@@ -115,7 +115,7 @@
 
 <!-- visible input parameters -->	
 
-	<parameter type="Integer" issimple="1" ismandatory="1">
+	<parameter type="Integer" issimple="0" ismandatory="1">
 	    <name>num_multimer_predictions_per_model</name>
 	    <attributes>
 		    <group>1</group>
@@ -125,7 +125,7 @@
 			    <code>"--num_multimer_predictions_per_model=$value"</code>
 		    </format>
             <vdef>
-                <value>5</value>
+                <value>1</value>
             </vdef>
 	    </attributes>
     </parameter>
@@ -139,7 +139,7 @@
 			    <code>"--max_template_date=$value"</code>
 		    </format>
             <vdef>
-                <value>2023-03-26</value>
+                <value>2023-05-30</value>
             </vdef>
 	    </attributes>
     </parameter>
@@ -172,32 +172,42 @@
 			    <language>perl</language>
 			    <code>"--model_preset=$value"</code>
 		    </format>
+			<vdef>
+               	<value>monomer_ptm</value>
+            </vdef>
             <vlist>
                 <value>monomer</value>
                 <label>monomer</label>
                 <value>monomer_ptm</value>
                 <label>monomer_ptm</label>
-				<vdef>
-                	<value>monomer_ptm</value>
-            	</vdef>
+                <value>monomer_casp14</value>
+                <label>monomer_casp14</label>
                 <value>multimer</value>
                 <label>multimer</label>
             </vlist>
 	    </attributes>
     </parameter>
-    <parameter type="Switch" issimple="0" ismandatory="0" ishidden="0">
-        <name>skip_run_relax</name>
-        <attributes>
-            <group>1</group>
-            <prompt>Skip calculating relaxed models</prompt>
-            <format>
-                <language>perl</language>
-                <code>" --skip_run_relax=$value"</code>
-            </format>
-            <vdef>
-                <value>1</value>
+	<parameter type="Excl" issimple="0" ismandatory="1" ishidden="0">
+	    <name>model_to_relax</name>
+	    <attributes>
+		    <group>1</group>
+		    <prompt>Models to relax (all,best,none)</prompt>
+		    <format>
+			    <language>perl</language>
+			    <code>"--models_to_relax=$value"</code>
+		    </format>
+			<vdef>
+               	<value>none</value>
             </vdef>
-        </attributes>
+            <vlist>
+                <value>none</value>
+                <label>none</label>
+                <value>best</value>
+                <label>best</label>
+                <value>all</value>
+                <label>all</label>
+            </vlist>
+	    </attributes>
     </parameter>
 
 </parameters>
