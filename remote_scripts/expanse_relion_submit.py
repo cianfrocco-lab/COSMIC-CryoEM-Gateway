@@ -1081,6 +1081,7 @@ if jobtype == 'modelangelo':
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 ##SBATCH --qos=nsg
+#SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
@@ -1173,6 +1174,7 @@ if jobtype == 'omegafold':
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 ##SBATCH --qos=nsg
+#SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
@@ -1458,6 +1460,7 @@ if jobtype == 'sleep':
 #SBATCH --gpus=1
 #SBATCH --mem=90
 #SBATCH --licenses=cosmic:1
+#SBATCH --qos=gpu-shared-cosmic2
 #module load cuda/9.2
 #module load intelmpi/2018.1.163
 #source /home/cosmic2/software_dependencies/relion/relion-3.1-gpu.sh
@@ -2229,6 +2232,7 @@ if jobtype == 'cryolo':
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 ##SBATCH --qos=nsg
+#SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
@@ -2309,6 +2313,7 @@ if jobtype == 'micassess':
 #SBATCH --gres=gpu:1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
+#SBATCH --qos=gpu-shared-cosmic2
 export MODULEPATH=/share/apps/compute/modulefiles/applications:$MODULEPATH
 export MODULEPATH=/share/apps/compute/modulefiles:$MODULEPATH
 date 
@@ -2497,6 +2502,7 @@ conda activate /expanse/projects/cosmic2/expanse/conda/cryodrgn/\n'''
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 ##SBATCH --qos=nsg
+#SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
@@ -2680,6 +2686,7 @@ colabfold_batch %s output/ %s''' %(fasta_path,cmd))
 #SBATCH --no-requeue
 #SBATCH --gpus=1
 #SBATCH --licenses=cosmic:1
+#SBATCH --qos=gpu-shared-cosmic2
 date
 cd '%s/'
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
@@ -2882,6 +2889,7 @@ if jobtype == 'esmfold':
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
+#SBATCH --qos=gpu-shared-cosmic2
 date
 . /expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenneth/env.cuda
 export HOME=/expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenneth/HOME.cuda
@@ -3089,6 +3097,7 @@ if jobtype == 'alphafold2':
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
+#SBATCH --qos=gpu-shared-cosmic2
 date
 cd '%s/'
 mkdir output_dir
@@ -3602,6 +3611,7 @@ if jobtype == 'standard_pipeline':
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 ##SBATCH --qos=nsg
+#SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
 #SBATCH -A %s  # Allocation name to charge job against
