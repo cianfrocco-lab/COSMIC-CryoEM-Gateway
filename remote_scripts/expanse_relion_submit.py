@@ -980,7 +980,7 @@ if jobtype == 'hhblits':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1084,7 +1084,7 @@ if jobtype == 'modelangelo':
 #SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1177,7 +1177,7 @@ if jobtype == 'omegafold':
 #SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1309,7 +1309,7 @@ if jobtype == 'isonet':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1383,7 +1383,7 @@ if jobtype == 'alignproj':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1451,7 +1451,7 @@ if jobtype == 'sleep':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=1
@@ -1554,7 +1554,7 @@ zip -r 3DFSC-output.zip Results_3DFSC-output/
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --no-requeue
@@ -1676,7 +1676,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1793,7 +1793,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -1912,7 +1912,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -2032,7 +2032,7 @@ matlab -nodisplay -nosplash -nodesktop -r "run('%s');exit" > stdout.txt 2> stder
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -2167,7 +2167,7 @@ angle_inc %s
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -2235,7 +2235,7 @@ if jobtype == 'cryolo':
 #SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
 #SBATCH --gpus=1
@@ -2307,7 +2307,7 @@ if jobtype == 'micassess':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
 #SBATCH --gres=gpu:1
@@ -2505,7 +2505,7 @@ conda activate /expanse/projects/cosmic2/expanse/conda/cryodrgn/\n'''
 #SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -2678,7 +2678,7 @@ colabfold_batch %s output/ %s''' %(fasta_path,cmd))
 #SBATCH --mail-type=end
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --cpus-per-task=10
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
@@ -2881,7 +2881,7 @@ if jobtype == 'esmfold':
 #SBATCH --mail-type=end
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
@@ -2983,7 +2983,7 @@ if jobtype == 'igfold':
 #SBATCH --mail-type=end
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
@@ -3088,7 +3088,7 @@ if jobtype == 'alphafold2':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=10
@@ -3212,7 +3212,7 @@ conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -3304,7 +3304,7 @@ mkdir postprocess
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
@@ -3374,7 +3374,7 @@ conda activate /expanse/projects/cosmic2/expanse/conda/pyem
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=1
@@ -3458,7 +3458,7 @@ singularity exec /expanse/projects/cosmic2/singularity/ubuntu-pyem-v6.simg /opt/
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=1
@@ -3527,7 +3527,7 @@ if jobtype == 'relion':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=8
@@ -3614,7 +3614,7 @@ if jobtype == 'standard_pipeline':
 #SBATCH --qos=gpu-shared-cosmic2
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=8
@@ -3697,7 +3697,7 @@ if jobtype == 'pipeline':
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=1             # Total number of mpi tasks requested
 #SBATCH --no-requeue
@@ -3803,7 +3803,7 @@ e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.
 ##SBATCH --qos=nsg
 #The next line is required if the user has more than one project
 # #SBATCH -A A-yourproject  # Allocation name to charge job against
-#SBATCH -A %s  # Allocation name to charge job against
+#SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=4             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
