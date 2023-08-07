@@ -294,6 +294,8 @@ else:
         warn('no warnings\n', 'datawarn.py no warnings', MAILLIST)
     pass
 
+expanseallocation = runit('expanseallocation.sh')
+
 # send daily report
 if time.localtime()[3] == 9:
     # 9am hour localtime, so email that datawarn ran with no warnings
@@ -319,6 +321,7 @@ if time.localtime()[3] == 9:
 #    Number of jobs submitted (cumulative)
 #    Number of jobs submitted (last 24 hours)
     message = ''
+    message = message + expanseallocation[0].decode() + '\n' + expanseallocation[1].decode() + '\n'
     message = message + 'SU usage (cumulative) {}\n'.format(SUcum)
     message = message + 'SU usage (last 24 hours) {}\n'.format(SU24h)
     message = message + 'SU per user (last 24 hours)\n'
