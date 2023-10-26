@@ -1,0 +1,8 @@
+Dear CIPRES Science Gateway User,
+
+This is a courtesy notice to let you know that your CIPRES Science Gateway account has not been accessed for more than one year.  Due to increasing user numbers and costs, we can no longer store data in accounts that have been idle for more than one year. As a result, all data in such accounts will be deleted in 30 days. If you want to preserve the data in your account, please log into your account at ${portal.url} within the next 30 days.  If for some reason you are unable to log in, you can instead send email to ${email.adminAddr}. Please include your CIPRES username and registered email address in your message if possible.
+
+If you take no action, all your stored tasks and data will be deleted 30 days from the date of this email.
+
+Sincerely,
+Mark Miller
