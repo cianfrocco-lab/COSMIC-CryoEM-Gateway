@@ -124,17 +124,17 @@ def clearWarningsForRecentLogins():
             where user_id = %s and preference like '%s%%' """ % (row[0], preferencePrefix)
 
         # print "delete DELETE_USER flags for recent logins statement is '%s'" % query2
-        print "Clearing scheduled deletion for user_id %d, email %s because he logged in on %s" % (row[0],
-            row[3], row[4])
+        print("Clearing scheduled deletion for user_id %d, email %s because he logged in on %s" % (row[0],
+            row[3], row[4]))
 
         cur2 = conn.cursor()
         try:
             cur2.execute(query2)
             conn.commit()
-        except Error, e:
+        except Error as e:
             conn.rollback()
-            print str(e)
-            print "delete statement $s failed." % query2 
+            print(str(e))
+            print("delete statement $s failed." % query2)
         cur2.close()    
     cur.close()
 
@@ -177,15 +177,15 @@ def issueWarningAndScheduleDeletion():
             if username.startswith("Guest-") and not "@" in email:
                 pass
             else:
-                print "Sending email to user_id %d, email %s.  He/she must log in by %s." % (userid, email, deleteDate)
+                print("Sending email to user_id %d, email %s.  He/she must log in by %s." % (userid, email, deleteDate))
                 mailer.sendMail(email, fromaddr, ccaddr, emailSubject, emailContentsFile)
-        except Exception, e:
+        except Exception as e:
             # I'm not sure if mail exceptions should be fatal because they indicate a problem that will cause failures
             # on all emails, or if they may specific to an email address.  I suspect the former.  If you find otherwise, 
             # comment out the "raise" line and uncomment the "traceback", "print" and "continue"  lines and the program 
             # will continue after mail exceptions instead of terminating.
 
-            print "Error sending email to %s.  Will try again next time this runs.  Deletion has not been scheduled." % email 
+            print("Error sending email to %s.  Will try again next time this runs.  Deletion has not been scheduled." % email )
 
             # traceback.print_exc()
             # print
@@ -201,16 +201,16 @@ def issueWarningAndScheduleDeletion():
         try:
             cur2.execute(query2)
             conn.commit()
-        except Error, e:
+        except Error as e:
             conn.rollback()
-            print str(e)
-            print "insert statement $s failed." % query2 
-            print """ 
+            print(str(e))
+            print("insert statement $s failed." % query2 )
+            print(""" 
                 "If this is due to a duplicate key error, it is likely that more than one instance of this
                 program is running at the same time or that another program is changing the user preferences
                 records at the same time.  This should not be allowed to happen as users may receive duplicate
                 and confusing emails as a result.
-            """
+            """)
         cur2.close()    
     cur.close()
         
@@ -245,7 +245,7 @@ def doDeletions():
 
     for row in cur:
         if not hasData(row[0], row[4]):
-            print "User_id %d, email  %s, is scheduled for deletion but has no data to delete." % (row[0], row[3]) 
+            print("User_id %d, email  %s, is scheduled for deletion but has no data to delete." % (row[0], row[3]) )
             removeFlags(row[0])
         elif sdkUserDelete(row[4], row[0]):
             removeFlags(row[0])
@@ -261,10 +261,10 @@ def removeFlags(userid):
     try:
         cur.execute(query)
         conn.commit()
-    except Error, e:
+    except Error as e:
         conn.rollback()
-        print str(e)
-        print "delete statement $s failed." % query 
+        print(str(e))
+        print("delete statement $s failed." % query )
     cur.close()    
 
 
@@ -282,17 +282,17 @@ def sdkUserDelete(username, uid):
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     outerr = p.communicate()
     if (p.returncode != 0):
-        print
-        print """
+        print()
+        print("""
             stdout: %s 
             stderr: %s
-            """ % (outerr[0], outerr[1])
-        print """ 
+            """ % (outerr[0], outerr[1]))
+        print(""" 
             '%s' returned an error code.  
              %s's data may not have been deleted.  Will try again next time this runs.
-             """ % (cmd, username)
+             """ % (cmd, username))
         return False
-    print "Deleted tasks and data for username %s, uid=%d"  % (username, uid)
+    print("Deleted tasks and data for username %s, uid=%d"  % (username, uid))
     return True
 
 def hasData(userId, username):
@@ -302,10 +302,10 @@ def hasData(userId, username):
     try:
         cur.execute(query)
         conn.commit()
-    except Error, e:
+    except Error as e:
         conn.rollback()
-        print "hasData query failed. Query was: %s" % query 
-        print str(e)
+        print("hasData query failed. Query was: %s" % query )
+        print(str(e))
         return 0
 
     numberOfFolders = 0
@@ -353,7 +353,7 @@ def main(argv=None):
     options, remainder = getopt.getopt(argv[1:], "h")
     for opt, arg in options:
         if opt in ("-h"):
-            print __doc__
+            print(__doc__)
             return 0
 
     clearWarningsForRecentLogins()
