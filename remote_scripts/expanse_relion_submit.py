@@ -1088,6 +1088,7 @@ if jobtype == 'modelangelo':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -1181,6 +1182,7 @@ if jobtype == 'omegafold':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -1313,6 +1315,7 @@ if jobtype == 'isonet':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -2238,6 +2241,7 @@ if jobtype == 'cryolo':
 #SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -2510,6 +2514,7 @@ conda activate /expanse/projects/cosmic2/expanse/conda/cryodrgn/\n'''
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --licenses=cosmic:1
 date 
@@ -3217,6 +3222,7 @@ conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --licenses=cosmic:1
 date 
@@ -3532,6 +3538,7 @@ if jobtype == 'relion':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -3808,6 +3815,7 @@ e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=4             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
