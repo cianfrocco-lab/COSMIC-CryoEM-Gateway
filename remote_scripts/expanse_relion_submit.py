@@ -3333,13 +3333,14 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 
 if jobtype == 'csparc2star':
         command=args['commandline']
+        infile=command.split()[-1]
         outfile=command.split()[-1].split('.')[0]+'.star'
-        cmd='''module load anaconda3/2020.11
-module load cpu
+        cmd='''module load cpu/0.15.4
+module load anaconda3/2020.11
 module load DefaultModules
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
-conda activate /expanse/projects/cosmic2/expanse/conda/pyem
-%s %s >> stdout 2>>stderr.txt''' %(command,outfile)
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/conda-pyem/
+/expanse/projects/cosmic2/expanse/software_dependencies/new-pyem-repo/pyem/csparc2star.py %s %s >> stdout 2>>stderr.txt''' %(infile,outfile)
         runhours=8
         runminutes = math.ceil(60 * runhours)
         partition='shared'
