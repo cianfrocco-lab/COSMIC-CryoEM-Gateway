@@ -2694,14 +2694,18 @@ colabfold_batch %s output/ %s''' %(fasta_path,cmd))
 #SBATCH --qos=gpu-shared-cosmic2
 date
 cd '%s/'
+export jobhandle=%s
+export jobdir=%s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 bash run.sh >>stdout.txt 2>>stderr.txt
 /bin/tar -czf output.tar.gz output
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*log.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,jobname,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -2902,9 +2906,13 @@ export HOME=/expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenn
 conda activate esmfold
 cd '%s/'
 %s >>stdout.txt 2>>stderr.txt
+export jobdir=%s
+export jobhandle=%s
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*.pae.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,cmd,jobdir,jobname)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -3043,6 +3051,7 @@ if jobtype == 'alphafold2':
             if name == '--model_preset':
                 model_preset = value
             if name == '--fasta_paths':
+                fasta_paths_value = value
                 fasta_paths_list = value.split(',')
                 for fasta_path in fasta_paths_list:
                     # strip out the double-quotes that pisexml put in
@@ -3106,6 +3115,8 @@ if jobtype == 'alphafold2':
 date
 cd '%s/'
 mkdir output_dir
+export jobhandle=%s
+export jobdir=%s
 export TMPDIR=`pwd`/output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
@@ -3137,10 +3148,16 @@ deactivate
 module purge
 . /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/env
 python %s/plotting_afold.py %s/output_dir/
+#echo fasta_paths_value
+#export fastas="%s"
+find output_dir -name \\*.pkl -exec rm {} \; -print
+find output_dir -name msas -a -type d -exec rm -rf {} \; -print
 /bin/tar -czf output_dir.tar.gz output_dir
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*_plddt.txt\|.*_pae.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'],jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,models_to_relax,REMOTESCRIPTSDIR,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,jobname,jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,models_to_relax,REMOTESCRIPTSDIR,jobdir,fasta_paths_value)
         #%(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
