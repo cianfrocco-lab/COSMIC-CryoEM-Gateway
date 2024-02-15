@@ -1088,6 +1088,7 @@ if jobtype == 'modelangelo':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -1181,6 +1182,7 @@ if jobtype == 'omegafold':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -1313,6 +1315,7 @@ if jobtype == 'isonet':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -2238,6 +2241,7 @@ if jobtype == 'cryolo':
 #SBATCH --account=%s  # Allocation name to charge job against
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=6             # Total number of mpi tasks requested
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -2510,6 +2514,7 @@ conda activate /expanse/projects/cosmic2/expanse/conda/cryodrgn/\n'''
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=94348M
 #SBATCH --gpus=1
 #SBATCH --licenses=cosmic:1
 date 
@@ -2689,14 +2694,18 @@ colabfold_batch %s output/ %s''' %(fasta_path,cmd))
 #SBATCH --qos=gpu-shared-cosmic2
 date
 cd '%s/'
+export jobhandle=%s
+export jobdir=%s
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
 pwd > stdout.txt 2>stderr.txt
 bash run.sh >>stdout.txt 2>>stderr.txt
 /bin/tar -czf output.tar.gz output
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*log.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,jobname,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -2897,9 +2906,13 @@ export HOME=/expanse/projects/cosmic2/expanse/software_dependencies/esmfold.kenn
 conda activate esmfold
 cd '%s/'
 %s >>stdout.txt 2>>stderr.txt
+export jobdir=%s
+export jobhandle=%s
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*.pae.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,cmd)
+        %(partition,jobname, runtime, mailuser, args['account'], 1,jobdir,cmd,jobdir,jobname)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
         cmdfile = "./batch_command.cmdline"
@@ -3038,6 +3051,7 @@ if jobtype == 'alphafold2':
             if name == '--model_preset':
                 model_preset = value
             if name == '--fasta_paths':
+                fasta_paths_value = value
                 fasta_paths_list = value.split(',')
                 for fasta_path in fasta_paths_list:
                     # strip out the double-quotes that pisexml put in
@@ -3101,6 +3115,8 @@ if jobtype == 'alphafold2':
 date
 cd '%s/'
 mkdir output_dir
+export jobhandle=%s
+export jobdir=%s
 export TMPDIR=`pwd`/output_dir
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > start.txt
 echo 'Job is now running' >> job_status.txt
@@ -3132,10 +3148,16 @@ deactivate
 module purge
 . /expanse/projects/cosmic2/expanse/software_dependencies/afold.2.3.2.kenneth/env
 python %s/plotting_afold.py %s/output_dir/
+#echo fasta_paths_value
+#export fastas="%s"
+find output_dir -name \\*.pkl -exec rm {} \; -print
+find output_dir -name msas -a -type d -exec rm -rf {} \; -print
 /bin/tar -czf output_dir.tar.gz output_dir
+mkdir /expanse/projects/cosmic2/structure_prediction_results/$jobhandle
+(cd $jobdir; find . -regex '.*.pdb\|.*_plddt.txt\|.*_pae.txt\|.*.fasta' -regextype grep -print ) | (cd $jobdir; tar czf - --files-from=-) | (cd /expanse/projects/cosmic2/structure_prediction_results/$jobhandle; tar zxf -)
 date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 """ \
-        %(partition,jobname, runtime, mailuser, args['account'],jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,models_to_relax,REMOTESCRIPTSDIR,jobdir)
+        %(partition,jobname, runtime, mailuser, args['account'],jobdir,jobname,jobdir,fasta_paths_string,max_template_date,db_preset,model_preset,predpermodel,models_to_relax,REMOTESCRIPTSDIR,jobdir,fasta_paths_value)
         #%(partition,jobname, runtime, mailuser, args['account'], 1,4,6,jobdir,cmd,jobdir,cmd,jobdir,jobdir,REMOTESCRIPTSDIR,jobdir)
         runfile = "./batch_command.run"
         statusfile = "./batch_command.status"
@@ -3217,6 +3239,7 @@ conda activate /expanse/projects/cosmic2/conda-expanse/deepEMhancer_env
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=%i
 #SBATCH --no-requeue
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --licenses=cosmic:1
 date 
@@ -3333,13 +3356,14 @@ date +'%%s %%a %%b %%e %%R:%%S %%Z %%Y' > done.txt
 
 if jobtype == 'csparc2star':
         command=args['commandline']
+        infile=command.split()[-1]
         outfile=command.split()[-1].split('.')[0]+'.star'
-        cmd='''module load anaconda3/2020.11
-module load cpu
+        cmd='''module load cpu/0.15.4
+module load anaconda3/2020.11
 module load DefaultModules
 source /cm/shared/apps/spack/cpu/opt/spack/linux-centos8-zen2/gcc-10.2.0/anaconda3-2020.11-weucuj4yrdybcuqro5v3mvuq3po7rhjt/etc/profile.d/conda.sh
-conda activate /expanse/projects/cosmic2/expanse/conda/pyem
-%s %s >> stdout 2>>stderr.txt''' %(command,outfile)
+conda activate /expanse/projects/cosmic2/expanse/software_dependencies/conda-pyem/
+/expanse/projects/cosmic2/expanse/software_dependencies/new-pyem-repo/pyem/csparc2star.py %s %s >> stdout 2>>stderr.txt''' %(infile,outfile)
         runhours=8
         runminutes = math.ceil(60 * runhours)
         partition='shared'
@@ -3531,6 +3555,7 @@ if jobtype == 'relion':
 #SBATCH --nodes=%i  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=%i             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
@@ -3807,6 +3832,7 @@ e2proc2d.py %s/ordered_class_averages.hdf %s-ISAC_output_ordered_class_averages.
 #SBATCH --nodes=1  # Total number of nodes requested (16 cores/node)
 #SBATCH --ntasks-per-node=4             # Total number of mpi tasks requested
 #SBATCH --cpus-per-task=6
+#SBATCH --mem=377308M
 #SBATCH --gpus=4
 #SBATCH --no-requeue
 #SBATCH --licenses=cosmic:1
