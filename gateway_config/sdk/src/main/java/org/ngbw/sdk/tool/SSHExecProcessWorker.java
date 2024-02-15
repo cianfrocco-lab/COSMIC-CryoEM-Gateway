@@ -340,6 +340,7 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 	{
 		InputStream is = null;
 		int tries = 0;
+		m_log.debug("starting read of " + filename + ".");
 		try
 		{
 			while (true)
@@ -348,6 +349,7 @@ public class SSHExecProcessWorker extends BaseProcessWorker
 				{
 					tries++;
 					is = handler.getInputStream(filename);
+					m_log.debug("returning InputStream for " + filename + ".");
 					return is;
 				}
 				catch (FileNotFoundException e)

@@ -52,6 +52,7 @@ public class DownloadAction extends ManageTasks
 	@SkipValidation
 	private InputStream getTheData(String inputPath)  throws Exception
 	{
+		logger.debug("in getTheData for: " + inputPath);
 		Task task = null;
 		String[] taskId = (String[])getParameters().get(ID);
 		if (taskId != null && taskId.length > 0) 
@@ -89,6 +90,7 @@ public class DownloadAction extends ManageTasks
 					" has a string that contains " +
 					"characters other than ascii letters, numbers, single period, underscore and backslash" );
 			}
+			logger.debug ( "path to download '" + inputPath + "'." );
 			is = getTheData(inputPath);
 		}
 		catch (Exception t)
