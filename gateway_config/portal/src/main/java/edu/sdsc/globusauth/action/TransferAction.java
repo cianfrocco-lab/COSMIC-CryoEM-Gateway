@@ -413,9 +413,15 @@ public class TransferAction extends NgbwSupport {
 			{
             	String result = activationProcess ( username, globusRoot,
                     s_epbmid, s_epid, s_eppath, s_dispname, "source" );
+				logger.debug("activation Process, with result: " + result);
             	if (result.equals(SUCCESS)) {
+					logger.debug("result.equals(SUCCESS): " + result);
                 	getCount(s_epid, s_eppath, s_dispname);
-            	}
+					logger.debug("after getCount");
+            	} else {
+					logger.debug("not result.equals(SUCCESS): " + result);
+				}
+				logger.debug("returning success by activationProcess, " + username + " " + globusRoot);
             	return SUCCESS;
 			}
 			catch ( Exception e )
@@ -584,14 +590,14 @@ public class TransferAction extends NgbwSupport {
           String epid, String eppath, String dispname, String type )
         throws Exception
     {
-        logger.info ( "MONA: entered activationProcess" );
-        logger.info ( "MONA: username = " + username );
-        logger.info ( "MONA: globus_root_path = " + globus_root_path );
-        logger.info ( "MONA: epbmid = " + epbmid );
-        logger.info ( "MONA: epid = " + epid );
-        logger.info ( "MONA: eppath = " + eppath );
-        logger.info ( "MONA: dispname = " + dispname );
-        logger.info ( "MONA: type = " + type );
+        //logger.info ( "MONA: entered activationProcess" );
+        //logger.info ( "MONA: username = " + username );
+        //logger.info ( "MONA: globus_root_path = " + globus_root_path );
+        //logger.info ( "MONA: epbmid = " + epbmid );
+        //logger.info ( "MONA: epid = " + epid );
+        //logger.info ( "MONA: eppath = " + eppath );
+        //logger.info ( "MONA: dispname = " + dispname );
+        //logger.info ( "MONA: type = " + type );
 		//Workbench testbench = getWorkbench();
 		//logger.debug("in activationProcess, before generating new state, old state from Workbench is: " + testbench.getSession(username).get(OauthConstants.OAUTH2_STATE) );
 		//WorkbenchSession testsession = getWorkbenchSession();
@@ -606,15 +612,17 @@ public class TransferAction extends NgbwSupport {
 
         String state = new BigInteger(130, new SecureRandom()).toString(32);
 		getSession().put(OauthConstants.OAUTH2_STATE, state);
-		logger.debug("start of activationProcess, getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
+		//logger.debug("start of activationProcess, getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 
 		Map<String, Boolean> ep_status = endpointStatus(epid);
-        logger.info ( "MONA: ep_status 1 = " + ep_status );
+        //logger.info ( "MONA: ep_status 1 = " + ep_status );
 
         if (epbmid.equals("XSERVER")) {
+			//logger.debug("before ep_status test and autoActivate");
             if ( ! ep_status.get ( "activated" ) && ! autoActivate ( epid ) )
                 return "failure";
 
+			//logger.debug("after ep_status test and autoActivate");
             //activateCAProxy ( "81e90a20-aa7e-11ea-8f0a-0a21f750d19b" );
 
             String globus_user_uuid =
@@ -629,8 +637,8 @@ public class TransferAction extends NgbwSupport {
                     acl_client = new JSONACLAPIClient ( epid );
 
                 JSONArray access_list = acl_client.accessList();
-                logger.debug ( "MONA: access_list = " + access_list );
-                logger.debug ( "MONA: access_list length = " + access_list.length() );
+                //logger.debug ( "MONA: access_list = " + access_list );
+                //logger.debug ( "MONA: access_list length = " + access_list.length() );
 
                 acl_client.setupACL ( globus_user_uuid, username );
             }
@@ -643,84 +651,78 @@ public class TransferAction extends NgbwSupport {
            	//createUserDir(epid, eppath);
         } else {
             if (!ep_status.get("activated")) {
-            //if (!ep_status.get("is_connected")) {
                 logger.debug ( "ep_status not activated");
                 logger.debug ( "epid: " + epid);
-                //logger.debug ( "ep_status not is_connected");
 				//My GCP endpoint
+			    //logger.debug("before autoActivate(epid)");
                 if (!autoActivate(epid)) {
                     logger.error("My endpoint, " + dispname + " can't be activated.");
                     reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
                     return "failure";
                 }
+			    //logger.debug("after autoActivate(epid)");
+				ep_status = endpointStatus(epid);
+			    logger.debug("ep_status is: " + ep_status.get("activated"));
             } else {
                 logger.debug ( "ep_status activated");
-				if(ep_status.get("is_globus_connect")) {
-					 if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
-                    	reportUserError ( "Warning, the endpoint, " +
+			}
+			if(ep_status.get("is_globus_connect")) {
+                	logger.debug ( "status is not negative for is_globus_connect: " + ep_status.get("is_globus_connect"));
+				if(!ep_status.get("is_connected") || ep_status.get("is_paused")) {
+					reportUserError ( "Warning, the endpoint, " +
                             dispname + ", is not connected or paused." );
-						return "failure";
-                	}
+		    		logger.debug("returning failure for endpoint not connected or paused");
+					return "failure";
+				}
+			} else {
+                logger.debug ( "status is negative for id_globus_connect");
+		        //logger.debug("before negative status autoActivate(epid)");
+                if (!autoActivate(epid)) {
+                	logger.error("My endpoint, " + dispname + " can't be activated.");
+               		reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
+					return "failure";
+				}
+		        logger.debug("after negative status autoActivate(epid)");
+				logger.debug("before ls of epid");
+				Exception err = getLsError(epid, eppath);
+				if(err == null){
+					logger.debug("getLsError succeeded, no error to print");
+					logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 				} else {
-                	logger.debug ( "status is negative for id_globus_connect");
-                	if (!autoActivate(epid)) {
-                   	 logger.error("My endpoint, " + dispname + " can't be activated.");
-                   	 reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
-                   	 return "failure";
-                	}
-					//logger.debug("before ls of epid");
-    //public boolean displayLs(String endpointId, String path) {
-					Exception err = getLsError(epid, eppath);
-					if(err == null){
-						logger.debug("getLsError succeeded, no error to print");
-						logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
-					} else {
-						logger.debug("getLsError error: (" + err.toString() + "}");
+					logger.debug("getLsError error: (" + err.toString() + "}");
             			if (err.toString().startsWith("ConsentRequired")) {
-							logger.debug("found ConsentRequired in (" + err.toString() + ")");
+						logger.debug("found ConsentRequired in (" + err.toString() + ")");
 //https://auth.globus.org/v2/oauth2/authorize?
 //scope=urn:globus:auth:scope:auth.globus.org:view_identities+openid+email+profile&
 //state=security_token%3D138r5719ru3e1%26url%3Dhttps://oa2cb.example.com/myHome&
 //redirect_uri=https://oauth2-login-demo.example.com/callback&
 //response_type=code&
 //client_id=d430e6c8-b06f-4446-a060-2b6b2bc3e54a
-							String auth_uri = config.getProperty(OauthConstants.AUTH_URI);
-							//logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
-							state = getSession().get(OauthConstants.OAUTH2_STATE).toString();
-							String redirect_uri = config.getProperty(OauthConstants.REDIRECT_URI);
-							String client_id = config.getProperty(OauthConstants.CLIENT_ID);
-							String consentUrl = auth_uri + "?scope=urn:globus:auth:scope:transfer.api.globus.org:all[*https://auth.globus.org/scopes/" + epid + "/data_access]&state=" + state + "&redirect_uri=" + redirect_uri + "&response_type=code&client_id=" + client_id;
-							//logger.debug("consentUrl: (" + consentUrl + ")");
-                   	 		//reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
-                   	 		reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + consentUrl + "\"> Consent </a>");
+						String auth_uri = config.getProperty(OauthConstants.AUTH_URI);
+						logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
+						state = getSession().get(OauthConstants.OAUTH2_STATE).toString();
+						String redirect_uri = config.getProperty(OauthConstants.REDIRECT_URI);
+						String client_id = config.getProperty(OauthConstants.CLIENT_ID);
+						String consentUrl = auth_uri + "?scope=urn:globus:auth:scope:transfer.api.globus.org:all[*https://auth.globus.org/scopes/" + epid + "/data_access]&state=" + state + "&redirect_uri=" + redirect_uri + "&response_type=code&client_id=" + client_id;
+						logger.debug("consentUrl: (" + consentUrl + ")");
+                   	 	reportUserMessage("ConsentRqequired for an endpoint, \"" + dispname + "\". Please allow consent on you endpoint, <a href=\"" + consentUrl + "\"> Consent </a>");
+						Exception consenterr = getLsError(epid, eppath);
+						if(err == null){
+							logger.debug("getLsError succeeded, no error to print");
+							logger.debug("getSession().get(OauthConstants.OAUTH2_STATE): (" + getSession().get(OauthConstants.OAUTH2_STATE) +")");
 						} else {
-							logger.debug("did not find ConsentRequired in (" + err.toString() + ")");
+							logger.debug("getLsError error: (" + err.toString() + "}");
 						}
-            			//if (err.toString().startsWith("DirectoryCreated")) {
-                		//	logger.info("User directory, " + path + " was created.");
-                		//	return true;
-            			//}
-					}
-        			//Map<String, String> params = new HashMap<String, String>();
-        			//if (eppath != null) {
-            	//		params.put("path", eppath);
-            	//		params.put("show_hidden","0");
-        		//	}
-            	//	String resource = BaseTransferAPIClient.endpointPath(epid)
-             	//	       + "/ls";
-            	//	JSONTransferAPIClient.Result r = client.getResult(resource, params);
-				//	logger.debug("after ls of epid");
-				//	logger.debug("r is : " + r);
-                	//if (!autoConsent(epid)) {
-                   	 //logger.error("My endpoint, " + dispname + " can't be activated.");
-                   	 //reportUserMessage("Unable to auto activate an endpoint, \"" + dispname + "\". Please activate your endpoint, <a href=\"" + ep_act_uri + "\" target=\"_blank_\"> Activate </a>");
-                   	 //return "failure";
-                	//}
-                }
-			}
-        }
+					} else {
+						logger.debug("did not find ConsentRequired in (" + err.toString() + ")");
+					} // consent required
+				} //getLs error
+			} //globus_connect
+        } //XSERVER
+		logger.debug("returning SUCCESS");
         return SUCCESS;
-    }
+    } //def
+	//}
 
     /* Not used since we are not using the above thread code to update the
 	** transfer record
@@ -1500,10 +1502,10 @@ public class TransferAction extends NgbwSupport {
 		    //logger.debug ( "MONA: fileArray = " + fileArray );
             filecount = fileArray.length();
 		    //logger.debug ( "MONA: filecount = " + filecount );
-            //logger.info("File count:"+filecount);
+            logger.info("File count:"+filecount);
             return filecount;
         } catch (Exception e) {
-            //logger.error("Display file list: "+e.toString());
+            logger.error("Display file list: "+e.toString());
 			//reportUserError("It was failed to list files in the directory on the endpoint ID, \""+endpointId+"\".");
 			reportUserError
 				( "Error, unable to get access on the source endpoint \""
