@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import org.apache.struts2.interceptor.validation.SkipValidation;
@@ -357,6 +358,69 @@ public abstract class ToolParameters extends CreateTask
 			Map<Long, String> dataMap = new HashMap<Long, String>(dataList.size());
 			for (UserDataItem dataItem : dataList) {
 				dataMap.put(dataItem.getUserDataId(), truncateText(dataItem.getLabel()));
+			}
+			return dataMap;
+		}
+	}
+
+	public List<String> getDataForParameterAsList(String parameter) {
+		String tool = getTool();
+		if (tool == null || parameter == null)
+			return null;
+		else {
+			//TODO: need getDataForParameter() business method
+			List<UserDataItem> dataList = null;
+			try {
+				dataList = getCurrentFolder().findDataItems();
+			} catch (Throwable error) {
+				reportError(error, "Error retrieving current folder's data list");
+				return null;
+			}
+		    List<String> dataMap = new ArrayList<String>(dataList.size());
+			for (UserDataItem dataItem : dataList) {
+				dataMap.add("<option value=\"" + dataItem.getUserDataId() + "\">" +  truncateText(dataItem.getLabel()) + "</option>");
+			}
+			return dataMap;
+		}
+	}
+
+	public List<String> getValueForParameterAsList(String parameter) {
+		String tool = getTool();
+		if (tool == null || parameter == null)
+			return null;
+		else {
+			//TODO: need getDataForParameter() business method
+			List<UserDataItem> dataList = null;
+			try {
+				dataList = getCurrentFolder().findDataItems();
+			} catch (Throwable error) {
+				reportError(error, "Error retrieving current folder's data list");
+				return null;
+			}
+		    List<String> dataMap = new ArrayList<String>(dataList.size());
+			for (UserDataItem dataItem : dataList) {
+				dataMap.add(Long.toString(dataItem.getUserDataId()));
+			}
+			return dataMap;
+		}
+	}
+
+	public List<String> getLabelForParameterAsList(String parameter) {
+		String tool = getTool();
+		if (tool == null || parameter == null)
+			return null;
+		else {
+			//TODO: need getDataForParameter() business method
+			List<UserDataItem> dataList = null;
+			try {
+				dataList = getCurrentFolder().findDataItems();
+			} catch (Throwable error) {
+				reportError(error, "Error retrieving current folder's data list");
+				return null;
+			}
+		    List<String> dataMap = new ArrayList<String>(dataList.size());
+			for (UserDataItem dataItem : dataList) {
+				dataMap.add(truncateText(dataItem.getLabel()));
 			}
 			return dataMap;
 		}
