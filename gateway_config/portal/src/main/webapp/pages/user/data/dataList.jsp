@@ -64,8 +64,9 @@
 
   <%@ include file="/pages/common/pagination.jsp" %>
   <s:form action="paginateData" theme="simple">
-    <s:select name="pageSize" list="#{ 2000:'2000' }"
-      onchange="reload(this.form)" value="pageSizeString"/>
+    <select name="pageSize" onchange="reload(this.form)" > 
+      <option value="2000">2000</option>
+    </select>
     &nbsp; records on each page
   </s:form>
 <!--

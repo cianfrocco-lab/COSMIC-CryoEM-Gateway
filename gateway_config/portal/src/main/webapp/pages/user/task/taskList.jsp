@@ -49,8 +49,32 @@
   <%@ include file="/pages/common/pagination.jsp" %>
   <s:form action="paginateTasks" theme="simple">
       Show
-      <s:select name="pageSize" list="#{ 20:'20', 40:'40', 100:'100', 200:'200' }"
-        onchange="reload(this.form)" value="pageSizeString"/>
+        <select name="pageSize" onchange="reload(this.form)" >
+          <s:if test="%{pageSizeString == '20'}">
+            <option value="20" selected>20</option>
+          </s:if>
+          <s:else>
+            <option value="20">20</option>
+          </s:else>
+          <s:if test="%{pageSizeString == '40'}">
+            <option value="40" selected>40</option>
+          </s:if>
+          <s:else>
+            <option value="40">40</option>
+          </s:else>
+          <s:if test="%{pageSizeString == '100'}">
+            <option value="100" selected>100</option>
+          </s:if>
+          <s:else>
+            <option value="100">100</option>
+          </s:else>
+          <s:if test="%{pageSizeString == '200'}">
+            <option value="200" selected>200</option>
+          </s:if>
+          <s:else>
+            <option value="200">200</option>
+          </s:else>
+        </select>
       records on each page
   </s:form>
 
