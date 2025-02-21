@@ -24,7 +24,7 @@
 
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
-      <h3><p>This is a science gateway for cryo-EM structure determination.</p></h3>
+      <h3><p>COSMIC<sup>2</sup> is a cloud platform for structural biology research and education</p></h3>
       <br>
       <h4><p>Please login below using your university credentials and you are
           ready to go!</p></h4>
