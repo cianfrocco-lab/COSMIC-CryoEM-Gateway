@@ -8,7 +8,7 @@
 	<!-- meta name="heading" content="Login"/ -->
   <content tag="menu">Toolkit</content>
 </head>
-<h2>Cryo-EM Image Processing Tools</h2>
+<h2>Tools available</h2>
 <div>
     <b>If there is a  tool or a feature you need, please let us know.</b>
 </div>
