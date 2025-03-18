@@ -207,6 +207,18 @@
                 <OutputParameters>
                 </OutputParameters>
             </Tool>
+			<Tool id="ARDECON"
+                name="AR-DECON - Deconvolution for cryo-EM maps"
+                toolresource="expanse"
+                configfile="pisexml/ardecon.xml"
+                commandrenderer="org.ngbw.pise.commandrenderer.PiseCommandRenderer">
+                <InputParameters>
+                    <InputParameter id="infile_" entityType="UNKNOWN"
+                        dataType="UNKNOWN" dataFormat="UNKNOWN" iomode="FILE"/>
+                </InputParameters>
+                <OutputParameters>
+                </OutputParameters>
+            </Tool>
 			<Tool id="SPHIRE_ISAC"
                 name="ISAC 2D classification on Expanse"
                 toolresource="expanse-gpu"
