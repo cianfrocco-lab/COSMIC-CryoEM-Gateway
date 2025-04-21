@@ -75,7 +75,7 @@
  -->
 		<ToolResource id="expanse" type="REMOTE_SHELL" 
 			class="org.ngbw.sdk.tool.DefaultToolResource"
-			filehandler="org.ngbw.sdk.tool.SSHFileHandler" 
+			filehandler="org.ngbw.sdk.tool.LocalFileHandler" 
 			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
 			<Parameters>
                 <Parameter key="cancel" value="${expanse.cancel}"  />
@@ -94,7 +94,7 @@
 		</ToolResource>
 		<ToolResource id="expanse-gpu" type="REMOTE_SHELL" 
 			class="org.ngbw.sdk.tool.DefaultToolResource"
-			filehandler="org.ngbw.sdk.tool.SSHFileHandler" 
+			filehandler="org.ngbw.sdk.tool.LocalFileHandler" 
 			processworker="org.ngbw.sdk.tool.SSHExecProcessWorker">
 			<Parameters>
                 <Parameter key="cancel" value="${expanse.cancel}"  />
