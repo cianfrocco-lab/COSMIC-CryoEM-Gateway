@@ -105,6 +105,21 @@
         </attributes>
     </parameter>
 
+    <parameter type="Switch" issimple="1">
+        <name>morememory</name>
+        <attributes>
+            <group>2</group>
+            <prompt>I need more memory</prompt>
+            <format>
+                <language>perl</language>
+                <code>($value) ? " -morememory=True" : " --morememory=False"</code>
+            </format>
+            <vdef>
+                <value>0</value>
+            </vdef>
+        </attributes>
+    </parameter>
+
 	<parameter type="Float">
         <name>sigma</name>
         <attributes>

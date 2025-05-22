@@ -31,7 +31,7 @@
 
     <!-- ============================================================= Packages -->
     <!-- Default NGBW web application package -->
-    <package name="default" extends="struts-default">
+    <package name="default" extends="struts-default,json-default">
 
 		
 
@@ -430,6 +430,15 @@
 				list,display,displayInput,displayParameters,displayWorkingDirectory,delete,refresh,setPage,
 				cancel,downloadSelected,deleteSelected
 			</allowed-methods>
+        </action>
+        <action name="refreshStatus" class="org.ngbw.web.actions.ManageTasks" method="refreshStatus">
+            <result type="json">
+                                <param name="includeProperties">
+                                        currentTaskStageDivide,
+                                        taskMessagesDivide
+                                </param>
+                                <param name="noCache">true</param>
+            </result>
         </action>
         <action name="paginateTasks" class="org.ngbw.web.actions.ManageTasks" method="paginate">
             <result name="list">/pages/user/task/taskList.jsp</result>

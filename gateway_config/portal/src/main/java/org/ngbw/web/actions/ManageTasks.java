@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import org.apache.log4j.Logger;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.struts2.interceptor.validation.SkipValidation;
 import org.ngbw.sdk.WorkbenchSession;
@@ -23,6 +27,8 @@ import org.ngbw.web.model.Page;
 import org.ngbw.web.model.Tab;
 import org.ngbw.web.model.TabbedPanel;
 import org.ngbw.web.model.impl.ListPage;
+import org.ngbw.sdk.Workbench;
+import org.ngbw.sdk.tool.Tool;
 
 /**
  * Struts action class to manage user tasks in the NGBW web application.
@@ -117,6 +123,17 @@ public class ManageTasks extends DataManager
 		refreshFolderTaskTabs();
 		return LIST;
 	}
+
+    @SkipValidation
+    public String refreshStatus ()
+    {
+        Task ct = getCurrentTask();
+        if (ct != null)
+        {
+            setCurrentTask(getSelectedTask(ct.getTaskId()));
+        }
+        return SUCCESS;
+    }
 	
 	@SuppressWarnings("unchecked")
 	@SkipValidation
@@ -983,6 +1000,17 @@ public class ManageTasks extends DataManager
 			return 0;
 		}
 	}
+
+    public String getCurrentTaskStageDivide()
+    {
+        String retStr = getCurrentTaskStage();
+        if (retStr == null)
+        {
+          retStr = "NONE";
+        }
+        logger.info("retStr = " +  retStr);
+        return  retStr;
+    }
 	
 	public String getCurrentTaskStage() {
         //logger.info ( "MONA: entered ManageTasks.getCurrentTaskStage()" );
@@ -994,7 +1022,25 @@ public class ManageTasks extends DataManager
 				TaskRunStage stage = task.getStage();
 				if (stage == null || stage.toString() == null)
 					throw new NullPointerException("Current task has no stage.");
-				else return stage.toString();
+				else
+                {
+                    String status = stage.toString();
+                    if (stage.equals(TaskRunStage.SUBMITTED))
+                    {
+                        String tmp = status;
+                        status = status + " (in waiting queue...)";
+                        Tool tool =  Workbench.getInstance().getTool(task.getToolId());
+                        String workingDir = tool.getToolResource().getWorkingDirectory(task.getJobHandle());
+                        File file = new File(workingDir + "/" + "start.txt");
+                        if (file.exists())
+                        { 
+                             File fileJobInfo = new File(workingDir + "/" + "_JOBINFO.TXT");
+                             if (fileJobInfo.exists() && (file.lastModified() >= fileJobInfo.lastModified()))
+                                status = tmp + " (running...)";
+                        }
+                    }
+                    return status;
+                }                    
 			}
 		} catch (Throwable error) {
 			reportCaughtError(error, "Error retrieving execution stage of current task");
@@ -1017,6 +1063,22 @@ public class ManageTasks extends DataManager
 			return false;
 		}
 	}
+
+    public String getTaskMessagesDivide ()
+    {               
+       List<TaskLogMessage> lists = getTaskMessages();
+            
+       StringBuilder sb = new StringBuilder();
+       if (lists != null) 
+       {
+         for (TaskLogMessage tl : lists)
+         {  
+           sb.append(tl.toString());
+           sb.append("<br>");
+         }
+       }
+       return sb.toString();
+    }
 	
 	public List<TaskLogMessage> getTaskMessages() {
         //logger.info ( "MONA: entered ManageTasks.getTaskMessages()" );
