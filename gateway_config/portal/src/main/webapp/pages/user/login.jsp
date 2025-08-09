@@ -11,16 +11,14 @@
 
 	<!-- Please leave the following warning section here for future uses -->
     <!-- maintenance warning
+     -->
      <div class="alert alert-danger" role="alert">
          <font size="+1"><span class="glyphicon glyphicon-exclamation-sign"
              aria-hidden="true"></span>
-        <span class="sr-only">Warning:</span>
-        The COSMIC<sup>2</sup> Science Gateway will be down for general
-		system maintenance<br>
-		&nbsp;&nbsp;&nbsp;&nbsp; on Tuesday, November 17, 2020 between 16:30
-		and 23:30 Pacific Time.</font>
+        <span class="sr-only">Announcement:</span>
+        Announcement - we will be updating user access policies and user allocations starting August 12, 2025.<br>
+		&nbsp;&nbsp;&nbsp;&nbsp; To learn more, please visit <a href="https://www.cosmic2.org/user-policies">https://www.cosmic2.org/user-policies</a></font>
      </div>
-     -->
 
       <h2>Welcome to COSMIC<sup>2</sup> !</h2> 
 
