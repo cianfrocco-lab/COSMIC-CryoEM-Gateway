@@ -1038,15 +1038,18 @@ public class SessionManager extends NgbwSupport
         if (newComment != null)
         {
              String currentComment = user.getComment();
-             String[] crs = currentComment.split("\\"+SEP);
-             if (crs != null)
+             if (currentComment != null)
              {
-                  int i = 0;
-                  for (String s : crs)
-                  {
-                     logger.info("currentComment[" + i +"] = " + s);
-                     ++i;
-                  }
+                 String[] crs = currentComment.split("\\"+SEP);
+                 if (crs != null)
+                 {
+                      int i = 0;
+                      for (String s : crs)
+                      {
+                         logger.info("currentComment[" + i +"] = " + s);
+                         ++i;
+                      }
+                 }
              }
              if (currentComment == null || currentComment.isEmpty() ||
                 !currentComment.contains(newComment)) {
