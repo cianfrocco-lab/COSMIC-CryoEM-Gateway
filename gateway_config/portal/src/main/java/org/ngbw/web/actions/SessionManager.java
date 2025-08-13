@@ -24,6 +24,7 @@ import org.ngbw.sdk.database.Sso;
 import org.ngbw.web.controllers.SessionController;
 import org.ngbw.sdk.clients.Client;
 import org.ngbw.sdk.ValidationException;
+import org.ngbw.sdk.common.util.SendError;
 
 /**
  * Struts action class to process all session-related requests
@@ -56,6 +57,8 @@ public class SessionManager extends NgbwSupport
 	// default password for automatic reset
 	public static final String DEFAULT_PASSWORD = "changeme";
 
+    public static final String SEP = "^";
+    public static final int itemSize = 5;
 	/*================================================================
 	 * Properties
 	 *================================================================*/
@@ -99,9 +102,14 @@ public class SessionManager extends NgbwSupport
 			refreshCurrentFolder();
 			User user = controller.getAuthenticatedUser();
 			user.setLastLogin(Calendar.getInstance().getTime());
+            setFullNewComment(user);
 			user.save();
 
 			checkUserDataSize ( user );
+            if (!Workbench.getInstance().exemptFromMultipleAccountCheck(user.getEmail())) {
+			    reportUserError("Please provide an academic email to qualify for job submission. Your current email on file is: " + user.getEmail());
+			}
+            logger.info("SessionAttribute(email) =" + (String)getSessionAttribute("email"));
 		}
 		catch (Exception e)
 		{
@@ -346,11 +354,20 @@ public class SessionManager extends NgbwSupport
 		return u;
 	}
 
+    public String getUserIPAndAgent()
+    {
+
+        return (super.getClientIp() + "|" + super.getClientUserAgent() + SEP);
+    }
 
 	public String register() {
 		// validate user input - if passed, attempt to register new user
 		if (validateUser())
 		{
+            String comment = getUserIPAndAgent();
+
+            logger.info("register() comment = " + comment);
+
 			SessionController controller = getController();
 			ValidationResult result = controller.registerUser(getUsername(), getNewPassword(),
 				getEmail(), getFirstName(), getLastName(), getInstitution(), getCountry());
@@ -690,10 +707,12 @@ public class SessionManager extends NgbwSupport
 	}
 
 	public String getEmail() {
+        logger.info("getEmail() email = " + email);
 		return email;
 	}
 
 	public void setEmail(String email) {
+        logger.info("setEmail(String email) email = " + email);
 		this.email = email;
 	}
 
@@ -734,6 +753,51 @@ public class SessionManager extends NgbwSupport
 		this.account = account;
 	}
 
+    public String activateAccount ()
+    {
+        logger.trace("BEGIN: activeAccount()::String");
+
+        try
+        {
+            String username = getRequestParameter(USER);
+            String code = getRequestParameter(CODE);
+
+            if (username == null || username.isEmpty() || code == null || code.isEmpty())
+            {
+                logger.error("user/code is missing from the request.");
+                return INPUT;
+            }
+
+            //SessionController controller = getController();
+            //User user = User.findUser(username, null, false, true);
+            User user = User.findAllUserByUsername(username);
+
+            if (null == user)
+            {
+                logger.error("No registered user was found with that username: " + username);
+                return INPUT;
+            }
+            else if (null == user.getActivationCode())
+            {
+                return SUCCESS;
+            }
+            else if (user.getActivationCode().equals(code))
+            {
+                user.setActivationCode(null);
+                user.save();
+                return SUCCESS;
+            }
+        }
+        catch ( Exception ex )
+        {
+            logger.error("There was an error activating account: " + username);
+            logger.error(ex);
+        }
+
+        logger.trace("END: activeAccount()::String");
+
+        return INPUT;
+    }
 
 	/*================================================================
 	 * Convenience methods
@@ -940,6 +1004,57 @@ public class SessionManager extends NgbwSupport
 		else return true;
 	}
 
+    private String getFullNewComment(String currentComment, String newComment)
+    {
+        if (currentComment == null || currentComment.isEmpty())
+            return newComment;
+
+        String[] crs = currentComment.split("\\"+SEP);
+        if (crs != null)
+        {
+             for (String s : crs)
+                logger.info("getFullNewComment = " + s);
+        }
+        if (crs != null && crs.length < itemSize)
+            return (currentComment + newComment);
+        else if (crs != null && crs.length >= itemSize)
+        {
+            StringBuffer sb = new StringBuffer();
+            for (int i = 1; i < crs.length; ++i)
+            {
+                sb.append(crs[i]);
+                sb.append(SEP);
+            }
+            sb.append(newComment);
+            return sb.toString();
+        }
+
+        return newComment;
+    }
+
+    private void setFullNewComment(User user)
+    {
+        String newComment = getUserIPAndAgent();
+        if (newComment != null)
+        {
+             String currentComment = user.getComment();
+             String[] crs = currentComment.split("\\"+SEP);
+             if (crs != null)
+             {
+                  int i = 0;
+                  for (String s : crs)
+                  {
+                     logger.info("currentComment[" + i +"] = " + s);
+                     ++i;
+                  }
+             }
+             if (currentComment == null || currentComment.isEmpty() ||
+                !currentComment.contains(newComment)) {
+                user.setComment(getFullNewComment(currentComment, newComment));
+              }
+        }
+    }
+
 	static boolean validateEmail(String email) {
 	/*
 		Matcher matcher = emailPattern.matcher(email);
@@ -974,4 +1089,46 @@ public class SessionManager extends NgbwSupport
 			return sendEmail(email, subject, body);
 		}
 	}
+
+    protected boolean
+    sendActivationEmail ( final String email )
+    {
+        if (email == null || email.equals("")) {
+			logger.debug("Error sending activation email: email is  null or empty.");
+			return false;
+		} else {
+            try {
+    			User user = getController().getAuthenticatedUser();
+                String username = user.getUsername();
+                String code = Client.makeActivationCode(username);
+                user.setActivation(code);
+                user.save();
+    
+                HttpServletRequest req = ServletActionContext.getRequest();
+    
+                int port = req.getServerPort();
+                String action = "activateAccount.action";
+                String url = (req.isSecure()) ? "https://" : "http://";
+                url += req.getServerName();
+    
+                // include the port if it is a non-conventional one such as 8080 or 8443.
+                url += (port != 80 && port != 443) ? (":" + port) : "";
+                url += req.getContextPath() + "/" + action;
+                url += "?user=" + username.trim() + "&code=" + code;
+                String subject = "COSMIC2 Science Gateway Account Activation";
+    
+                String body = "Dear " + username + ":\n\n"
+                    + "Please click the link at the bottom of this email to activate your COSMIC2 account.\n\n"
+                    + "Thank you!\n\n";
+                String link = "<a href=\"" + url + "\">Click here to activate your COSMIC2 account</a>"; 
+    			SendError.sendToUser(email, body + url);
+            }
+            catch ( Exception ex ) {
+                logger.error(ex);
+                return false;
+            }
+		}
+        return true;
+    }
+
 }

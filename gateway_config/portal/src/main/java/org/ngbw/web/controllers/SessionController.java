@@ -545,26 +545,32 @@ public class SessionController
     {
         // Make up a random password.
         String password = "Iplant" + username + Calendar.getInstance().getTimeInMillis();
-        return doRegisterUser(username, password, email, firstName, lastName, institution, country, UserRole.STANDARD);
+        return doRegisterUser(username, password, email, firstName, lastName, institution, country, UserRole.STANDARD, null);
     }
 
 
     public ValidationResult registerUser ( String username, String password, String email,
                                            String firstName, String lastName, String institution, String country )
     {
-        return doRegisterUser(username, password, email, firstName, lastName, institution, country, UserRole.STANDARD);
+        return doRegisterUser(username, password, email, firstName, lastName, institution, country, UserRole.STANDARD, null);
     }
 
+    public ValidationResult registerUser ( String username, String password, String email,
+                                           String firstName, String lastName, String institution, String country, String comment )
+    {
+        return doRegisterUser(username, password, email, firstName, lastName, institution, country, UserRole.STANDARD, comment);
+
+    }
 
     public ValidationResult registerUser ( String username, String password, String email,
                                            String firstName, String lastName, String institution, String country, UserRole role )
     {
-        return doRegisterUser(username, password, email, firstName, lastName, institution, country, role);
+        return doRegisterUser(username, password, email, firstName, lastName, institution, country, role, null);
     }
 
 
     private ValidationResult doRegisterUser ( String username, String password, String email,
-                                              String firstName, String lastName, String institution, String country, UserRole role )
+                                              String firstName, String lastName, String institution, String country, UserRole role, String comment )
     {
         if (StringUtils.isNullOrEmpty(username, true))
         {
@@ -574,6 +580,16 @@ public class SessionController
         else if (StringUtils.isNullOrEmpty(password, true))
         {
             logger.error("User account could not be created because the provided password is null.");
+            return null;
+        }
+        else if (StringUtils.isNullOrEmpty(lastName, true))
+        {
+            logger.error("User account could not be created because the provided last name is null.");
+            return null;
+        }
+        else if (StringUtils.isNullOrEmpty(firstName, true))
+        {
+            logger.error("User account could not be created because the provided first name is null.");
             return null;
         }
 /*
@@ -593,6 +609,10 @@ public class SessionController
             user.setLastName(lastName);
             user.setCountry(country);
             user.setRole(role);
+            logger.info("doRegisterUser() comment = " + comment);
+            if (comment != null) {
+                user.setComment(comment);
+            }
 
             // Instituion field is now required but we'll leave this test
             if (!StringUtils.isNullOrEmpty(institution, true))
@@ -602,7 +622,9 @@ public class SessionController
 
             // register user
             Workbench workbench = getWorkbench();
+            logger.info("doRegisterUser() workbench = " + (workbench == null? "null": "not null"));
             ValidationResult result = workbench.registerNewUser(user);
+            logger.info("doRegisterUser() after registerNewUser user = " + user.getUsername());
 
             // log in newly registered user
             if (result.isValid())
@@ -825,8 +847,8 @@ public class SessionController
             catch ( UserAuthenticationException error )
             {
                 reportCaughtError(error, "Error authenticating user \"" + username + "\"");
-                throw new UserAuthenticationException("Sorry, the information you entered "
-                        + "did not match our records!  Please try again.", error);
+                throw new UserAuthenticationException("Sorry, either the account is not activated or the information you entered "
+                        + "did not match our records!  If your account is not activated, please click the link in the activation email to activate it before trying to login again.", error);
             }
             catch ( IOException | SQLException error )
             {
@@ -1078,6 +1100,13 @@ public class SessionController
         
         try
         {
+            User userFromEmail = User.findUserByEmail(email, UserRole.STANDARD);
+            if (userFromEmail != null && userFromEmail.getUserId() != user.getUserId())
+            {
+                result.addError("A user with this email: " + email + " already exists!");
+                return result;
+            }
+
             user.setEmail(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
@@ -1113,13 +1142,14 @@ public class SessionController
              */
 
             // Make sure email isn't changed to email address already in use by another STANDARD user.
+            /*
             User userFromEmail = User.findUserByEmail(user.getEmail(), UserRole.STANDARD);
             
             if (userFromEmail != null && userFromEmail.getUserId() != user.getUserId())
             {
                 result.addError("A user with this email: " + user.getEmail() + " already exists!");
                 return result;
-            }
+            }*/
 
             // TODO: took this out.  We aren't letting users set their own tg account.
             user.setAccount("teragrid", account);

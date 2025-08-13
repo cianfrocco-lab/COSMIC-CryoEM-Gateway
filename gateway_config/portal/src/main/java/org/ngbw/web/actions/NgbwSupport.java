@@ -10,6 +10,7 @@ import java.io.PushbackInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +41,10 @@ import org.ngbw.sdk.database.Folder;
 import org.ngbw.sdk.database.Statistics;
 import org.ngbw.sdk.database.User;
 import org.ngbw.sdk.tool.Tool;
+import org.ngbw.sdk.jobs.UsageLimit;
 import org.ngbw.web.controllers.FolderController;
 import org.ngbw.web.model.impl.ToolComparator;
-
+import org.ngbw.sdk.core.shared.UserRole;
 import com.opensymphony.xwork2.ActionSupport;
 
 /**
@@ -74,7 +76,8 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 	public static final String USER_LOGGED = "userLogged";
 	public static final String START_NEW_TASK = "startNewTask";
 	public static final String UPLOAD_APPLET_ERROR = "uploadAppletError";
-
+	public static final String MONTHLY = "monthly";
+    public static final String USER_AGENT = "User-Agent";
 	// result constants
 	public static final String HOME = "home";
 	public static final String LIST = "list";
@@ -112,6 +115,7 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 	public String staticSite = wbProperties.getProperty("build.portal.staticUrl");
 	public String trackerUrl = wbProperties.getProperty("build.portal.trackerUrl");
 	public String portalAppName = wbProperties.getProperty("build.portal.appName");
+	private String suResetFrequency = wbProperties.getProperty("accounting.period.frequency");
 
 
 
@@ -272,8 +276,31 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 		return getServletRequest().getRemoteAddr();
 	}
 
+	public String getClientUserAgent()
+	{
+		return getServletRequest().getHeader(USER_AGENT);
+	}
 
+    public boolean isAdministrator ()
+    {
+        boolean isAdmin = false;
 
+        WorkbenchSession wbSession = getWorkbenchSession();
+
+        try
+        {
+            User user = (null == wbSession)? null : wbSession.getUser();
+            UserRole role = (null == user)? null : user.getRole();
+            isAdmin = role != null && role.equals(UserRole.ADMIN);
+        }
+        catch ( Throwable t )
+        {
+            isAdmin = false;
+            logger.error(t.getMessage(), t);
+        }
+
+        return isAdmin;
+    }
 
 	//----------------------------------------------------------------
 	// View properties --
@@ -650,7 +677,40 @@ implements ParameterAware, SessionAware, ServletRequestAware, ServletResponseAwa
 		}
 	}
 
+	public long getXSEDELimit() {
+		try
+		{
+           return UsageLimit.getInstance().getXSEDELimit(getWorkbenchSession().getUser(), null);
+		}
+		catch(Exception e)
+		{
+			reportError(e, "Error retrieving SU limit for user" );
+			return 0;
+		}
+	}
 
+	public String getSuResetFrequency() {
+       if (suResetFrequency != null)
+           return suResetFrequency;
+       else
+           return "";
+	}
+
+	public String getSuAllocationExpireTime() {
+       if (suResetFrequency != null && suResetFrequency.equalsIgnoreCase(MONTHLY))
+       {
+           Calendar calendar = Calendar.getInstance();
+           calendar.setTime(new Date());
+           int day = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+           calendar.set(Calendar.DAY_OF_MONTH, day);
+           calendar.set(Calendar.MINUTE, 59);
+           calendar.set(Calendar.HOUR_OF_DAY, 23);
+	       SimpleDateFormat dateFormat = new SimpleDateFormat("M/d/yy HH:mm");
+           return dateFormat.format(calendar.getTime());
+	   }
+       else
+           return "";
+    }
 	/**
 	 * Return the max user data size allowed in different units.  Note: kb =
 	 * 1024, not 1000.

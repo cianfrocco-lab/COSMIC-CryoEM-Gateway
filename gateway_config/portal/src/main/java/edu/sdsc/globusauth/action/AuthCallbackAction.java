@@ -3,7 +3,8 @@ package edu.sdsc.globusauth.action;
  * Created by cyoun on 10/6/16.
  * Updated by Mona Wong 6/7/19
  */
-
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -225,17 +226,21 @@ public class AuthCallbackAction extends FolderManager {
                     */
 
                     OauthProfile db_profile = profileManager.load(identity);
+                    //logger.debug ( "MONA: db_profile= " + (db_profile == null? "null":"not null"));
                     if (db_profile == null) {
+                        //logger.debug ( "MONA: db_profile 1 ");
                         //profile.setUserId(00001L);
                         profile.setUsername(username);
                         profile.setLinkUsername(username);
                         profile.setIdentityId(identity);
                         profile.setFirstname(names[0]);
-                        profile.setLastname(names[1]);
+                        if (names.length > 1)
+                            profile.setLastname(names[1]);
                         profile.setEmail(email);
                         profile.setInstitution("");
                         //profile = profileManager.add(profile);
                         long userid = registerUser();
+                        logger.debug ( "MONA: created userid = " + userid);
                         if ( userid == -1L) return "failure";
 
                         profile.setUserId(userid);
@@ -244,7 +249,8 @@ public class AuthCallbackAction extends FolderManager {
                         getSession().put("user_id",userid);
                         getSession().put(OauthConstants.EMAIL, email);
                         getSession().put(OauthConstants.FIRST_NAME, names[0]);
-                        getSession().put(OauthConstants.LAST_NAME, names[1]);
+                        if (names.length > 1)
+                            getSession().put(OauthConstants.LAST_NAME, names[1]);
                         getSession().put(OauthConstants.INSTITUTION, "");
                     } else {
                         //transfer
@@ -435,10 +441,14 @@ public class AuthCallbackAction extends FolderManager {
         
         // Here is where new user accounts are created
         else {
+            String comment = super.getUserIPAndAgent();
+
+            logger.info("registerUser() comment = " + comment);
+
             String password = "Globus" + profile.getUsername() + Calendar.getInstance().getTimeInMillis();
             ValidationResult result = controller.registerUser(profile.getUsername(), password,
                     profile.getEmail(), profile.getFirstname(), profile.getLastname(),
-                    profile.getInstitution(), null);
+                    profile.getInstitution(), null, comment);
             //logger.debug ( "MONA: result = " + result );
             if (result == null) {
                 addActionError("Sorry, there was an error creating your account.");
@@ -452,9 +462,12 @@ public class AuthCallbackAction extends FolderManager {
             } else {
                 String username = profile.getUsername();
                 //logger.debug ( "MONA: username = " + username );
-                addActionMessage ( "User account \"" + username +
-                    "\" successfully created." );
-
+                if (sendActivationEmail(profile.getEmail())) 
+                    addActionMessage ( "User account \"" + username +
+                        "\" successfully created. An activation email has been sent out. Please click the link in the email to activate your account");
+                else
+                    addActionMessage ( "User account \"" + username + "\" successfully created.");
+ 
                 // Now create user's toplevel data directory
                 String globusRoot =
                     Workbench.getInstance().getProperties().getProperty

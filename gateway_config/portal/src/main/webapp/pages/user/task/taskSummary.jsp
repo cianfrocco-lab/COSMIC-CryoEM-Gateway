@@ -4,8 +4,13 @@
 <!---->
 <div class="callout">
   You may edit your task using the tabs above.<br>
-  Current SU Hr Usage: <s:property value="%{getCPUHours()}"/>
+  <b><s:property value="%{getSUResetFrequency()}"/> SU Hr Usage/Predicted Usage: <span class="red"><s:property value="%{getCPUHours()}"/></span></b>
   <s:a href="javascript:popitup('%{staticSite}/help/cpu_help')">Explain this?</s:a>
+  <br>
+  <b><s:property value="%{getSUResetFrequency()}"/> SU Hr Limit: <span class="red"><s:property value="%{getXSEDELimit()}"/></span></b>
+  <br>
+  <b><s:property value="%{getSUResetFrequency()}"/> SU Hr Expires: <span class="red"><s:property value="%{getSuAllocationExpireTime()}"/></span></b>
+  <br>
 </div>
 <s:form action="createTask" theme="simple" cssClass="form-horizontal" role="form">
   <s:token/>

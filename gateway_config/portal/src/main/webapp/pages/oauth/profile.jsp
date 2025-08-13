@@ -21,6 +21,7 @@
     <div class="form-group">
         <label class="col-xs-2 control-label">Email</label>
         <div class="col-xs-10">
+            <!-- s:textfield cssClass="form-control" name="profile.email" value="%{#session.email}"/-->
             <s:textfield cssClass="form-control" name="profile.email" value="%{#session.email}"/>
         </div>
     </div>

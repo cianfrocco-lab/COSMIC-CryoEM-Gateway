@@ -9,9 +9,15 @@
   </s:a>
   <h2>Tasks</h2>
   <div class="callout">
-    <b>Current SU Hr Usage: <span class="red"><s:property value="%{getCPUHours()}"/></span></b>
+    <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Usage/Predicted Usage: <span class="red"><s:property value="%{getCPUHours()}"/></span></b>
     <s:a cssClass="btn btn-link" href="javascript:popitup('%{staticSite}/help/cpu_help')">Explain this?</s:a>
     <br>
+    <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Limit: <span class="red"><s:property value="%{getXSEDELimit()}"/></span></b>
+    <br>
+    <s:if test="%{getSuResetFrequency() == 'Monthly' || getSuResetFrequency() == 'monthly'}">
+      <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Expires: <span class="red"><s:property value="%{getSuAllocationExpireTime()}"/></span></b>
+      <br><br>
+    </s:if>
     <s:if test="%{currentTabSize != 1}">
       There are currently <s:property value="%{currentTabSize}"/>
       tasks in this tab.

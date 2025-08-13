@@ -258,7 +258,7 @@ public class User extends VersionedRow implements Comparable<User> {
 	private final Column<String> m_phoneNumber = new StringColumn("PHONE_NUMBER", true, 20);
 	private final Column<String> m_email = new StringColumn("EMAIL", false, 200);
 	private final Column<String> m_websiteUrl = new StringColumn("WEBSITE_URL", true, 255);
-	private final Column<String> m_comment = new StringColumn("COMMENT", true, 255);
+	private final Column<String> m_comment = new StringColumn("COMMENT", true, 1600);
 	private final Column<Long> m_defaultGroupId = new LongColumn("DEFAULT_GROUP_ID", true);
 	private final Column<Boolean> m_active = new BooleanColumn("ACTIVE", false);
 	private final Column<Boolean> m_canSubmit = new BooleanColumn("CAN_SUBMIT", false);
@@ -772,6 +772,11 @@ public class User extends VersionedRow implements Comparable<User> {
 		return (country == null)? false : (US_TERRITORIES.get(country.trim()) != null);
 	}
 
+	public boolean isAdmin()
+	{
+		return (getRole() == UserRole.ADMIN);
+	}
+
 	public void setActive(Boolean active)
 	{
 		m_active.setValue(active);
@@ -962,6 +967,11 @@ public class User extends VersionedRow implements Comparable<User> {
 		List<User> users = retrieveUsers(new StringCriterion("EMAIL", email), new StringCriterion("ACTIVATION_CODE", null));
 		return (users == null || users.isEmpty())? null : users.get(0);
 	}
+	public static User findUserAllByEmail ( String email ) throws IOException, SQLException
+	{
+		List<User> users = retrieveUsers(new StringCriterion("EMAIL", email));
+		return (users == null || users.isEmpty())? null : users.get(0);
+	}
 	/*
 	* Email is unique for each role except REST_END_USER_UMBRELLA. For umbrella users, email is
 	* unique for each value of umbrella_appname. umbrella_appname is empty except for
@@ -985,6 +995,14 @@ public class User extends VersionedRow implements Comparable<User> {
 
 		return (users == null || users.isEmpty())? null : users.get(0);
 	}
+
+    public static User findUserByComment ( String comment) throws IOException, SQLException
+    {
+        List<User> users = retrieveUsers(
+                            (new StringCriterion("COMMENT", "%" + comment + "%")).setEqualOrLike(false));
+
+        return (users == null || users.isEmpty())? null : users.get(0);
+    }
 
 	public static List<User> findActiveUsersByRole(UserRole role) throws IOException, SQLException
 	{
@@ -1318,6 +1336,21 @@ public class User extends VersionedRow implements Comparable<User> {
 		}
 	}
 
+    public void setXSEDESuLimit ( String xsedeSuLimit, String limit )
+    {
+        try
+        {
+            Map<String, String> p = preferences();
+            p.put(xsedeSuLimit, limit);
+            save();
+        }
+        catch ( Exception e )
+        {
+            log.error("", e);
+            throw new WorkbenchException("Internal Database Error");
+        }
+    }
+
 	/**
 		Returns null if not found.
 	*/
@@ -1380,6 +1413,7 @@ public class User extends VersionedRow implements Comparable<User> {
 			{
 				throw new ValidationException("Email may not contain single quote characters.");
 			}
+			log.info("Trying to save user info into database...");
 
 			super.save(dbConn);
 	}

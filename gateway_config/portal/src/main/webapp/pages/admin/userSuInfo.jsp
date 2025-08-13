@@ -1,0 +1,124 @@
+<%@taglib prefix="s" uri="/struts-tags" %>
+<%--<%@taglib prefix="sx" uri="/struts-dojo-tags" %>--%>
+<style>
+.floating-box {
+    display: inline-block;
+}  
+</style>
+<body>
+    <s:else>               
+        <s:url id="adminTasksListUrl" action="administration" method="listTasks" includeParams="none" />
+        <s:a href="%{adminTasksListUrl}" cssClass="btn btn-primary">Go back to Administration Tasks</s:a>
+    </s:else>  
+    <hr />
+    
+    <h3>User SU Usages & Transactions</h3>
+    
+    <div class="container-fluid mt-5 mb-5">
+        
+        <s:if test="%{#action.getMyselfSuInfo()}">
+        </s:if>
+        <s:else>
+        <!-- ========== User Search ========== -->
+        <div class="row">
+            <div class="col-sm-12">
+                <label>Search user by username, or email</label>
+                <form action="userSuInfoSearch" method="post" class="form-inline">
+                    <div class="form-group">
+                        <s:textfield cssClass="form-control" 
+                            name="userSuSearchStr" 
+                            placeholder="User's Username/Email" 
+                            required="true" autofocus="true" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
+        <hr />
+        </s:else>
+        
+        <s:if test="%{#action.hasSuAllocation()}">
+            <div class="row mt-5 mb-5">
+                <div class="col-sm-12">
+                    <h4>User: <s:property value="%{#action.getUserName()}" /></h4>
+                </div>
+            </div>
+            <hr />
+            <form action="userSuLimit"  method="post">
+                <div class="row mt-5 mb-5">
+                    <div class="col-sm-12">
+                        <label>Set <s:property value="%{getSuResetFrequency()}"/> SU Hour Limit:</label>
+                        <s:textfield 
+                                     name="userXSEDELimit"
+                                     placeholder="SU Hour Limit"
+                                     required="true" />
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+                <s:hidden name="userName" value="%{#action.getUserName()}" />
+                <s:hidden name="userId" value="%{#action.getUserId()}" />
+            </form>
+            <br>
+
+            <form action="userSuInfoMonthSelect" method="post"> 
+            <!-- ========== User SU Allocation, Transactions, and Job Runs ========== -->
+
+            <div class="row mt-5 mb-5">
+                <div class="col-sm-12">
+                   <label>Select Month:</label>
+                   <s:select  name="selectedMonth" headerValue="Select Month" list="%{months}" onchange="this.form.submit()" />
+                </div>
+                <s:hidden name="userName" value="%{#action.getUserName()}" />
+                <s:hidden name="userId" value="%{#action.getUserId()}" />
+            </div>
+            <div class="row mt-5 mb-5">
+                <!-- ========== Allocations Summary ================ -->
+                <div class="col-sm-12 mb-5">
+                    <h4> Summary:</h4>
+  <div class="callout">
+    <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Usage/Predicted Usage: <span class="red"><s:property value="%{getSUHours()}"/></span></b>
+    <s:a cssClass="btn btn-link" href="javascript:popitup('%{staticSite}/help/cpu_help')">Explain this?</s:a>
+    <br>
+    <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Limit: <span class="red"><s:property value="%{getUserXSEDELimit()}"/></span></b>
+    <br>
+    <s:if test="%{getSuResetFrequency() == 'Monthly' || getSuResetFrequency() == 'monthly'}">
+      <b><s:property value="%{getSuResetFrequency()}"/> SU Hr Expires: <span class="red"><s:property value="%{getSuAllocationExpireTimeWithMonth()}"/></span></b>
+      <br><br>
+    </s:if>
+  </div>
+                </div>
+                <!-- ========== Transactions and Job Runs ========== -->
+                <div class="col-sm-12 mb-5">
+                    <h4>SU Transactions and Job Runs:</h4>
+                    <table class="table mt-5">
+                        <thead>
+                            <tr>
+                                <th class="text-left">ID</th>
+                                <th class="text-left">Type</th>
+                                <th class="text-left">Transaction Time</th>
+                                <th class="text-right">SU</th>
+                                <th class="text-left">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <s:iterator var="transaction" value="%{#action.suBalance}">
+                                <tr>
+                                    <td class="text-left"><s:property value="%{#transaction.id}" /></td>
+                                    <td class="text-left">
+                                        <s:property value="%{#transaction.suTransactionType}" />
+                                    </td>
+                                    <td class="text-left">
+                                        <s:date name="%{#transaction.transactionTime}" format="MM/dd/yyyy HH:mm:ss" />
+                                    </td>
+                                    <td class="text-right"><s:property value="%{#transaction.suAmount}" /></td>
+                                    <td class="text-left"><s:property value="%{#transaction.note}" /></td>
+                                </tr>
+                            </s:iterator>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </form>
+        </s:if>
+    </div>
+</body>

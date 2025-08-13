@@ -16,6 +16,16 @@
         <li class="${current_menu == 'Home' ? 'active' : ''}">
           <a href="<s:url action='home.action'/>"><span>Home</span></a>
         </li>
+        <s:if test="%{isAuthenticated()}">
+           <!-- Only show this tab IF AND ONLY IF the user has 'Admin' role. -->
+           <s:if test="%{isAdministrator()}">
+              <li>
+                <a href="<s:url action='administration.action'/>">
+                  <span>Administration</span>
+                 </a>
+              </li>
+           </s:if>
+        </s:if>
         <li class="${current_menu == 'Toolkit' ? 'active': ''}">
           <a href="<s:url action='tools.action'/>"><span>Toolkit</span></a>
         </li>

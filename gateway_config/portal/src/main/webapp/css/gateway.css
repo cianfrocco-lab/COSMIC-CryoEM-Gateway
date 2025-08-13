@@ -3,7 +3,7 @@ body {
 }
 
 .header {
-  background: #303030;
+  background: #FFFFFF;
   width: 100%;
 }
 
@@ -16,15 +16,42 @@ body {
   margin-top: 0;
 }
 
-.header h1 a {
-  display: block;
-  width: 300px;
-  height: 140px;
-  overflow: hidden;
+.header .ca {
+  display:  inline-block;
+  /*width: 500px;*/
+  /*width: 800px;*/
+  width: 50%;
+  height: 138px;
+  /*overflow: hidden;*/
+  overflow: visible;
   border-bottom: none;
   margin: 0;
   padding: 0;
-  background: url(../images/logo.png) no-repeat;
+  /*
+  background: url(../images/logo.png) left bottom no-repeat, url(../images/access-logo-official.svg) right top no-repeat;
+  background: url(../images/access-logo.png) left bottom no-repeat, url(../images/access-logo.png) 100px 80px right top no-repeat;
+  */
+  background-image: url(../images/newweblayout2.png);
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  background-size: 423px 138px;
+}
+
+.header .cb {
+  display: inline-block;
+  /*width: 500px;*/
+  /*width: 800px;*/
+  width: 50%;
+  height: 138px;
+  /*overflow: hidden;*/
+  overflow: visible;
+  border-bottom: none;
+  margin: 0;
+  padding: 0;
+  background-image: url(../images/access-logo-official.svg);
+  background-position: 98% 30%;
+  background-repeat: no-repeat;
+  background-size: 90px 13px;
 }
 
 .header h1 a:hover {
@@ -183,28 +210,35 @@ div.form-horizontal .form-group {
 }
 
 .bs-docs-nav {
-  text-shadow: 0 -1px 0 rgba(0,0,0,.15);
+  /*text-shadow: 0 -1px 0 rgba(0,0,0,.15); */
   /*background-color: #003366;*/
   /*border-color: #002355;*/
-  box-shadow: 0 1px 0 rgba(255,255,255,.1);
+  /*box-shadow: 0 1px 0 rgba(255,255,255,.1);*/
+  background-color: #D3D3D3;
+  border-style: none;
 }
 .bs-docs-nav .navbar-brand {
-  color: #fff;
+  color: #000000;
+  /*color: #fff;*/
 }
 .bs-docs-nav .navbar-nav > li > a {
   /*color: #99afcf;*/
-  color: #fff;
+  color: #000000;
+  /*color: #fff;*/
 }
 .bs-docs-nav .navbar-nav > li > a:hover {
   background-color: #cf6766;
-  color: #fff;
+  color: #000000;
+  /*color: #fff;*/
 }
 .bs-docs-nav .navbar-nav > .active > a,
 .bs-docs-nav .navbar-nav > .open > a,
 .bs-docs-nav .navbar-nav > .open > a:hover,
 .bs-docs-nav .navbar-nav > .active > a:hover {
-  color: #fff;
+  color: #000000;
+  /*color: #fff;*/
   /*background-color: #002952;*/
+  background-color: #D3D3D3;
 }
 
 .footer {

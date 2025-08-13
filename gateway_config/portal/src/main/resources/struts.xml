@@ -50,6 +50,9 @@
             <interceptor name="navigation"
                 class="org.ngbw.web.interceptors.NavigationInterceptor"/>
 
+            <interceptor
+                    name="adminRoleValidator"
+                    class="org.ngbw.web.interceptors.AdministratorRoleValidator" />
 
             <!-- Copied from struts-default.xml and changed validation exclude methods -->
             <interceptor-stack name="defaultStack">
@@ -107,6 +110,10 @@
                 <interceptor-ref name="loginInter"/>
             </interceptor-stack>
 
+            <interceptor-stack name="adminRoleValidatorStack">
+                <interceptor-ref name="authenticationStack" />
+                <interceptor-ref name="adminRoleValidator" />
+            </interceptor-stack>
         </interceptors>
 
         <default-interceptor-ref name="authenticationStack"/>
@@ -178,6 +185,69 @@
             <interceptor-ref name="defaultStack"/> <!-- This line is that the login page is not shown -->
             <result>/pages/user/statistics.jsp</result>
         </action>
+<!-- ADMINISTRATION -->
+        <action name="administration" class="org.ngbw.web.actions.AdminTaskManager" method="listTasks">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="login" type="redirectAction">login!input</result>
+            <result name="list">/pages/admin/adminTaskList.jsp</result>
+        </action>
+        <action name="adminTask" class="org.ngbw.web.actions.AdminTaskManager">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="multipleAccounts">/pages/admin/multipleAccounts.jsp</result>
+            <result name="accountActivation">/pages/admin/userAccountActivation.jsp</result>
+            <allowed-methods>
+                searchMultipleAccountReport,getMultipleAccounts,hasUnblockedAccounts,getUnblockedAccounts,unblockUser,getAccountActivation,activateAccountOnBehalfOfUser
+            </allowed-methods>
+        </action>
+        <action name="adminTaskMA" class="org.ngbw.web.actions.AdminTaskManager"  method="searchMultipleAccountReport">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="multipleAccounts">/pages/admin/multipleAccounts.jsp</result>
+        </action>
+        <action name="adminTaskBlock" class="org.ngbw.web.actions.AdminTaskManager"  method="blockMultipleAccounts">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="multipleAccounts">/pages/admin/multipleAccounts.jsp</result>
+        </action>
+        <action name="userSuInfo" class="org.ngbw.web.actions.UserSuAllocationManager">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="success">/pages/admin/userSuInfo.jsp</result>
+        </action>
+        <action name="userSuLimit" class="org.ngbw.web.actions.UserSuAllocationManager" method="submitUserSuLimit">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="success">/pages/admin/userSuInfo.jsp</result>
+        </action>
+        <action name="userSuInfoSearch" class="org.ngbw.web.actions.UserSuAllocationManager" method="searchUserSuInfo">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="error">/pages/admin/userSuInfo.jsp</result>
+            <result name="input">/pages/admin/userSuInfo.jsp</result>
+            <result name="success">/pages/admin/userSuInfo.jsp</result>
+        </action>
+        <action name="userSuInfoMonthSelect" class="org.ngbw.web.actions.UserSuAllocationManager" method="monthSelectUserSuInfo">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="error">/pages/admin/userSuInfo.jsp</result>
+            <result name="input">/pages/admin/userSuInfo.jsp</result>
+            <result name="success">/pages/admin/userSuInfo.jsp</result>
+        </action>
+         <action name="userJobStatistics" class="org.ngbw.web.actions.AdminTaskManager" method="getStatistics">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="list">/pages/admin/userJobStat.jsp</result>
+        </action>
+         <action name="refreshStatistics" class="org.ngbw.web.actions.AdminTaskManager" method="refresh">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="list">/pages/admin/userJobStat.jsp</result>
+        </action>
+        <action name="jobDetailsExpanseInQueue" class="org.ngbw.web.actions.AdminTaskManager" method="getJobDetailsExpanseInQueue">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="crj">/pages/admin/userJobDisplayExpanseInQueue.jsp</result>
+        </action>
+        <action name="jobDetailsExpanseRunning" class="org.ngbw.web.actions.AdminTaskManager" method="getJobDetailsExpanseRunning">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="crj">/pages/admin/userJobDisplayExpanseRunning.jsp</result>
+        </action>
+        <action name="userAccountActivationSearch" class="org.ngbw.web.actions.AdminTaskManager" method="searchAccountActivation">
+            <interceptor-ref name="adminRoleValidatorStack" />
+            <result name="input">/pages/admin/userAccountActivation.jsp</result>
+        </action>
+
 <!-- PROFILE -->
         <!--
         <action name="profile" class="org.ngbw.web.actions.ProfileManager">
@@ -322,6 +392,13 @@
             <interceptor-ref name="defaultStack"/>
             <result name="success">/pages/user/profile.jsp</result>
             <result name="input">/pages/user/forgotPassword.jsp</result>
+        </action>
+
+        <action name="activateAccount" class="org.ngbw.web.actions.SessionManager" method="activateAccount">
+            <interceptor-ref name="defaultStack"/>
+            <result name="success">/pages/user/activateSuccess.jsp</result>
+            <result name="input">/pages/user/activateFailure.jsp</result>
+            <allowed-methods>input</allowed-methods>
         </action>
 
         <!-- NGBW profile management pages -->

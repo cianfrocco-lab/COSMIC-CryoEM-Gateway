@@ -384,6 +384,33 @@ public enum UsageLimit
         return propertiesToLimits(getProperties(user, app));
     }
 
+    public long getXSEDELimit ( User user, Application app ) throws Exception
+    {
+        Limits limits = getLimits(user, app);
+        if (user.isUsUser())
+        {
+            logger.debug("US user.");
+            if (limits.xsede_us_su_limit != null)
+                return limits.xsede_us_su_limit;
+        }
+        else
+        {
+            if (limits.xsede_nonus_su_limit != null)
+                return limits.xsede_nonus_su_limit;
+        }
+        return 0L;
+    }
+
+    public void setXSEDELimit ( final User user, final Application app, long limit ) throws Exception
+    {
+        Limits limits = getLimits(user, app);
+        String key = "xsede_us_su_limit";
+        String value = "";
+        if (!user.isUsUser())
+            key = "xsede_nonus_su_limit";
+
+        user.setXSEDESuLimit(key, value + limit);
+    }
 
     /**
      * Todo: If user cancels a job, task is removed immediately, but runningTask record doesn't go

@@ -55,9 +55,9 @@
     <%-- BEGIN HEADER CONTAINER --%>
     <div class="container">
       <%-- BEGIN PAGE HEADER --%>
-      <div class="row">
-        <h1><a href="home.action">Web Portal</a></h1>
-      </div>
+      <!-- div class="row" -->
+        <a class="ca"  href="home.action"></a><a class="cb" href="https://access-ci.org/"></a>
+      <!-- /div -->
       <%-- END PAGE HEADER --%>
     </div>
 

@@ -59,7 +59,7 @@
     <div class="container">
       <%-- BEGIN PAGE HEADER --%>
       <div id="page-head" class="row">
-        <h1><a href="home.action">Web Portal</a></h1>
+        <a class="ca"  href="home.action"></a><a class="cb" href="https://access-ci.org/"></a>
       </div>
       <%-- END PAGE HEADER --%>
     </div>

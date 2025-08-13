@@ -85,7 +85,16 @@ public class CreateTask extends ManageTasks
 
 	// error message constants
 	public static final String CANNOT_SUBMIT =
+		"Sorry, job submission from your account has been temporarily suspended. Most likely this is due to the fact that your email on file is not an acaemic email or you haven't activated your account or heavy consumption of community resources from this account is detected. For information on reactivating your account, or if you think you received this message in error, please contact " +
+        EMAIL_SERVICE_ADDR;
+	public static final String CANNOT_SUBMIT_HEAVY_USAGE =
 		"Sorry, job submission from your account has been temporarily suspended. Most likely this is due to heavy consumption of community resources from this account. For information on reactivating your account, or if you think you received this message in error, please contact " +
+        EMAIL_SERVICE_ADDR;
+	public static final String CANNOT_SUBMIT_EMAIL =
+		"Sorry, job submission from your account has been temporarily suspended. Most likely this is due to the fact that your email on file is not an acaemic email. Please go to My Profile and change your email over there. After that you will receive an account activation email. Please click the link in the email to activate your account. If you think you received this message in error, please contact " +
+        EMAIL_SERVICE_ADDR;
+	public static final String CANNOT_SUBMIT_ACTIVATION =
+		"Sorry, job submission from your account has been temporarily suspended. Most likely this is due to the fact that you haven't activated your account. We sent you an activation email either when you registered this account or when you changed your email address. Please click the link in that email to activate your account. If you think you received this message in error, please contact " +
         EMAIL_SERVICE_ADDR;
 
 	/*================================================================
@@ -329,12 +338,23 @@ public class CreateTask extends ManageTasks
 			}
 			try
 			{
-				if (!task.getUser().canSubmit())  
+                if (!task.getUser().canSubmit()) {
+				    addActionError(CANNOT_SUBMIT_HEAVY_USAGE);
+				    debug(CANNOT_SUBMIT_HEAVY_USAGE);
+				    return LIST_ERROR;
+                }
+                if (!task.getUser().isActivated()) {
+				    addActionError(CANNOT_SUBMIT_ACTIVATION);
+				    debug(CANNOT_SUBMIT_ACTIVATION);
+				    return LIST_ERROR;
+                }
+				if (!getWorkbench().exemptFromMultipleAccountCheck(task.getUser().getEmail()))
 				{
-					addActionError(CANNOT_SUBMIT);
-					debug(CANNOT_SUBMIT);
-					return LIST_ERROR;
+				    addActionError(CANNOT_SUBMIT_EMAIL);
+				    debug(CANNOT_SUBMIT_EMAIL);
+				    return LIST_ERROR;
 				}
+
 				try
 				{
 					User user = super.getWorkbenchSession().getUser();
@@ -1215,11 +1235,21 @@ public class CreateTask extends ManageTasks
 				addActionError(msg);
 				return null;
 			}
-			if (!task.getUser().canSubmit())  
+            if (!task.getUser().canSubmit()) {
+			    addActionError(CANNOT_SUBMIT_HEAVY_USAGE);
+			    debug(CANNOT_SUBMIT_HEAVY_USAGE);
+			    return null;
+            }
+            if (!task.getUser().isActivated()) {
+		        addActionError(CANNOT_SUBMIT_ACTIVATION);
+		        debug(CANNOT_SUBMIT_ACTIVATION);
+		        return null;
+            }
+			if (!getWorkbench().exemptFromMultipleAccountCheck(task.getUser().getEmail()))
 			{
-				addActionError(CANNOT_SUBMIT);
-				debug(CANNOT_SUBMIT);
-				return null;
+			    addActionError(CANNOT_SUBMIT_EMAIL);
+			    debug(CANNOT_SUBMIT_EMAIL);
+			    return null;
 			}
 			task.setStage(TaskRunStage.READY);
 			logger.debug(getUsernameString() + "Calling saveAndsubmitTask" );
