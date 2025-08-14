@@ -149,8 +149,11 @@ public class RegistrationManagerBase
                 pass = rm.contains(endItems[endItems.length -1]);
                 
                 if (!pass && endItems.length > 1)
+                {
                     pass = rm.contains(endItems[endItems.length-2]);
-                
+                    if (!pass)
+                        pass = rm.contains(endItems[endItems.length-2] + DOT + endItems[endItems.length-1]);
+                }
                 if (pass)
                     return MatchType.CATEGORY;    
             }
