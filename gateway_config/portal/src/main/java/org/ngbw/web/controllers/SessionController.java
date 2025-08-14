@@ -633,7 +633,7 @@ public class SessionController
                     role.toString() + "\") successfully created." );
 
                 // This call will send email to admin to notify of new account
-                SendError.send ( "New account was created for " + username );
+                SendError.send ( "New account was created for " + username + " with email: " + email );
 
                 login(username, password);
             }

@@ -56,6 +56,7 @@ import org.ngbw.sdk.tool.TaskInitiate;
 import org.ngbw.sdk.tool.DisabledResourceException;
 import org.ngbw.sdk.common.util.ProcessUtils;
 import org.ngbw.sdk.tool.RegistrationManager;
+import org.ngbw.sdk.common.util.SendError;
 
 /**
  * This class is so far the main entry point into to the NGBW SDK. <br />
@@ -1373,13 +1374,14 @@ public class Workbench
             logger.info("registerNewUser() comment = " + user.getComment());
             User existingUser = null;
             if (user.getComment() != null && (existingUser = User.findUserByComment(user.getComment())) != null) {
-                String warning = "User (username = " + existingUser.getUsername() + ", email = "
+                String warning = "Existing user (username = " + existingUser.getUsername() + ", email = "
                         + existingUser.getEmail() + ") is trying to create a new account with username = "
-                        + user.getUsername() + ", email = " + user.getEmail();
+                        + user.getUsername() + ", email = " + user.getEmail() + ", first name = " + user.getFirstName() + ", last name = " + user.getLastName();
                 logger.info(warning);
                 result.addError("New account authentication fails. If you have any question, please contact us at cosmic2support@umich.edu");
                 result.addWarning(warning);
                 RegistrationManager.getRegistrationBlacklistManager().addToTheList(user.getEmail());
+                SendError.send ( warning );
                 return result;
             }
 
