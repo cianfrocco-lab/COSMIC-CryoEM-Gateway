@@ -17,7 +17,8 @@ public class GoauthAuthenticator implements Authenticator {
 	}
 
 	public void authenticateConnection(HttpsURLConnection c) {
-		String auth_string = "Globus-Goauthtoken " + this.token;
+		//String auth_string = "Globus-Goauthtoken " + this.token;
+        String auth_string = "Bearer " + this.token;
 		c.setRequestProperty("Authorization", auth_string);
 	}
 

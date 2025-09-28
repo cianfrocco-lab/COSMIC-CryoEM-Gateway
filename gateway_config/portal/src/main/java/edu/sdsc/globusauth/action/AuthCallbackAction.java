@@ -155,7 +155,22 @@ public class AuthCallbackAction extends FolderManager {
             // and can start the process of exchanging an auth code for a token.
             String passed_state = request.getParameter(OauthConstants.STATE);
             //logger.debug ( "MONA: passed_state = " + passed_state );
-            //logger.info("Passed state: "+passed_state);
+            logger.info("Passed back state from Gloabu Auth: "+passed_state + " while sent state is: " + getSession().get(OauthConstants.OAUTH2_STATE));
+            if (passed_state == null || passed_state.isEmpty() || !passed_state.equals(getSession().get(OauthConstants.OAUTH2_STATE))) {
+                String code = request.getParameter(OauthConstants.CODE);
+                TokenResponse tokenResponse = null;
+                try {
+                    tokenResponse = flow.newTokenRequest(code).setRedirectUri(redirect_uri).execute();
+                } catch (IOException e) {
+                    logger.error("Caught exception when trying to retrieve Auth Token: " + e);
+                    logger.error("Details is: " + ((TokenResponseException) e).getDetails());
+                }
+                logger.info("Mismatched state request detected. Begining of related info .... " );
+                logger.info("Token is: " + tokenResponse.toPrettyString());
+                IdToken id_token = IdToken.parse(jsonFactory, (String) tokenResponse.get(OauthConstants.ID_TOKEN));
+                logger.info("Id token is: " + id_token.toString());
+                logger.info("Mismatched state request detected. End of related info .... " );
+            }
             // Makes sure the state as the browser is sent back matches the one set when sent out from the
             // client
             if (!passed_state.isEmpty() && passed_state.equals(getSession().get(OauthConstants.OAUTH2_STATE))) {
@@ -183,7 +198,17 @@ public class AuthCallbackAction extends FolderManager {
                     // Parsing about the user
                     // logger.info("Token: " + tokenResponse.toPrettyString());
                     logger.info("Token: " + tokenResponse.toPrettyString());
-                    IdToken id_token = IdToken.parse(jsonFactory, (String) tokenResponse.get(OauthConstants.ID_TOKEN));
+                  
+                    IdToken id_token = null;
+                    try {
+                        String id_token_str = (String) tokenResponse.get(OauthConstants.ID_TOKEN);
+                        logger.info("Id token str = " + id_token_str);
+                        id_token = IdToken.parse(jsonFactory, (String) tokenResponse.get(OauthConstants.ID_TOKEN));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.error("Caught: " + ex.getMessage());
+                    }
                     logger.info("Id token: " + id_token.toString());
                     logger.info("Other tokens: "+tokenResponse.get("other_tokens"));
 
